@@ -44,18 +44,18 @@ export default function IncidentsPage() {
   return (
     <AppShell active="/incidents" title="Incidents">
       <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-lg font-semibold tracking-tight">Incidents</h2>
+        <h2 className="text-[22px] font-semibold tracking-tight">Incidents</h2>
         <span className="text-xs text-muted-foreground">
           {items ? `${items.length} shown` : "loading..."}
         </span>
       </div>
       {err && (
-        <div className="rounded-xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-4 text-sm text-[var(--status-critical)]">
+        <div className="rounded-3xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-4 text-sm text-[var(--status-critical)]">
           {err}
         </div>
       )}
       {items && (
-        <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+        <ul className="divide-y divide-border card-soft">
           {items.map((it) => (
             <li key={it.incident_id}>
               <Link

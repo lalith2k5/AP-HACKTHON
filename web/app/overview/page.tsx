@@ -65,7 +65,7 @@ function LoadingState() {
 
 function ErrorState({ message, status }: { message: string; status?: number }) {
   return (
-    <div className="rounded-xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-5">
+    <div className="rounded-3xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-5">
       <div className="flex items-center gap-2 text-sm font-semibold text-[var(--status-critical)]">
         <span aria-hidden>●</span>
         Backend unreachable
@@ -85,10 +85,10 @@ function ErrorState({ message, status }: { message: string; status?: number }) {
 function LoadedOverview({ data }: { data: Overview }) {
   const kpis = data.kpis ?? [];
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <section>
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Key metrics</h2>
+          <h2 className="text-[22px] font-semibold tracking-tight">Key metrics</h2>
           {data.freshness ? (
             <span className="text-xs text-muted-foreground">
               Last run: {data.freshness}
@@ -100,7 +100,7 @@ function LoadedOverview({ data }: { data: Overview }) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {kpis.map((k) => (
-              <div key={k.label} className="rounded-xl border border-border bg-card p-4">
+              <div key={k.label} className="card-soft p-5">
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {k.label}
                 </div>
@@ -116,7 +116,7 @@ function LoadedOverview({ data }: { data: Overview }) {
         {!data.urgent_queue?.length ? (
           <EmptyCard label="No urgent items" />
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+          <ul className="divide-y divide-border card-soft">
             {data.urgent_queue.map((u) => (
               <li key={u.id} className="flex items-center justify-between px-4 py-3">
                 <span className="text-sm">{u.title}</span>
@@ -134,7 +134,7 @@ function LoadedOverview({ data }: { data: Overview }) {
 
 function EmptyCard({ label }: { label: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+    <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
       {label}
     </div>
   );

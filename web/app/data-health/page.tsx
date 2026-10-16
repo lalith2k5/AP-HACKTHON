@@ -48,33 +48,33 @@ export default function DataHealthPage() {
 
   return (
     <AppShell active="/data-health" title="Data health">
-      <div className="space-y-6">
+      <div className="space-y-10">
         <div className="flex flex-wrap gap-2">
           <button onClick={runPipeline} disabled={!!busy}
-            className="rounded-lg bg-[var(--primary)] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+            className="rounded-2xl bg-[var(--primary)] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
             {busy === "pipeline" ? "Running..." : "Re-run pipeline"}
           </button>
           <button onClick={runEvaluation} disabled={!!busy}
-            className="rounded-lg border border-border px-3 py-2 text-sm font-medium disabled:opacity-50">
+            className="rounded-2xl border border-border px-3 py-2 text-sm font-medium disabled:opacity-50">
             {busy === "evaluation" ? "Running..." : "Re-run evaluation"}
           </button>
           <button onClick={resetDemo} disabled={!!busy}
-            className="rounded-lg border border-red-300 text-red-700 px-3 py-2 text-sm font-medium disabled:opacity-50">
+            className="rounded-2xl border border-red-300 text-red-700 px-3 py-2 text-sm font-medium disabled:opacity-50">
             Reset demo state
           </button>
         </div>
 
-        {err && <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
+        {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
         {job && (
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="text-sm font-semibold">Job {job.job_id ?? job.evaluation_run_id}</h2>
+          <div className="card-soft p-6">
+            <h2 className="text-[15px] font-semibold tracking-tight">Job {job.job_id ?? job.evaluation_run_id}</h2>
             <p className="mt-1 text-xs text-muted-foreground">status: {job.status} · stage: {job.stage}</p>
             {job.error && <p className="mt-2 text-xs text-red-600">{job.error}</p>}
           </div>
         )}
 
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold">Current metrics</h2>
+        <div className="card-soft p-6">
+          <h2 className="text-[15px] font-semibold tracking-tight">Current metrics</h2>
           <pre className="mt-3 overflow-auto rounded-lg bg-muted/40 p-3 text-[11px]">
             {metrics ? JSON.stringify(metrics, null, 2) : "Loading..."}
           </pre>

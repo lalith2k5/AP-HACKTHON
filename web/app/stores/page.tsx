@@ -14,12 +14,12 @@ export default function StoresPage() {
 
   return (
     <AppShell active="/stores" title="Stores">
-      {err && <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
+      {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
       {!rows && !err && <p className="text-sm text-muted-foreground">Loading...</p>}
       {rows && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="card-soft overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_96%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
               <tr>
                 <th className="px-4 py-2.5">Store</th>
                 <th>Region</th>
@@ -31,7 +31,7 @@ export default function StoresPage() {
             </thead>
             <tbody>
               {rows.map((s) => (
-                <tr key={s.store_id} className="border-t border-border hover:bg-muted/30">
+                <tr key={s.store_id} className="border-t border-[var(--border)] hover:bg-[color-mix(in_oklch,var(--foreground),transparent_97%)]">
                   <td className="px-4 py-2">
                     <Link href={`/stores/${s.store_id}`} className="font-medium hover:text-[var(--primary)]">{s.store_id}</Link>
                     <div className="text-xs text-muted-foreground">{s.store_name}</div>

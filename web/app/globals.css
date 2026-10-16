@@ -179,3 +179,61 @@
   --status-info:     oklch(0.70 0.19 253);
   --status-ok:       oklch(0.74 0.17 145);
 }
+
+
+/* ------------------------------------------------------------------
+   Premium Apple restyle — soft shadows, larger radius, refined palette
+   ------------------------------------------------------------------ */
+@theme inline {
+  --shadow-soft:  0 4px 30px rgba(0, 0, 0, 0.02);
+  --shadow-float: 0 8px 40px rgba(0, 0, 0, 0.04);
+  --shadow-lift:  0 12px 48px rgba(0, 0, 0, 0.06);
+  --radius-card:  20px;
+  --radius-pill:  999px;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #6e6e73;
+  --border: rgba(0, 0, 0, 0.06);
+  --input: rgba(0, 0, 0, 0.06);
+  --radius: 1.25rem;
+  --sidebar: rgba(250, 250, 252, 0.72);
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --card: #1d1d1f;
+  --card-foreground: #f5f5f7;
+  --muted: #1d1d1f;
+  --muted-foreground: #a1a1a6;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --sidebar: rgba(20, 20, 22, 0.72);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Premium utilities */
+@utility card-soft {
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+}
+
+@utility pill {
+  border-radius: var(--radius-pill);
+}
+
+@utility press {
+  transition: transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.press:active {
+  transform: scale(0.98);
+}

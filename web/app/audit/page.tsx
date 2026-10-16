@@ -20,22 +20,22 @@ export default function AuditPage() {
 
   return (
     <AppShell active="/audit" title="Audit log">
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex flex-wrap gap-3">
           <input placeholder="event_type (optional)" value={etype} onChange={(e) => setEtype(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
+            className="rounded-2xl border border-border bg-background px-3 py-1.5 text-sm" />
           <input placeholder="actor (optional)" value={actor} onChange={(e) => setActor(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
+            className="rounded-2xl border border-border bg-background px-3 py-1.5 text-sm" />
         </div>
-        {err && <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
+        <div className="card-soft overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_96%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
               <tr><th className="px-4 py-2.5">When</th><th>Event</th><th>Actor</th><th>Object</th><th>Detail</th></tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} className="border-t border-border">
+                <tr key={i} className="border-t border-[var(--border)]">
                   <td className="px-4 py-2 whitespace-nowrap text-xs">{r.timestamp ?? r.occurred_at ?? ""}</td>
                   <td className="text-xs">{r.event_type}</td>
                   <td className="text-xs">{r.actor ?? r.actor_id}</td>

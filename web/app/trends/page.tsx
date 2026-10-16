@@ -24,11 +24,11 @@ export default function TrendsPage() {
 
   return (
     <AppShell active="/trends" title="Trends">
-      <div className="space-y-6">
+      <div className="space-y-10">
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium">Region</label>
           <select value={region} onChange={(e) => setRegion(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm">
+            className="rounded-2xl border border-border bg-background px-3 py-1.5 text-sm">
             <option value="">All</option>
             <option value="DEL">DEL</option>
             <option value="MUM">MUM</option>
@@ -38,10 +38,10 @@ export default function TrendsPage() {
           </select>
         </div>
 
-        {err && <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
+        {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
 
-        <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold">Category totals</h2>
+        <section className="card-soft p-6">
+          <h2 className="text-[15px] font-semibold tracking-tight">Category totals</h2>
           {top.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">No data for this filter.</p>
           ) : (
@@ -59,8 +59,8 @@ export default function TrendsPage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold">Anomalies flagged ({data?.anomalies.length ?? 0})</h2>
+        <section className="card-soft p-6">
+          <h2 className="text-[15px] font-semibold tracking-tight">Anomalies flagged ({data?.anomalies.length ?? 0})</h2>
           {data?.anomalies.length ? (
             <table className="mt-3 w-full text-sm">
               <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -68,7 +68,7 @@ export default function TrendsPage() {
               </thead>
               <tbody>
                 {data.anomalies.slice(0, 25).map((a, i) => (
-                  <tr key={i} className="border-t border-border">
+                  <tr key={i} className="border-t border-[var(--border)]">
                     <td className="py-2">{a.store_id}</td>
                     <td>{a.predicted_category}</td>
                     <td>{a.num_flag_days}</td>

@@ -28,22 +28,22 @@ export default function WelcomePage() {
             />
             <span className="text-sm font-medium tracking-tight">StoreSignal AI</span>
           </div>
-          <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          <span className="pill border border-[var(--border)] bg-[color-mix(in_oklch,var(--foreground),transparent_94%)] px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)]">
             Local · Demo mode
           </span>
         </div>
 
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+        <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
           Turning store chatter
           <br />
           into action.
         </h1>
-        <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
+        <p className="mt-5 max-w-md text-[17px] leading-relaxed text-[var(--muted-foreground)]">
           Multilingual retail operations intelligence. Early-warning and
           incident-resolution — not a sentiment dashboard.
         </p>
 
-        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-12 flex flex-col gap-3 sm:flex-row">
           <Button
             render={<Link href="/overview" />}
             nativeButton={false}
@@ -64,7 +64,7 @@ export default function WelcomePage() {
           </Button>
         </div>
 
-        <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
+        <p className="mt-10 text-xs leading-relaxed text-[var(--muted-foreground)]">
           Demo profile selector is a local simulation, not production identity
           verification. All sample data is simulated; do not enter real customer
           or staff data.

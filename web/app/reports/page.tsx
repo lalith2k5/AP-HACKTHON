@@ -87,33 +87,33 @@ export default function ReportsPage() {
   return (
     <AppShell active="/reports" title="Weekly Report">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold tracking-tight">Weekly regional brief</h2>
+        <h2 className="text-[22px] font-semibold tracking-tight">Weekly regional brief</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           Evidence-backed summary. Unverified feedback — not a determination of fact.
         </p>
       </div>
 
       {err && (
-        <div className="rounded-xl border border-[var(--status-medium)]/30 bg-[color-mix(in_oklch,var(--status-medium),transparent_94%)] p-4 text-sm">
+        <div className="rounded-3xl border border-[var(--status-medium)]/30 bg-[color-mix(in_oklch,var(--status-medium),transparent_94%)] p-4 text-sm">
           {err}
         </div>
       )}
 
       {data && (
-        <div className="space-y-5">
+        <div className="space-y-8">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="card-soft p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Region</div>
               <div className="mt-1 text-lg font-semibold">{data.region_name}</div>
               <div className="text-xs text-muted-foreground">{data.region_id}</div>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="card-soft p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Week</div>
               <div className="mt-1 text-sm font-medium">
                 {data.week_start} → {data.week_end}
               </div>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="card-soft p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Feedback</div>
               <div className="mt-1 text-lg font-semibold">{data.total_feedback.toLocaleString()}</div>
               <div
@@ -124,7 +124,7 @@ export default function ReportsPage() {
                 {delta} vs previous week
               </div>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="card-soft p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Escalation precision
               </div>
@@ -143,7 +143,7 @@ export default function ReportsPage() {
 
           <section>
             <h3 className="mb-2 text-sm font-semibold tracking-tight">Top issues</h3>
-            <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+            <ul className="divide-y divide-border card-soft">
               {data.top_issues.map((t) => (
                 <li key={t.category} className="p-4">
                   <div className="flex items-start justify-between gap-4">

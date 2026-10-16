@@ -86,8 +86,8 @@ export default function AlertsPage() {
   return (
     <AppShell active="/alerts" title="Alerts">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold tracking-tight">Alerts</h2>
-        <div className="flex gap-1 rounded-lg border border-border bg-card p-0.5 text-xs">
+        <h2 className="text-[22px] font-semibold tracking-tight">Alerts</h2>
+        <div className="flex gap-1 card-soft p-0.5 text-xs">
           {(["all", "critical", "high"] as const).map((f) => (
             <button
               key={f}
@@ -121,7 +121,7 @@ export default function AlertsPage() {
             const busy = busyId === a.alert_id;
             const status = a.status ?? "open";
             return (
-              <li key={a.alert_id} className="rounded-xl border border-border bg-card p-4">
+              <li key={a.alert_id} className="card-soft p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -159,7 +159,7 @@ export default function AlertsPage() {
                   <div className="flex shrink-0 flex-col gap-1.5">
                     <Link
                       href={"/incidents/" + a.incident_id}
-                      className="rounded-lg border border-border px-2.5 py-1 text-center text-xs font-medium hover:bg-muted"
+                      className="rounded-2xl border border-border px-2.5 py-1 text-center text-xs font-medium hover:bg-muted"
                     >
                       Open
                     </Link>
@@ -169,7 +169,7 @@ export default function AlertsPage() {
                         onClick={() => doAction(a.alert_id, "Alert acknowledged", () =>
                           endpoints.ackAlert(a.alert_id, { actor: "demo-operator" })
                         )}
-                        className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted disabled:opacity-50"
+                        className="rounded-2xl border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted disabled:opacity-50"
                       >
                         Ack
                       </button>
@@ -181,14 +181,14 @@ export default function AlertsPage() {
                           onClick={() => doAction(a.alert_id, "Alert resolved", () =>
                             endpoints.resolveAlert(a.alert_id, { actor: "demo-operator" })
                           )}
-                          className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted disabled:opacity-50"
+                          className="rounded-2xl border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted disabled:opacity-50"
                         >
                           Resolve
                         </button>
                         <button
                           disabled={busy}
                           onClick={() => setOverrideId(a.alert_id)}
-                          className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-[var(--status-medium)] hover:bg-muted disabled:opacity-50"
+                          className="rounded-2xl border border-border px-2.5 py-1 text-xs font-medium text-[var(--status-medium)] hover:bg-muted disabled:opacity-50"
                         >
                           Override
                         </button>
@@ -242,19 +242,19 @@ function OverrideModal({
           onChange={(e) => setReason(e.target.value)}
           rows={3}
           placeholder="Why is this alert being overridden?"
-          className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm"
         />
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onCancel}
-            className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted"
+            className="rounded-2xl border border-border px-3 py-1.5 text-sm hover:bg-muted"
           >
             Cancel
           </button>
           <button
             disabled={!reason.trim()}
             onClick={() => onSubmit(reason)}
-            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            className="rounded-2xl bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
             Override
           </button>
