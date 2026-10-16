@@ -163,11 +163,11 @@ def screen_welcome() -> None:
     )
     st.write("")
     c1, c2, _ = st.columns([1, 1, 2])
-    if c1.button("Get Started", use_container_width=True, type="primary"):
+    if c1.button("Get Started", width="stretch", type="primary"):
         st.session_state.authenticated = True
         st.session_state.role = "regional_ops_lead"
         st.rerun()
-    if c2.button("Sign In", use_container_width=True):
+    if c2.button("Sign In", width="stretch"):
         st.session_state.show_signin = True
         st.rerun()
 
@@ -413,18 +413,18 @@ def screen_trends() -> None:
         return
     c1, c2 = st.columns(2)
     with c1:
-        cats = ["ALL", *sorted(radar["category"].dropna().unique().tolist())]
+        cats = ["ALL", *sorted(radar["predicted_category"].dropna().unique().tolist())]
         cat = st.selectbox("Category", cats)
     with c2:
         stores = ["ALL", *sorted(radar["store_id"].dropna().astype(str).unique().tolist())[:50]]
         store = st.selectbox("Store", stores)
     sub = radar
     if cat != "ALL":
-        sub = sub[sub["category"] == cat]
+        sub = sub[sub["predicted_category"] == cat]
     if store != "ALL":
         sub = sub[sub["store_id"].astype(str) == store]
     st.markdown(f"**{len(sub)} flags**")
-    st.dataframe(sub.head(100), use_container_width=True)
+    st.dataframe(sub.head(100), width="stretch")
     if "score" in sub.columns and "current_count" in sub.columns:
         st.markdown("**Top by robust score**")
         top = sub.sort_values("score", ascending=False).head(10)
@@ -447,7 +447,7 @@ def screen_stores() -> None:
     c1, c2 = st.columns([2, 3])
     with c1:
         st.markdown("**Top affected stores**")
-        st.dataframe(grp, use_container_width=True, hide_index=True)
+        st.dataframe(grp, width="stretch", hide_index=True)
     with c2:
         st.markdown("**Incidents by store**")
         st.bar_chart(grp.set_index("store_id")["incidents"], height=380)
@@ -512,10 +512,10 @@ def screen_actions() -> None:
                          inc[inc["incident_id"].astype(str) == sel].iloc[0].get("store_id")]
                 if row.empty:
                     st.info("No forecast rows for this store yet.")
-                    st.dataframe(fc.head(10), use_container_width=True)
+                    st.dataframe(fc.head(10), width="stretch")
                 else:
                     st.success(f"Forecast rows for store: {len(row)}")
-                    st.dataframe(row.head(20), use_container_width=True)
+                    st.dataframe(row.head(20), width="stretch")
 
 
 # ---------------------------------------------------------------------------
@@ -577,7 +577,7 @@ def screen_import_wizard() -> None:
         st.markdown(f"**Format:** `{pv['format']}`")
         st.markdown("**Detected columns:** " + ", ".join(f"`{c}`" for c in pv["columns"]))
         st.markdown("**Sample rows**")
-        st.dataframe(pd.DataFrame(pv["sample_rows"]).head(5), use_container_width=True)
+        st.dataframe(pd.DataFrame(pv["sample_rows"]).head(5), width="stretch")
 
         from storesignal.import_wizard import CANONICAL_COLUMNS, REQUIRED_COLUMNS
         st.markdown("### Column mapping")
@@ -616,7 +616,7 @@ def screen_import_wizard() -> None:
     from storesignal.import_wizard import list_batches
     batches = list_batches()
     if batches:
-        st.dataframe(pd.DataFrame(batches), use_container_width=True)
+        st.dataframe(pd.DataFrame(batches), width="stretch")
     else:
         st.caption("No imports yet.")
 
@@ -652,7 +652,7 @@ def screen_data_health() -> None:
 
     st.markdown("### Import batches")
     if batches:
-        st.dataframe(pd.DataFrame(batches), use_container_width=True)
+        st.dataframe(pd.DataFrame(batches), width="stretch")
     else:
         st.caption("No import batches yet.")
 
@@ -705,7 +705,7 @@ def screen_audit() -> None:
     if ac != "ALL" and "actor_id" in sub.columns:
         sub = sub[sub["actor_id"] == ac]
     st.caption(f"{len(sub)} events")
-    st.dataframe(sub.tail(300), use_container_width=True)
+    st.dataframe(sub.tail(300), width="stretch")
     st.download_button("Export JSON",
                        sub.to_json(orient="records", lines=True),
                        file_name="audit_export.jsonl")
@@ -779,7 +779,7 @@ elif view == "Incidents":
     if inc is None or inc.empty:
         st.info("No incidents yet — run `make pipeline`.")
     else:
-        st.dataframe(inc.head(100), use_container_width=True)
+        st.dataframe(inc.head(100), width="stretch")
 elif view == "Incident Detail":
     screen_incident_detail()
 elif view == "Evidence Explorer":
@@ -790,7 +790,7 @@ elif view == "Alerts":
     if alerts is None or alerts.empty:
         st.info("No alerts yet.")
     else:
-        st.dataframe(alerts.head(100), use_container_width=True)
+        st.dataframe(alerts.head(100), width="stretch")
 elif view == "Trends":
     screen_trends()
 elif view == "Store Impact":

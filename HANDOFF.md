@@ -16,6 +16,8 @@ The user switches chats when context limits hit. Before doing anything:
 6. Read section 11 (honest gaps) and ask user which gap to close next.
 
 Do NOT re-run the pipeline unless asked — it takes 30s and overwrites artifacts.
+Node/npm/brew confirmed installed. Next.js frontend Phase 1 (5 screens) is the
+current active workstream — read section 5a before doing anything frontend.
  Then confirm with the user
 that you have understood the state and ask what they want to do next.
 
@@ -121,6 +123,75 @@ Infrastructure:
   - tokens.py                 design tokens (dark/light)
   - cli.py                    Typer CLI
   - pipeline.py               orchestrator
+
+
+## 5a. Next.js frontend — Phase 1 in progress
+
+**Decision made:** Add a Next.js + Tailwind + shadcn/ui + Framer Motion
+frontend for the 5 highest-visibility screens. Runs alongside the existing
+Streamlit UI. Streamlit is NOT removed until the new UI is complete.
+
+**Environment confirmed (2026-10-16):**
+- Node v26.10.0
+- npm 11.19.1
+- Homebrew 7.0.9
+- 97 GB free disk
+
+**Phase 1 scope (5 screens):**
+1. Welcome / Sign-in
+2. Overview dashboard
+3. Incident Detail (Overview / Evidence / Timeline / Actions tabs)
+4. Alerts center
+5. Weekly Report
+
+**Planned stack:**
+- Next.js 15 (App Router) + TypeScript
+- Tailwind CSS v4 (via PostCSS, no CDN)
+- shadcn/ui (component primitives)
+- Framer Motion (spring physics, material transitions)
+- Data source: existing FastAPI at http://localhost:8000
+
+**Apple-grade design system targets:**
+- SF Pro typography stack (-apple-system, BlinkMacSystemFont)
+- 8pt spacing grid
+- Continuous corner curve (squircle) via SVG mask for cards
+- Semantic color tokens (systemBlue, systemGray, systemRed etc.)
+- Backdrop-blur "materials" on overlays and sidebars
+- Framer Motion springs: stiffness ~260, damping ~30 (Apple-ish feel)
+
+**Directory target:**
+    ~/storesignal-ai/web/
+    ├── app/
+    │   ├── layout.tsx
+    │   ├── page.tsx                 (welcome)
+    │   ├── overview/page.tsx
+    │   ├── incidents/[id]/page.tsx
+    │   ├── alerts/page.tsx
+    │   └── reports/page.tsx
+    ├── components/ui/                (shadcn)
+    ├── lib/api.ts                    (fetch wrapper for FastAPI)
+    ├── lib/tokens.ts                 (Apple design tokens)
+    ├── tailwind.config.ts
+    ├── postcss.config.mjs
+    ├── package.json
+    └── tsconfig.json
+
+**How to run (target end state):**
+    # Terminal 1 — FastAPI backend
+    "$HOME/storesignal-ai/.venv/bin/uvicorn" storesignal.api:app --reload --port 8000
+
+    # Terminal 2 — Next.js frontend
+    cd "$HOME/storesignal-ai/web" && npm run dev
+    # open http://localhost:3000
+
+**Migration note:** Streamlit UI remains at :8501 for comparison until the
+Next.js frontend matches all 5 target screens. Then `ui.py` is deleted and
+`make ui` is retired.
+
+**Known Streamlit bugs fixed this session:**
+- `category_distribution()` now returns column `category` (not `predicted_category`)
+- `screen_trends` now reads `radar["predicted_category"]`
+- `use_container_width=True` -> `width="stretch"` everywhere
 
 ## 6. Current verified metrics (unchanged from baseline)
 
