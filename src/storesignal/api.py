@@ -26,6 +26,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from storesignal import state as _state
+from storesignal import settings as _settings
 from storesignal.api_envelope import install as install_envelope
 from storesignal.api_extras import router as _extras_router
 from storesignal.api_jobs import router as _jobs_router
@@ -87,11 +88,16 @@ _RATE_LIMIT = 300
 _RATE_WINDOW = 60.0
 
 
+_LOCAL_IPS = {"127.0.0.1", "::1", "localhost", "testclient"}
+
+
 @app.middleware("http")
 async def _rate_limit_middleware(request: Request, call_next):
     if request.method == "OPTIONS":
         return await call_next(request)
     ip = request.client.host if request.client else "unknown"
+    if _settings.DEMO_MODE and ip in _LOCAL_IPS:
+        return await call_next(request)
     now = time.time()
     bucket = _RATE_BUCKETS[ip]
     while bucket and bucket[0] < now - _RATE_WINDOW:
