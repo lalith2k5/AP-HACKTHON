@@ -14,6 +14,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from storesignal.config_loader import load_config
+from storesignal.api_envelope import install as install_envelope
 from storesignal.security import (
     audit,
     check_idempotency,

@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from pathlib import Path
 
 from storesignal import settings as _settings
 
@@ -99,9 +98,6 @@ def transition(
                 "from": from_state, "allowed": sorted(allowed)}
     if is_override and not reason:
         return {"ok": False, "error": "override requires reason"}
-    if to_state in OVERRIDE_REQUIRED_STATES and to_state != "reopened" and not reason:
-        if from_state != "in_progress" and from_state != "resolved":
-            pass  # normal resolution path, no reason needed
     rec = {
         "incident_id": incident_id,
         "from_state": from_state,
