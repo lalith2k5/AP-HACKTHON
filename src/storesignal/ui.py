@@ -91,14 +91,14 @@ def apply_theme() -> None:
             margin-bottom: 12px;
         }}
         h1, h2, h3, h4 {{ color: var(--ss-fg); }}
-        @media (max-width: 780px) {
+        @media (max-width: 780px) {{
             .ss-hero {{ padding: 32px 20px; }}
             .ss-hero h1 {{ font-size: 26px; }}
             .ss-kpi {{ font-size: 22px; }}
             .ss-card {{ padding: 12px; }}
             section[data-testid="stSidebar"] {{ width: 200px !important; }}
             div[data-testid="stHorizontalBlock"] {{ flex-direction: column; }}
-        }
+        }}
         </style>
         """,
         unsafe_allow_html=True,

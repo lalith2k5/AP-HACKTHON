@@ -257,25 +257,37 @@ def action_recommendations(incident_id: str) -> list[dict]:
     ]
 
 
-CITY_COORDS = {
-    "Hyderabad": (17.3850, 78.4867),
-    "Bangalore": (12.9716, 77.5946),
-    "Bengaluru": (12.9716, 77.5946),
-    "Mumbai":    (19.0760, 72.8777),
-    "Pune":      (18.5204, 73.8567),
-    "Delhi":     (28.6139, 77.2090),
-    "New Delhi": (28.6139, 77.2090),
+CITY_PREFIX_COORDS = {
+    "DEL": (28.6139, 77.2090),
+    "BOM": (19.0760, 72.8777),
+    "MUM": (19.0760, 72.8777),
+    "HYD": (17.3850, 78.4867),
+    "BLR": (12.9716, 77.5946),
+    "MAA": (13.0827, 80.2707),
+    "CHN": (13.0827, 80.2707),
+    "CCU": (22.5726, 88.3639),
+    "KOL": (22.5726, 88.3639),
+    "PUN": (18.5204, 73.8567),
+    "PNQ": (18.5204, 73.8567),
+    "AMD": (23.0225, 72.5714),
+    "JAI": (26.9124, 75.7873),
+    "LKO": (26.8467, 80.9462),
+    "KOC": (9.9312, 76.2673),
 }
 
 
-def _region_store_ids(region_id: str) -> set[str]:
+def store_coords() -> dict:
+    """store_id -> (lat, lon), derived from the S-XXX-NNN prefix."""
     p = REF / "store_master.csv"
     if not p.exists():
-        return set()
+        return {}
     df = pd.read_csv(p)
-    if "region_id" not in df.columns or "store_id" not in df.columns:
-        return set()
-    return set(df[df["region_id"] == region_id]["store_id"].astype(str).tolist())
+    out = {}
+    for sid in df["store_id"].astype(str):
+        parts = sid.split("-")
+        if len(parts) >= 2 and parts[1] in CITY_PREFIX_COORDS:
+            out[sid] = CITY_PREFIX_COORDS[parts[1]]
+    return out
 
 
 def filter_by_region(df, region_id: str):
