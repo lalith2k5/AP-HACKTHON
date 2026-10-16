@@ -19,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from storesignal.config_loader import load_config
+from storesignal import auth_oidc
 from storesignal.paths import (
     CODE_ROOT,
     PROCESSED_DIR,
@@ -100,14 +101,34 @@ def audit(event_type, actor, detail="", **extra):
 
 async def require_api_key(
     x_api_key: str | None = Header(default=None),
+    authorization: str | None = Header(default=None),
     x_request_id: str | None = Header(default=None),
 ):
+    # OIDC path (takes precedence when enabled)
+    if auth_oidc.enabled() and authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+        try:
+            claims = auth_oidc.verify_token(token)
+        except auth_oidc.OIDCError as e:
+            audit("auth_failed", "oidc", f"token rejected: {e}",
+                  request_id=x_request_id or "?")
+            raise HTTPException(status_code=401, detail=f"invalid token: {e}")
+        role = auth_oidc.role_from_claims(claims)
+        if role is None:
+            audit("auth_failed", claims.get("sub", "unknown"),
+                  "token has no recognized role",
+                  request_id=x_request_id or "?")
+            raise HTTPException(status_code=403, detail="no recognized role")
+        return {"role": role, "request_id": x_request_id,
+                "sub": claims.get("sub"), "via": "oidc"}
+
+    # Legacy static key path
     role = resolve_role(x_api_key)
     if role is None:
         audit("auth_failed", "unknown", "invalid or missing api key",
               request_id=x_request_id or "?")
         raise HTTPException(status_code=401, detail="invalid or missing API key")
-    return {"role": role, "request_id": x_request_id}
+    return {"role": role, "request_id": x_request_id, "via": "static_key"}
 
 
 def require_permission(permission):
