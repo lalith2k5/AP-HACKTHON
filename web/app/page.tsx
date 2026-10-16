@@ -300,7 +300,7 @@ export default function WelcomePage() {
           </h2>
           <p className="lede" style={{ maxWidth: 540, margin: "20px auto 0" }}>
             The full walkthrough is in the demo script. The workspace runs
-            locally, on simulated data, without any cloud dependency.
+            locally on demo data, without any cloud dependency.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 40 }}>
             <Link href="/overview" className="btn btn-primary btn-lg">
