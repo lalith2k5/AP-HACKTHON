@@ -130,7 +130,7 @@ def import_data(
     channel: str = typer.Option(None, "--channel", help="Force channel for all rows"),
 ):
     """Import an external feedback file through the validation wizard."""
-    from storesignal.import_wizard import preview, run_import, mapping_template
+    from storesignal.import_wizard import mapping_template, preview, run_import
 
     src = Path(source).expanduser().resolve()
     if not src.exists():

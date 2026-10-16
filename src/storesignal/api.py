@@ -42,6 +42,7 @@ app = FastAPI(
     version="0.3.0",
     description="Voice-of-Store Engine — early-warning and incident-resolution intelligence layer.",
 )
+install_envelope(app)
 
 install_security(app)
 
@@ -103,32 +104,25 @@ def _coerce(value):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "artifacts_ready": {
-        "predictions": (PROC / "predictions.parquet").exists(),
-        "escalations": (PROC / "escalations.parquet").exists(),
-        "incidents":   (PROC / "incidents.parquet").exists(),
-        "alerts":      (PROC / "alerts.parquet").exists(),
-        "forecasts":   (PROC / "forecasts.parquet").exists(),
-        "briefs":      (PROC / "briefs").exists(),
-    }}
-
-
-# ---------------------------------------------------------------------------
-# Feedback ingestion (idempotency-aware)
-# ---------------------------------------------------------------------------
-@app.post("/api/v1/feedback",
-          dependencies=[Depends(require_permission("ingest"))])
-def ingest_one(
-    rec: FeedbackIn,
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
-):
-    cached = check_idempotency(idempotency_key)
-    if cached:
-        return {**cached["response"], "idempotent_replay": True}
-    payload = {"status": "accepted", "record_id": rec.record_id}
-    store_idempotency(idempotency_key, "POST /api/v1/feedback", payload)
-    audit("feedback_ingest", "api", rec.record_id, channel=rec.channel)
-    return payload
+    """Liveness + readiness. Never exposes secrets."""
+    from storesignal import settings as _s
+    from storesignal.import_wizard import IMPORT_DIR
+    errs = _s.validate_startup()
+    model_ok = (_s.MODEL_DIR / "baseline_model.joblib").exists()
+    demo = _s.DEMO_MODE
+    return {
+        "status": "ok" if not errs else "degraded",
+        "version": "0.2.0",
+        "readiness": {
+            "config": not any("config" in e for e in errs),
+            "model": model_ok,
+            "data_dir": _s.DATA_DIR.exists(),
+            "imports_dir": IMPORT_DIR.exists(),
+            "errors": errs,
+        },
+        "demo_mode": demo,
+        "env": _s.ENV,
+    }
 
 
 @app.post("/api/v1/feedback/batch",

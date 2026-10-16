@@ -8,7 +8,6 @@ report, writes an immutable raw artifact, and records an import batch.
 Used by the CLI (`storesignal import`) and the API (`POST /api/v1/ingest`).
 """
 import csv
-import io
 import json
 import time
 import uuid

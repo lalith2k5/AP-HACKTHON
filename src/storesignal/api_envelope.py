@@ -2,6 +2,7 @@
 StoreSignal AI - API response envelope + cursor pagination helpers (spec 14.1/14.4).
 """
 from __future__ import annotations
+
 from typing import Any
 
 from fastapi import Request
