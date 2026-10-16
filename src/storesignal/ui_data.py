@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pandas as pd
 
@@ -131,3 +130,59 @@ def category_distribution() -> pd.DataFrame | None:
              .reset_index(name="count")
              .sort_values("count", ascending=False).head(12))
     return agg
+
+
+def action_recommendations(incident_id: str) -> list[dict]:
+    """Deterministic recommendation playbook keyed off the incident category."""
+    inc = incidents()
+    if inc is None or inc.empty or "incident_id" not in inc.columns:
+        return []
+    rows = inc[inc["incident_id"].astype(str) == incident_id]
+    if rows.empty:
+        return []
+    row = rows.iloc[0]
+    cat = str(row.get("category", row.get("predicted_category", "unknown")))
+    sev = str(row.get("severity", "medium")).lower()
+    urgency = {"critical": "critical", "high": "high",
+               "medium": "medium", "low": "low"}.get(sev, "medium")
+    playbook = {
+        "refrigeration_equipment": [
+            ("Inspect freezer immediately", "Store Ops", "2-4 hrs",
+             "Prevent food-safety risk"),
+            ("Escalate to maintenance team", "Maintenance", "4-8 hrs",
+             "Restore cold chain"),
+        ],
+        "availability_stockout": [
+            ("Trigger replenishment order", "Supply Chain", "1-2 hrs",
+             "Recover lost sales"),
+            ("Audit planogram compliance", "Merchandising", "2-3 hrs",
+             "Prevent repeat"),
+        ],
+        "allergen_risk": [
+            ("Verify allergen labeling on shelf", "Food Safety", "1 hr",
+             "Prevent regulatory exposure"),
+            ("Remove ambiguous product", "Store Ops", "30 min",
+             "Immediate safety"),
+        ],
+        "staff_conduct_misconduct": [
+            ("Log restricted case with HR", "HR", "1 hr",
+             "Compliance"),
+            ("Preserve evidence record", "HR", "30 min",
+             "Due process"),
+        ],
+        "food_safety_or_hygiene": [
+            ("Hygiene sweep and log", "Store Ops", "2-4 hrs",
+             "Prevent safety incident"),
+            ("Review CCTV segment", "Store Ops", "1 hr",
+             "Confirm conditions"),
+        ],
+    }
+    default = [
+        ("Acknowledge and triage", "Store Ops", "1 hr", "Reduce MTTR"),
+        ("Assign owner with SLA", "Store Ops", "30 min", "Accountability"),
+    ]
+    actions = playbook.get(cat, default)
+    return [
+        {"action": a, "owner": o, "effort": e, "benefit": b, "urgency": urgency}
+        for a, o, e, b in actions
+    ]

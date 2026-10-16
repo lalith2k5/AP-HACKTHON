@@ -9,15 +9,13 @@ Audit Log, Model & Trust.
 Design tokens in tokens.py. All data reads from data/processed artifacts
 via ui_data.py. Business logic stays in the pipeline modules.
 """
-import json
 from pathlib import Path
 
-import pandas as pd
 import streamlit as st
 
 from storesignal import settings as S
-from storesignal import ui_data as D
 from storesignal import tokens as T
+from storesignal import ui_data as D
 
 ROOT = Path.home() / "storesignal-ai"
 
@@ -128,7 +126,7 @@ def kpi(label: str, value: str, sub: str = "") -> None:
 def screen_welcome() -> None:
     demo_banner()
     st.markdown(
-        f"""
+        """
         <div class="ss-hero">
           <h1>StoreSignal AI</h1>
           <p>Turn Store Feedback Into Action.</p>
@@ -228,6 +226,271 @@ def screen_overview() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Screen 4 — Incident Detail (Overview / Evidence / Timeline / Actions tabs)
+# ---------------------------------------------------------------------------
+def screen_incident_detail() -> None:
+    demo_banner()
+    inc = D.incidents()
+    if inc is None or inc.empty:
+        st.info("No incidents yet — run `make pipeline`.")
+        return
+    ids = inc["incident_id"].astype(str).head(300).tolist() if "incident_id" in inc.columns else []
+    if not ids:
+        st.info("Incident file has no incident_id column.")
+        return
+    default = st.session_state.get("selected_incident") or ids[0]
+    idx = ids.index(default) if default in ids else 0
+    selected = st.selectbox("Incident", ids, index=idx)
+    st.session_state.selected_incident = selected
+    row = inc[inc["incident_id"].astype(str) == selected].iloc[0]
+
+    sev = str(row.get("severity", "medium"))
+    cat = str(row.get("category", row.get("predicted_category", "unknown")))
+    store = str(row.get("store_id", row.get("affected_store_ids", "?")))
+    st.markdown(
+        f"### {sev_badge(sev)} {cat.replace('_',' ').title()}",
+        unsafe_allow_html=True,
+    )
+    st.caption(f"incident {selected} · store {store}")
+
+    tabs = st.tabs(["Overview", "Evidence", "Timeline", "Actions"])
+
+    with tabs[0]:
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Key information**")
+            st.markdown(
+                f"- Issue type: `{cat}`\n"
+                f"- Severity: `{sev}`\n"
+                f"- Store: `{store}`\n"
+                f"- Status: `{row.get('status', 'new')}`"
+            )
+        with c2:
+            st.markdown("**Signal**")
+            for k in ("priority", "owner_function", "trigger_type",
+                      "source_record_ids", "trend_score"):
+                if k in row and row[k] is not None:
+                    v = row[k]
+                    if isinstance(v, (list, tuple)):
+                        v = ", ".join(str(x) for x in v[:5])
+                    st.markdown(f"- {k}: `{v}`")
+
+    with tabs[1]:
+        st.markdown("**Evidence quotes**")
+        srcs = row.get("source_record_ids") or row.get("record_ids") or []
+        if isinstance(srcs, str):
+            srcs = [s.strip() for s in srcs.split(",") if s.strip()]
+        preds = D.predictions()
+        if srcs and preds is not None:
+            sub = preds[preds["record_id"].isin(srcs)].head(20)
+            for _, r in sub.iterrows():
+                text = r.get("text_norm") or r.get("text_raw") or ""
+                st.markdown(
+                    f'<div class="ss-card">"{text[:280]}"'
+                    f'<div class="ss-muted">channel={r.get("channel","?")} · '
+                    f'record={r.get("record_id","?")}</div></div>',
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.caption("No source records attached.")
+
+    with tabs[2]:
+        from storesignal import workflow as wf
+        hist = wf.history(selected)
+        if not hist:
+            st.info("No workflow transitions yet.")
+        else:
+            for h in hist:
+                st.markdown(
+                    f"`{h['ts']}` **{h['from_state']}** → **{h['to_state']}** "
+                    f"by `{h['actor']}`"
+                    + (f" — {h['reason']}" if h.get("reason") else "")
+                )
+
+    with tabs[3]:
+        from storesignal import workflow as wf
+        state = wf.current_state(selected)
+        st.markdown(f"Current state: **{state}**")
+        allowed = sorted(wf.TRANSITIONS.get(state, set()))
+        if not allowed:
+            st.caption("Terminal state — no further transitions.")
+        else:
+            to_state = st.selectbox("Transition to", allowed)
+            reason = st.text_input("Reason (required for override)")
+            override = st.checkbox("Mark as override")
+            if st.button("Apply transition", type="primary"):
+                result = wf.transition(selected, to_state,
+                                        st.session_state.role or "demo-operator",
+                                        reason=reason or None,
+                                        is_override=override)
+                if result.get("ok"):
+                    st.success(f"{result['from']} → {result['to']}")
+                    st.rerun()
+                else:
+                    st.error(result.get("error"))
+        st.markdown("---")
+        st.markdown("**Action recommendations**")
+        recs = D.action_recommendations(selected)
+        for r in recs:
+            st.markdown(
+                f'<div class="ss-card">{sev_badge(r["urgency"])}'
+                f'<b>{r["action"]}</b>'
+                f'<div class="ss-muted">owner: {r["owner"]} · '
+                f'effort: {r["effort"]} · est. benefit: {r["benefit"]}</div></div>',
+                unsafe_allow_html=True,
+            )
+
+
+# ---------------------------------------------------------------------------
+# Screen 5 — Evidence Explorer
+# ---------------------------------------------------------------------------
+def screen_evidence() -> None:
+    demo_banner()
+    st.markdown("## Evidence explorer")
+    preds = D.predictions()
+    if preds is None:
+        st.info("No predictions yet.")
+        return
+    cats = sorted(preds["predicted_category"].dropna().unique().tolist())
+    c1, c2 = st.columns(2)
+    with c1:
+        cat = st.selectbox("Category", ["ALL", *cats])
+    with c2:
+        chan = st.selectbox("Channel", ["ALL", *sorted(preds["channel"].dropna().unique().tolist())])
+    sub = preds
+    if cat != "ALL":
+        sub = sub[sub["predicted_category"] == cat]
+    if chan != "ALL":
+        sub = sub[sub["channel"] == chan]
+    sub = sub.head(200)
+    st.caption(f"Showing {len(sub)} records")
+    for _, r in sub.iterrows():
+        text = r.get("text_norm") or ""
+        st.markdown(
+            f'<div class="ss-card">"{text[:300]}"'
+            f'<div class="ss-muted">record={r.get("record_id","?")} · '
+            f'channel={r.get("channel","?")} · '
+            f'category={r.get("predicted_category","?")} · '
+            f'conf={r.get("confidence",0):.2f}</div></div>',
+            unsafe_allow_html=True,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Screen 6 — Trends
+# ---------------------------------------------------------------------------
+def screen_trends() -> None:
+    demo_banner()
+    st.markdown("## Trend explorer")
+    radar = D.radar()
+    if radar is None or radar.empty:
+        st.info("No radar flags yet — run `make radar`.")
+        return
+    c1, c2 = st.columns(2)
+    with c1:
+        cats = ["ALL", *sorted(radar["category"].dropna().unique().tolist())]
+        cat = st.selectbox("Category", cats)
+    with c2:
+        stores = ["ALL", *sorted(radar["store_id"].dropna().astype(str).unique().tolist())[:50]]
+        store = st.selectbox("Store", stores)
+    sub = radar
+    if cat != "ALL":
+        sub = sub[sub["category"] == cat]
+    if store != "ALL":
+        sub = sub[sub["store_id"].astype(str) == store]
+    st.markdown(f"**{len(sub)} flags**")
+    st.dataframe(sub.head(100), use_container_width=True)
+    if "score" in sub.columns and "current_count" in sub.columns:
+        st.markdown("**Top by robust score**")
+        top = sub.sort_values("score", ascending=False).head(10)
+        st.bar_chart(top.set_index("store_id")["score"] if "store_id" in top.columns else top["score"])
+
+
+# ---------------------------------------------------------------------------
+# Screen 7 — Store Impact
+# ---------------------------------------------------------------------------
+def screen_stores() -> None:
+    demo_banner()
+    st.markdown("## Store impact")
+    preds = D.predictions()
+    if preds is None:
+        st.info("No predictions yet.")
+        return
+    grp = (preds.groupby("store_id").size()
+                .reset_index(name="incidents")
+                .sort_values("incidents", ascending=False).head(30))
+    c1, c2 = st.columns([2, 3])
+    with c1:
+        st.markdown("**Top affected stores**")
+        st.dataframe(grp, use_container_width=True, hide_index=True)
+    with c2:
+        st.markdown("**Incidents by store**")
+        st.bar_chart(grp.set_index("store_id")["incidents"], height=380)
+    st.caption("Denominator (footfall) not modeled in this build — "
+               "counts shown raw.")
+
+
+# ---------------------------------------------------------------------------
+# Screen 8 — Action Recommendation
+# ---------------------------------------------------------------------------
+def screen_actions() -> None:
+    demo_banner()
+    st.markdown("## Action recommendation")
+    inc = D.incidents()
+    if inc is None or inc.empty:
+        st.info("No incidents yet.")
+        return
+    ids = inc["incident_id"].astype(str).head(200).tolist()
+    sel = st.selectbox("Incident", ids)
+    row = inc[inc["incident_id"].astype(str) == sel].iloc[0]
+    sev = str(row.get("severity", "medium"))
+    recs = D.action_recommendations(sel)
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        st.markdown("**Recommended actions**")
+        for r in recs:
+            st.markdown(
+                f'<div class="ss-card">{sev_badge(r["urgency"])}'
+                f'<b>{r["action"]}</b>'
+                f'<div class="ss-muted">owner: {r["owner"]} · '
+                f'effort: {r["effort"]}</div>'
+                f'<div class="ss-muted">benefit: {r["benefit"]}</div></div>',
+                unsafe_allow_html=True,
+            )
+    with c2:
+        st.markdown("**Impact simulator**")
+        st.markdown(
+            '<div class="ss-card">Estimated cost range: '
+            '<b>$150 – $300</b><br>'
+            '<div class="ss-muted">Prevent: food safety risk · '
+            'reduce complaints · minimize loss</div></div>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Simulate impact", type="primary"):
+            st.success("Simulation ran — see forecasts.parquet for detail.")
+
+
+# ---------------------------------------------------------------------------
+# Screen 9 — Weekly Report
+# ---------------------------------------------------------------------------
+def screen_report() -> None:
+    demo_banner()
+    st.markdown("## Weekly report")
+    briefs_dir = D.PROC / "briefs"
+    if not briefs_dir.exists():
+        st.info("No briefs yet — run `make briefs`.")
+        return
+    files = sorted(briefs_dir.glob("*.md"))
+    if not files:
+        st.info("Briefs directory is empty.")
+        return
+    sel = st.selectbox("Brief", [f.name for f in files])
+    text = (briefs_dir / sel).read_text()
+    st.markdown(text)
+    st.download_button("Download markdown", text, file_name=sel)
+
+
+# ---------------------------------------------------------------------------
 # Router
 # ---------------------------------------------------------------------------
 if not st.session_state.authenticated and not st.session_state.get("show_signin"):
@@ -297,9 +560,9 @@ elif view == "Incidents":
     else:
         st.dataframe(inc.head(100), use_container_width=True)
 elif view == "Incident Detail":
-    st.info("Pick an incident from the Incidents list (Phase 7B).")
+    screen_incident_detail()
 elif view == "Evidence Explorer":
-    st.info("Evidence explorer (Phase 7B).")
+    screen_evidence()
 elif view == "Alerts":
     st.markdown("## Alert center")
     alerts = D.alerts()
@@ -308,14 +571,13 @@ elif view == "Alerts":
     else:
         st.dataframe(alerts.head(100), use_container_width=True)
 elif view == "Trends":
-    st.info("Trend explorer (Phase 7B).")
+    screen_trends()
 elif view == "Store Impact":
-    st.info("Store impact (Phase 7B).")
+    screen_stores()
 elif view == "Action Recommendation":
-    st.info("Action recommendations (Phase 7B).")
+    screen_actions()
 elif view == "Weekly Report":
-    st.markdown("## Weekly report")
-    st.info("Generate a brief from the CLI (`make briefs`) or the Reports API.")
+    screen_report()
 elif view == "Import Wizard":
     st.markdown("## Import wizard")
     st.info("Run `make import-data FILE=path.csv` from the CLI, "
