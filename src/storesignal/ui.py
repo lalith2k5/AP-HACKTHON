@@ -91,6 +91,14 @@ def apply_theme() -> None:
             margin-bottom: 12px;
         }}
         h1, h2, h3, h4 {{ color: var(--ss-fg); }}
+        @media (max-width: 780px) {
+            .ss-hero {{ padding: 32px 20px; }}
+            .ss-hero h1 {{ font-size: 26px; }}
+            .ss-kpi {{ font-size: 22px; }}
+            .ss-card {{ padding: 12px; }}
+            section[data-testid="stSidebar"] {{ width: 200px !important; }}
+            div[data-testid="stHorizontalBlock"] {{ flex-direction: column; }}
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -98,6 +106,18 @@ def apply_theme() -> None:
 
 
 apply_theme()
+
+
+def user_can(permission: str) -> bool:
+    """UI-side permission check against security.PERMISSIONS."""
+    from storesignal import security as _sec
+    role = st.session_state.get("role") or "anonymous"
+    return _sec.has_permission(role, permission)
+
+
+def user_is_sensitive() -> bool:
+    from storesignal import security as _sec
+    return _sec.can_access_sensitive(st.session_state.get("role") or "")
 
 
 def demo_banner() -> None:
@@ -181,7 +201,7 @@ def screen_signin() -> None:
 def screen_overview() -> None:
     demo_banner()
     st.markdown("## Overview")
-    metrics = D.overview_metrics()
+    metrics = D.overview_metrics(region=st.session_state.region)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         kpi("Total feedback", f"{metrics['total']:,}", "across 4 channels")
@@ -213,7 +233,7 @@ def screen_overview() -> None:
 
     st.write("")
     st.markdown("#### Urgent queue")
-    alerts = D.alerts()
+    alerts = D.filter_by_region(D.alerts(), st.session_state.region)
     if alerts is not None and not alerts.empty:
         urgent = alerts.sort_values("priority", ascending=False).head(8)
         for _, r in urgent.iterrows():
@@ -431,8 +451,22 @@ def screen_stores() -> None:
     with c2:
         st.markdown("**Incidents by store**")
         st.bar_chart(grp.set_index("store_id")["incidents"], height=380)
-    st.caption("Denominator (footfall) not modeled in this build — "
-               "counts shown raw.")
+
+    st.markdown("#### Geographic view")
+    coords = D.store_coords()
+    rows = []
+    for _, r in grp.iterrows():
+        sid = str(r["store_id"])
+        if sid in coords:
+            lat, lon = coords[sid]
+            rows.append({"lat": lat, "lon": lon,
+                         "store": sid, "incidents": int(r["incidents"])})
+    if rows:
+        st.map(pd.DataFrame(rows), latitude="lat", longitude="lon",
+               size="incidents", zoom=4)
+    else:
+        st.caption("No coordinate data for current stores.")
+    st.caption("Denominator (footfall) not modeled in this build — counts shown raw.")
 
 
 # ---------------------------------------------------------------------------
@@ -470,7 +504,18 @@ def screen_actions() -> None:
             unsafe_allow_html=True,
         )
         if st.button("Simulate impact", type="primary"):
-            st.success("Simulation ran — see forecasts.parquet for detail.")
+            fc = D.forecasts()
+            if fc is None or fc.empty:
+                st.warning("No forecast artifacts — run `make forecast`.")
+            else:
+                row = fc[fc.get("store_id", pd.Series(dtype=str)) ==
+                         inc[inc["incident_id"].astype(str) == sel].iloc[0].get("store_id")]
+                if row.empty:
+                    st.info("No forecast rows for this store yet.")
+                    st.dataframe(fc.head(10), use_container_width=True)
+                else:
+                    st.success(f"Forecast rows for store: {len(row)}")
+                    st.dataframe(row.head(20), use_container_width=True)
 
 
 # ---------------------------------------------------------------------------
@@ -490,7 +535,26 @@ def screen_report() -> None:
     sel = st.selectbox("Brief", [f.name for f in files])
     text = (briefs_dir / sel).read_text()
     st.markdown(text)
-    st.download_button("Download markdown", text, file_name=sel)
+    c1, c2 = st.columns(2)
+    with c1:
+        st.download_button("Download markdown", text, file_name=sel)
+    with c2:
+        if user_can("generate_brief"):
+            if st.button("Regenerate all briefs"):
+                import subprocess
+                res = subprocess.run(
+                    [str(Path.home() / "storesignal-ai" / ".venv" / "bin" / "python"),
+                     "-m", "storesignal.briefs"],
+                    cwd=str(Path.home() / "storesignal-ai"),
+                    capture_output=True, text=True,
+                )
+                if res.returncode == 0:
+                    st.success("Briefs regenerated.")
+                    st.rerun()
+                else:
+                    st.error(f"Regeneration failed: {res.stderr[-300:]}")
+        else:
+            st.caption("Role lacks 'generate_brief' permission.")
 
 
 # ---------------------------------------------------------------------------
@@ -711,7 +775,7 @@ if view == "Overview":
     screen_overview()
 elif view == "Incidents":
     st.markdown("## Incidents")
-    inc = D.incidents()
+    inc = D.filter_by_region(D.incidents(), st.session_state.region)
     if inc is None or inc.empty:
         st.info("No incidents yet — run `make pipeline`.")
     else:
@@ -722,7 +786,7 @@ elif view == "Evidence Explorer":
     screen_evidence()
 elif view == "Alerts":
     st.markdown("## Alert center")
-    alerts = D.alerts()
+    alerts = D.filter_by_region(D.alerts(), st.session_state.region)
     if alerts is None or alerts.empty:
         st.info("No alerts yet.")
     else:

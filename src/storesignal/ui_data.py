@@ -89,10 +89,10 @@ def audit_log() -> pd.DataFrame | None:
     return pd.DataFrame(rows) if rows else None
 
 
-def overview_metrics() -> dict:
-    p = predictions()
-    inc = incidents()
-    alerts_df = alerts()
+def overview_metrics(region: str = "ALL") -> dict:
+    p = filter_by_region(predictions(), region)
+    inc = filter_by_region(incidents(), region)
+    alerts_df = filter_by_region(alerts(), region)
     esc = escalations()
     total = 0 if p is None else len(p)
     open_inc = 0 if inc is None else len(inc)
@@ -255,3 +255,47 @@ def action_recommendations(incident_id: str) -> list[dict]:
         {"action": a, "owner": o, "effort": e, "benefit": b, "urgency": urgency}
         for a, o, e, b in actions
     ]
+
+
+CITY_COORDS = {
+    "Hyderabad": (17.3850, 78.4867),
+    "Bangalore": (12.9716, 77.5946),
+    "Bengaluru": (12.9716, 77.5946),
+    "Mumbai":    (19.0760, 72.8777),
+    "Pune":      (18.5204, 73.8567),
+    "Delhi":     (28.6139, 77.2090),
+    "New Delhi": (28.6139, 77.2090),
+}
+
+
+def _region_store_ids(region_id: str) -> set[str]:
+    p = REF / "store_master.csv"
+    if not p.exists():
+        return set()
+    df = pd.read_csv(p)
+    if "region_id" not in df.columns or "store_id" not in df.columns:
+        return set()
+    return set(df[df["region_id"] == region_id]["store_id"].astype(str).tolist())
+
+
+def filter_by_region(df, region_id: str):
+    if df is None or region_id in (None, "ALL", ""):
+        return df
+    ids = _region_store_ids(region_id)
+    if not ids or "store_id" not in df.columns:
+        return df
+    return df[df["store_id"].astype(str).isin(ids)]
+
+
+def store_coords() -> dict:
+    """store_id -> (lat, lon) via city lookup in store_master.csv."""
+    p = REF / "store_master.csv"
+    if not p.exists():
+        return {}
+    df = pd.read_csv(p)
+    out = {}
+    for _, r in df.iterrows():
+        city = str(r.get("city", "")).strip()
+        if city in CITY_COORDS and r.get("store_id"):
+            out[str(r["store_id"])] = CITY_COORDS[city]
+    return out
