@@ -112,7 +112,7 @@ async def require_api_key(
         except auth_oidc.OIDCError as e:
             audit("auth_failed", "oidc", f"token rejected: {e}",
                   request_id=x_request_id or "?")
-            raise HTTPException(status_code=401, detail=f"invalid token: {e}")
+            raise HTTPException(status_code=401, detail=f"invalid token: {e}") from e
         role = auth_oidc.role_from_claims(claims)
         if role is None:
             audit("auth_failed", claims.get("sub", "unknown"),

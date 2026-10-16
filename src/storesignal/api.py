@@ -103,6 +103,70 @@ async def _rate_limit_middleware(request: Request, call_next):
     bucket.append(now)
     return await call_next(request)
 
+
+# ---------------------------------------------------------------------------
+# Global auth middleware
+# Requires auth on all /api/v1/* when require_api_key is true.
+# Public: /health, OPTIONS preflight, and a small explicit allowlist.
+# Accepts: x-api-key (static) OR Authorization: Bearer <JWT> (OIDC).
+# ---------------------------------------------------------------------------
+_AUTH_PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
+
+
+@app.middleware("http")
+async def _auth_middleware(request: Request, call_next):
+    # Always allow preflight and public endpoints
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    path = request.url.path
+    if path in _AUTH_PUBLIC_PATHS or not path.startswith("/api/"):
+        return await call_next(request)
+
+    # Enforce only when configured
+    if not _cfg.api.require_api_key and not _oidc_enabled():
+        return await call_next(request)
+
+    # Try OIDC Bearer first
+    authz = request.headers.get("authorization", "")
+    if _oidc_enabled() and authz.lower().startswith("bearer "):
+        token = authz.split(" ", 1)[1].strip()
+        try:
+            claims = _oidc_verify(token)
+        except Exception as e:
+            audit("auth_failed", "oidc", f"token rejected: {e}")
+            return JSONResponse(
+                status_code=401,
+                content={"error": {"code": "UNAUTHORIZED",
+                                   "message": f"invalid token: {e}"}},
+            )
+        role = _oidc_role(claims)
+        if role is None:
+            audit("auth_failed", claims.get("sub", "unknown"),
+                  "token has no recognized role")
+            return JSONResponse(
+                status_code=403,
+                content={"error": {"code": "FORBIDDEN",
+                                   "message": "no recognized role"}},
+            )
+        request.state.role = role
+        request.state.auth_via = "oidc"
+        return await call_next(request)
+
+    # Fall back to static key
+    key = request.headers.get("x-api-key")
+    role = _resolve_role(key)
+    if role is None:
+        audit("auth_failed", "unknown",
+              f"missing or invalid key on {path}")
+        return JSONResponse(
+            status_code=401,
+            content={"error": {"code": "UNAUTHORIZED",
+                               "message": "invalid or missing API key"}},
+        )
+    request.state.role = role
+    request.state.auth_via = "static_key"
+    return await call_next(request)
+
 install_envelope(app)
 
 install_security(app)
@@ -285,6 +349,34 @@ class AlertAck(BaseModel):
     actor: str = Field(default="demo-operator")
     note: str | None = None
     decision: str | None = None
+
+
+
+
+# ---------------------------------------------------------------------------
+# Auth helper shims (used by _auth_middleware)
+# ---------------------------------------------------------------------------
+def _oidc_enabled():
+    try:
+        from storesignal import auth_oidc
+        return auth_oidc.enabled()
+    except Exception:
+        return False
+
+
+def _oidc_verify(token):
+    from storesignal import auth_oidc
+    return auth_oidc.verify_token(token)
+
+
+def _oidc_role(claims):
+    from storesignal import auth_oidc
+    return auth_oidc.role_from_claims(claims)
+
+
+def _resolve_role(key):
+    from storesignal.security import resolve_role
+    return resolve_role(key)
 
 
 # ---------------------------------------------------------------------------
