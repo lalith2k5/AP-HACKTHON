@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -12,6 +12,8 @@ type Incident = {
   predicted_category: string;
   owner_function: string;
   severity: string;
+  status?: string;
+  priority?: string;
   first_seen: string;
   last_seen: string;
   record_count: number;
@@ -19,6 +21,15 @@ type Incident = {
   sample_text: string;
   verification_status: string;
   evidence?: string[];
+  notes?: { ts: string; actor: string; note: string }[];
+};
+
+type TimelineEvent = {
+  ts: string;
+  kind: string;
+  label: string;
+  actor?: string;
+  reason?: string;
 };
 
 const TABS = ["Overview", "Evidence", "Timeline", "Actions"] as const;
@@ -31,30 +42,47 @@ const SEV_COLOR: Record<string, string> = {
   low: "var(--status-low)",
 };
 
+const STATUSES = ["new", "triaged", "assigned", "in_progress", "resolved", "verified_closed", "reopened", "needs_review"];
+const OWNERS = ["Store Ops", "Supply Chain", "Merchandising", "HR", "Risk", "Food Safety", "Digital", "Maintenance", "Finance"];
+
 export default function IncidentDetailClient() {
   const params = useParams();
   const id = (params && (params.id as string)) || "";
   const [data, setData] = useState<Incident | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("Overview");
+  const [flash, setFlash] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    try {
+      const d = (await endpoints.incident(id)) as Incident;
+      setData(d);
+    } catch (e) {
+      setErr((e as ApiError).message);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
-    (async () => {
-      try {
-        const d = (await endpoints.incident(id)) as Incident;
-        setData(d);
-      } catch (e) {
-        setErr((e as ApiError).message);
-      }
-    })();
-  }, [id]);
+    reload();
+  }, [id, reload]);
+
+  function notify(msg: string) {
+    setFlash(msg);
+    setTimeout(() => setFlash(null), 2500);
+  }
 
   return (
     <AppShell active="/incidents" title={"Incident " + id}>
       <Link href="/incidents" className="mb-4 inline-block text-xs text-muted-foreground hover:text-foreground">
         ← All incidents
       </Link>
+
+      {flash && (
+        <div className="mb-4 rounded-lg border border-[var(--status-ok)]/30 bg-[color-mix(in_oklch,var(--status-ok),transparent_92%)] px-3 py-2 text-xs text-[var(--status-ok)]">
+          {flash}
+        </div>
+      )}
 
       {err && (
         <div className="rounded-xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-4 text-sm text-[var(--status-critical)]">
@@ -74,6 +102,9 @@ export default function IncidentDetailClient() {
               <span>{data.record_count} records</span>
               <span className="font-medium uppercase" style={{ color: SEV_COLOR[data.severity] }}>
                 {data.severity}
+              </span>
+              <span className="rounded bg-muted px-1.5 py-0.5 font-medium uppercase">
+                {data.status ?? "new"}
               </span>
               <span className="rounded bg-muted px-1.5 py-0.5">{data.verification_status}</span>
             </div>
@@ -100,8 +131,8 @@ export default function IncidentDetailClient() {
 
           {tab === "Overview" && <TabOverview d={data} />}
           {tab === "Evidence" && <TabEvidence d={data} />}
-          {tab === "Timeline" && <TabTimeline d={data} />}
-          {tab === "Actions" && <TabActions />}
+          {tab === "Timeline" && <TabTimeline id={id} />}
+          {tab === "Actions" && <TabActions id={id} d={data} onDone={reload} notify={notify} />}
         </>
       )}
     </AppShell>
@@ -114,6 +145,7 @@ function TabOverview({ d }: { d: Incident }) {
     ["Store", d.store_id],
     ["Owner", d.owner_function],
     ["Severity", d.severity],
+    ["Status", d.status ?? "new"],
     ["Verification", d.verification_status],
     ["Channels", d.channels.split("|").join(", ")],
     ["First seen", d.first_seen],
@@ -155,48 +187,178 @@ function TabEvidence({ d }: { d: Incident }) {
   );
 }
 
-function TabTimeline({ d }: { d: Incident }) {
+function TabTimeline({ id }: { id: string }) {
+  const [events, setEvents] = useState<TimelineEvent[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const d = (await endpoints.timeline(id)) as { events: TimelineEvent[] };
+        setEvents(d.events);
+      } catch (e) {
+        setErr((e as ApiError).message);
+      }
+    })();
+  }, [id]);
+
+  if (err) return <EmptyCard label={err} />;
+  if (!events) return <div className="text-sm text-muted-foreground">Loading timeline…</div>;
+  if (events.length === 0) return <EmptyCard label="No timeline events" />;
+
+  const KIND_COLOR: Record<string, string> = {
+    first_seen: "var(--status-info)",
+    last_seen: "var(--status-high)",
+    override: "var(--status-medium)",
+    note: "var(--status-ok)",
+  };
+
   return (
     <ol className="relative space-y-4 border-l border-border pl-5">
-      <li>
-        <div className="absolute -left-1.5 size-3 rounded-full bg-[var(--status-info)]" />
-        <div className="text-xs text-muted-foreground">First seen</div>
-        <div className="text-sm font-medium">{d.first_seen}</div>
-      </li>
-      <li>
-        <div className="absolute -left-1.5 size-3 rounded-full bg-[var(--status-high)]" />
-        <div className="text-xs text-muted-foreground">Last seen</div>
-        <div className="text-sm font-medium">{d.last_seen}</div>
-      </li>
-      <li className="text-xs text-muted-foreground">
-        Full transition history requires a backend audit endpoint — not implemented yet.
-      </li>
+      {events.map((e, i) => (
+        <li key={i}>
+          <div
+            className="absolute -left-1.5 size-3 rounded-full"
+            style={{ background: KIND_COLOR[e.kind] ?? "var(--muted-foreground)" }}
+          />
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">
+            {e.kind} · {e.ts}
+          </div>
+          <div className="mt-0.5 text-sm">{e.label}</div>
+          {(e.actor || e.reason) && (
+            <div className="mt-1 text-xs text-muted-foreground">
+              {e.actor ? <span>by {e.actor}</span> : null}
+              {e.reason ? <span> · {e.reason}</span> : null}
+            </div>
+          )}
+        </li>
+      ))}
     </ol>
   );
 }
 
-function TabActions() {
+function TabActions({
+  id,
+  d,
+  onDone,
+  notify,
+}: {
+  id: string;
+  d: Incident;
+  onDone: () => Promise<void>;
+  notify: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+  const [owner, setOwner] = useState(d.owner_function);
+  const [status, setStatus] = useState(d.status ?? "new");
+  const [error, setError] = useState<string | null>(null);
+
+  async function run(label: string, fn: () => Promise<unknown>) {
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+      await onDone();
+      notify(label);
+    } catch (e) {
+      setError((e as ApiError).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="space-y-3">
-      <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
-        Action mutations require backend endpoints that do not exist yet:
-        <ul className="mt-2 ml-4 list-disc space-y-0.5 text-xs">
-          <li><code className="font-mono">PATCH /api/v1/incidents/{"{id}"}</code></li>
-          <li><code className="font-mono">POST /api/v1/incidents/{"{id}"}/notes</code></li>
-        </ul>
-        Both are in spec section 14.2 but not implemented. Tab shell ready; buttons ship once endpoints land.
+    <div className="space-y-4">
+      {error && (
+        <div className="rounded-lg border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-3 text-xs text-[var(--status-critical)]">
+          {error}
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-3 text-sm font-semibold tracking-tight">Assign owner & status</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Owner</span>
+            <select
+              value={owner}
+              onChange={(e) => setOwner(e.target.value)}
+              disabled={busy}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            >
+              {OWNERS.map((o) => <option key={o}>{o}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</span>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              disabled={busy}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            >
+              {STATUSES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="mt-3 flex gap-2">
+          <button
+            disabled={busy}
+            onClick={() => run("Incident updated", () =>
+              endpoints.patchIncident(id, { actor: "demo-operator", owner_function: owner, status })
+            )}
+            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {busy ? "Saving…" : "Save changes"}
+          </button>
+          <button
+            disabled={busy}
+            onClick={() => run("Incident resolved", () =>
+              endpoints.patchIncident(id, { actor: "demo-operator", status: "resolved", reason: "Resolved via UI" })
+            )}
+            className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
+          >
+            Mark resolved
+          </button>
+        </div>
       </div>
-      <div className="flex gap-2">
-        <button disabled className="cursor-not-allowed rounded-lg bg-primary px-3 py-1.5 text-sm text-primary-foreground opacity-40">
-          Assign owner
-        </button>
-        <button disabled className="cursor-not-allowed rounded-lg border border-border px-3 py-1.5 text-sm opacity-40">
-          Add note
-        </button>
-        <button disabled className="cursor-not-allowed rounded-lg border border-border px-3 py-1.5 text-sm opacity-40">
-          Resolve
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-3 text-sm font-semibold tracking-tight">Add note</h3>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          disabled={busy}
+          rows={3}
+          placeholder="Investigation update, action taken, follow-up…"
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        />
+        <button
+          disabled={busy || !note.trim()}
+          onClick={() => run("Note added", async () => {
+            await endpoints.addNote(id, { actor: "demo-operator", note });
+            setNote("");
+          })}
+          className="mt-3 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {busy ? "Saving…" : "Add note"}
         </button>
       </div>
+
+      {d.notes && d.notes.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h3 className="mb-3 text-sm font-semibold tracking-tight">Notes ({d.notes.length})</h3>
+          <ul className="space-y-2">
+            {d.notes.map((n, i) => (
+              <li key={i} className="border-l-2 border-border pl-3">
+                <div className="text-xs text-muted-foreground">{n.ts} · {n.actor}</div>
+                <div className="text-sm">{n.note}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

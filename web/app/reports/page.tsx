@@ -4,40 +4,62 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { endpoints, ApiError } from "@/lib/api";
 
+type TopIssue = {
+  category: string;
+  current_count: number;
+  previous_count: number;
+  trend: string;
+  severity: string;
+  owner_function: string;
+  next_action: string;
+  escalation_rule?: string;
+};
+
 type Brief = {
-  region_id?: string;
-  generated_at?: string;
-  period?: { from: string; to: string };
-  executive_summary?: string;
-  top_issues?: { category: string; count: number; severity?: string; stores?: string[] }[];
-  mandatory_risk?: { category: string; count: number; reason?: string }[];
-  evidence?: string[];
+  region_id: string;
+  region_name: string;
+  week_start: string;
+  week_end: string;
+  total_feedback: number;
+  total_feedback_previous_week: number;
+  top_issues: TopIssue[];
+};
+
+const SEV_COLOR: Record<string, string> = {
+  critical: "var(--status-critical)",
+  high: "var(--status-high)",
+  medium: "var(--status-medium)",
+  low: "var(--status-low)",
+};
+
+const TREND_COLOR: Record<string, string> = {
+  UP: "var(--status-critical)",
+  DOWN: "var(--status-ok)",
+  FLAT: "var(--muted-foreground)",
 };
 
 export default function ReportsPage() {
   const [data, setData] = useState<Brief | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [raw, setRaw] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const d = (await endpoints.brief("HYD")) as Brief;
+        const d = (await endpoints.briefWeekly()) as Brief;
         setData(d);
       } catch (e) {
-        const err2 = e as ApiError;
-        setErr(err2.message);
-        // The brief endpoint may return non-JSON / different shape; grab raw as fallback
-        try {
-          const r = await fetch("http://localhost:8790/api/v1/briefs/weekly");
-          const t = await r.text();
-          setRaw(t.slice(0, 2000));
-        } catch {
-          /* ignore */
-        }
+        setErr((e as ApiError).message);
       }
     })();
   }, []);
+
+  const mandatory = data?.top_issues.filter((t) =>
+    (t.escalation_rule ?? "").startsWith("mandatory")
+  ) ?? [];
+
+  const delta = data
+    ? data.total_feedback - data.total_feedback_previous_week
+    : 0;
 
   return (
     <AppShell active="/reports" title="Weekly Report">
@@ -49,64 +71,87 @@ export default function ReportsPage() {
       </div>
 
       {err && (
-        <div className="space-y-3">
-          <div className="rounded-xl border border-[var(--status-medium)]/30 bg-[color-mix(in_oklch,var(--status-medium),transparent_94%)] p-4 text-sm">
-            Brief endpoint returned: {err}
-          </div>
-          {raw && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Raw /api/v1/briefs/weekly (first 2000 chars)
-              </div>
-              <pre className="overflow-auto text-[11px] leading-relaxed">{raw}</pre>
-            </div>
-          )}
+        <div className="rounded-xl border border-[var(--status-medium)]/30 bg-[color-mix(in_oklch,var(--status-medium),transparent_94%)] p-4 text-sm">
+          {err}
         </div>
       )}
 
       {data && (
         <div className="space-y-5">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            {data.region_id && <span>Region {data.region_id}</span>}
-            {data.generated_at && <span>Generated {data.generated_at}</span>}
-            {data.period && (
-              <span>
-                Period {data.period.from} to {data.period.to}
-              </span>
-            )}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Region</div>
+              <div className="mt-1 text-lg font-semibold">{data.region_name}</div>
+              <div className="text-xs text-muted-foreground">{data.region_id}</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Week</div>
+              <div className="mt-1 text-sm font-medium">
+                {data.week_start} → {data.week_end}
+              </div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Feedback</div>
+              <div className="mt-1 text-lg font-semibold">{data.total_feedback.toLocaleString()}</div>
+              <div
+                className="text-xs"
+                style={{ color: delta > 0 ? "var(--status-critical)" : delta < 0 ? "var(--status-ok)" : "var(--muted-foreground)" }}
+              >
+                {delta >= 0 ? "+" : ""}
+                {delta} vs previous week
+              </div>
+            </div>
           </div>
 
-          {data.executive_summary && (
-            <section className="rounded-xl border border-border bg-card p-4">
-              <h3 className="mb-2 text-sm font-semibold tracking-tight">Executive summary</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{data.executive_summary}</p>
-            </section>
-          )}
+          <section>
+            <h3 className="mb-2 text-sm font-semibold tracking-tight">Top issues</h3>
+            <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+              {data.top_issues.map((t) => (
+                <li key={t.category} className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium">{t.category.split("_").join(" ")}</span>
+                        <span
+                          className="text-xs font-medium uppercase"
+                          style={{ color: SEV_COLOR[t.severity] ?? "var(--muted-foreground)" }}
+                        >
+                          {t.severity}
+                        </span>
+                        <span
+                          className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold"
+                          style={{ color: TREND_COLOR[t.trend] }}
+                        >
+                          {t.trend}
+                        </span>
+                      </div>
+                      {t.next_action && (
+                        <p className="mt-1.5 text-xs text-muted-foreground">{t.next_action}</p>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right text-xs">
+                      <div className="font-semibold">{t.current_count}</div>
+                      <div className="text-muted-foreground">prev {t.previous_count}</div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-          {data.top_issues && data.top_issues.length > 0 && (
-            <section>
-              <h3 className="mb-2 text-sm font-semibold tracking-tight">Top issues</h3>
-              <ul className="divide-y divide-border rounded-xl border border-border bg-card">
-                {data.top_issues.map((t) => (
-                  <li key={t.category} className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm">{t.category.split("_").join(" ")}</span>
-                    <span className="text-xs text-muted-foreground">{t.count}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {data.mandatory_risk && data.mandatory_risk.length > 0 && (
+          {mandatory.length > 0 && (
             <section>
               <h3 className="mb-2 text-sm font-semibold tracking-tight text-[var(--status-critical)]">
-                Mandatory-risk section
+                Mandatory-risk section ({mandatory.length})
               </h3>
               <ul className="divide-y divide-border rounded-xl border border-[var(--status-critical)]/30 bg-card">
-                {data.mandatory_risk.map((m) => (
+                {mandatory.map((m) => (
                   <li key={m.category} className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm">{m.category.split("_").join(" ")}</span>
-                    <span className="text-xs text-muted-foreground">{m.count}</span>
+                    <div>
+                      <span className="text-sm">{m.category.split("_").join(" ")}</span>
+                      <span className="ml-2 text-xs text-muted-foreground">{m.owner_function}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{m.current_count}</span>
                   </li>
                 ))}
               </ul>

@@ -6,6 +6,7 @@ idempotency keys, spec-compliant classify response.
 """
 
 import json
+import time
 import uuid
 
 import pandas as pd
@@ -211,6 +212,70 @@ def classify(
 
 
 # ---------------------------------------------------------------------------
+# State overrides (append-only JSONL; latest wins per (id, field))
+# ---------------------------------------------------------------------------
+def _overrides_path(kind):
+    return PROC / f"{kind}_overrides.jsonl"
+
+def _notes_path():
+    return PROC / "incident_notes.jsonl"
+
+def _append_jsonl(path, rec):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
+
+def _read_jsonl(path):
+    if not path.exists():
+        return []
+    out = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                out.append(json.loads(line))
+            except Exception:
+                pass
+    return out
+
+def _latest_overrides(kind, id_field, id_value):
+    state = {}
+    for rec in _read_jsonl(_overrides_path(kind)):
+        if rec.get(id_field) == id_value:
+            state[rec["field"]] = rec["value"]
+    return state
+
+def _apply_overrides(d, kind, id_field, id_value):
+    ov = _latest_overrides(kind, id_field, id_value)
+    for k, v in ov.items():
+        d[k] = v
+    d["_overridden_fields"] = sorted(ov.keys())
+    return d
+
+
+class IncidentPatch(BaseModel):
+    actor: str = Field(default="demo-operator")
+    owner_function: str | None = None
+    owner_id: str | None = None
+    status: str | None = None
+    priority: str | None = None
+    reason: str | None = None
+
+
+class NoteBody(BaseModel):
+    actor: str = Field(default="demo-operator")
+    note: str
+
+
+class AlertAck(BaseModel):
+    actor: str = Field(default="demo-operator")
+    note: str | None = None
+    decision: str | None = None
+
+
+# ---------------------------------------------------------------------------
 # Incidents
 # ---------------------------------------------------------------------------
 @app.get("/api/v1/incidents")
@@ -238,8 +303,79 @@ def get_incident(incident_id: str):
     if row.empty:
         raise HTTPException(status_code=404, detail="incident not found")
     rec = {k: _coerce(v) for k, v in row.iloc[0].to_dict().items()}
+    rec = _apply_overrides(rec, "incident", "incident_id", incident_id)
     rec["evidence"] = links()[links()["incident_id"] == incident_id]["record_id"].tolist()
+    rec["notes"] = [n for n in _read_jsonl(_notes_path()) if n.get("incident_id") == incident_id]
     return rec
+
+
+@app.patch("/api/v1/incidents/{incident_id}")
+def patch_incident(incident_id: str, body: IncidentPatch):
+    """MVP demo: no auth dependency (matches read endpoints in demo mode)."""
+    inc = incidents()
+    row = inc[inc["incident_id"] == incident_id]
+    if row.empty:
+        raise HTTPException(status_code=404, detail="incident not found")
+    before = {k: _coerce(v) for k, v in row.iloc[0].to_dict().items()}
+    before = _apply_overrides(before, "incident", "incident_id", incident_id)
+    updates = body.model_dump(exclude_none=True, exclude={"actor", "reason"})
+    if not updates:
+        raise HTTPException(status_code=422, detail="no fields to update")
+    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    for field, value in updates.items():
+        _append_jsonl(_overrides_path("incident"), {
+            "incident_id": incident_id, "field": field, "value": value,
+            "ts": ts, "actor": body.actor, "reason": body.reason,
+        })
+    audit("incident.status_changed", body.actor, incident_id,
+          before={k: before.get(k) for k in updates},
+          after=updates, reason=body.reason)
+    after = _apply_overrides(before, "incident", "incident_id", incident_id)
+    return {"incident_id": incident_id, "before": before, "after": after}
+
+
+@app.post("/api/v1/incidents/{incident_id}/notes")
+def post_incident_note(incident_id: str, body: NoteBody):
+    inc = incidents()
+    if inc[inc["incident_id"] == incident_id].empty:
+        raise HTTPException(status_code=404, detail="incident not found")
+    if not body.note.strip():
+        raise HTTPException(status_code=422, detail="note cannot be empty")
+    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    rec = {"incident_id": incident_id, "ts": ts, "actor": body.actor, "note": body.note}
+    _append_jsonl(_notes_path(), rec)
+    audit("incident.note_added", body.actor, incident_id,
+          note_preview=body.note[:120])
+    return rec
+
+
+@app.get("/api/v1/incidents/{incident_id}/timeline")
+def incident_timeline(incident_id: str):
+    inc = incidents()
+    row = inc[inc["incident_id"] == incident_id]
+    if row.empty:
+        raise HTTPException(status_code=404, detail="incident not found")
+    r = row.iloc[0]
+    events = []
+    if _coerce(r.get("first_seen")):
+        events.append({"ts": str(_coerce(r.get("first_seen"))), "kind": "first_seen",
+                       "label": "Incident first observed"})
+    if _coerce(r.get("last_seen")):
+        events.append({"ts": str(_coerce(r.get("last_seen"))), "kind": "last_seen",
+                       "label": "Most recent record in window"})
+    for ov in _read_jsonl(_overrides_path("incident")):
+        if ov.get("incident_id") == incident_id:
+            events.append({"ts": ov.get("ts"), "kind": "override",
+                           "label": str(ov.get("field")) + " -> " + str(ov.get("value")),
+                           "actor": ov.get("actor"), "reason": ov.get("reason")})
+    for nt in _read_jsonl(_notes_path()):
+        if nt.get("incident_id") == incident_id:
+            events.append({"ts": nt.get("ts"), "kind": "note",
+                           "label": (nt.get("note") or "")[:200],
+                           "actor": nt.get("actor")})
+    events = [e for e in events if e.get("ts")]
+    events.sort(key=lambda e: str(e["ts"]))
+    return {"incident_id": incident_id, "events": events}
 
 
 # ---------------------------------------------------------------------------
@@ -250,6 +386,7 @@ def list_alerts(
     trigger_type: str | None = None,
     severity: str | None = None,
     owner: str | None = None,
+    status: str | None = None,
     limit: int = Query(100, ge=1, le=1000),
 ):
     df = alerts().copy()
@@ -257,7 +394,61 @@ def list_alerts(
     if severity: df = df[df["severity"] == severity]
     if owner: df = df[df["owner_function"] == owner]
     df = df.sort_values("priority", ascending=False).head(limit)
-    return [{k: _coerce(v) for k, v in row.items()} for row in df.to_dict(orient="records")]
+    records = []
+    for row in df.to_dict(orient="records"):
+        rec = {k: _coerce(v) for k, v in row.items()}
+        rec = _apply_overrides(rec, "alert", "alert_id", rec.get("alert_id", ""))
+        rec.setdefault("status", "open")
+        if status and rec.get("status") != status:
+            continue
+        records.append(rec)
+    return records
+
+
+@app.post("/api/v1/alerts/{alert_id}/acknowledge")
+def ack_alert(alert_id: str, body: AlertAck):
+    df = alerts()
+    if df[df["alert_id"] == alert_id].empty:
+        raise HTTPException(status_code=404, detail="alert not found")
+    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    _append_jsonl(_overrides_path("alert"), {
+        "alert_id": alert_id, "field": "status", "value": "acknowledged",
+        "ts": ts, "actor": body.actor, "note": body.note,
+    })
+    audit("alert.acknowledged", body.actor, alert_id)
+    return {"alert_id": alert_id, "status": "acknowledged", "ts": ts}
+
+
+@app.post("/api/v1/alerts/{alert_id}/resolve")
+def resolve_alert(alert_id: str, body: AlertAck):
+    df = alerts()
+    if df[df["alert_id"] == alert_id].empty:
+        raise HTTPException(status_code=404, detail="alert not found")
+    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    _append_jsonl(_overrides_path("alert"), {
+        "alert_id": alert_id, "field": "status", "value": "resolved",
+        "ts": ts, "actor": body.actor, "note": body.note,
+    })
+    audit("alert.resolved", body.actor, alert_id)
+    return {"alert_id": alert_id, "status": "resolved", "ts": ts}
+
+
+@app.post("/api/v1/alerts/{alert_id}/override")
+def override_alert(alert_id: str, body: AlertAck):
+    df = alerts()
+    if df[df["alert_id"] == alert_id].empty:
+        raise HTTPException(status_code=404, detail="alert not found")
+    if not (body.note and body.note.strip()):
+        raise HTTPException(status_code=422, detail="override requires a reason")
+    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    _append_jsonl(_overrides_path("alert"), {
+        "alert_id": alert_id, "field": "status", "value": "suppressed_with_reason",
+        "ts": ts, "actor": body.actor, "note": body.note,
+        "decision": body.decision or "suppressed",
+    })
+    audit("alert.overridden", body.actor, alert_id,
+          decision=body.decision, reason=body.note)
+    return {"alert_id": alert_id, "status": "suppressed_with_reason", "ts": ts}
 
 
 @app.post("/api/v1/alerts/{alert_id}/review",
@@ -323,11 +514,17 @@ def tracking_summary_endpoint():
 # Briefs
 # ---------------------------------------------------------------------------
 @app.get("/api/v1/briefs/weekly")
-def get_brief(region_id: str):
+def get_brief(region_id: str | None = None):
     briefs_dir = PROC / "briefs"
-    files = sorted(briefs_dir.glob(f"brief_{region_id}_*.json"))
+    if region_id:
+        files = sorted(briefs_dir.glob(f"brief_{region_id}_*.json"))
+    else:
+        files = sorted(briefs_dir.glob("brief_*.json"))
     if not files:
-        raise HTTPException(status_code=404, detail="brief not found")
+        raise HTTPException(
+            status_code=404,
+            detail="brief not found; run POST /api/v1/briefs/weekly/generate",
+        )
     with open(files[-1], encoding="utf-8") as f:
         return json.load(f)
 
@@ -358,9 +555,16 @@ def overview(region_id: str | None = None):
 
     inc = incidents().copy()
     alt = alerts().copy()
-    if region_id and "region_id" in inc.columns:
-        inc = inc[inc["region_id"] == region_id]
-        alt = alt[alt["region_id"] == region_id] if "region_id" in alt.columns else alt
+    # Region filter: derive from store_id prefix (S-DEL-001 -> DEL)
+    if region_id:
+        def _reg(df):
+            if "region_id" in df.columns:
+                return df[df["region_id"] == region_id]
+            if "store_id" in df.columns:
+                return df[df["store_id"].astype(str).str.split("-").str[1] == region_id]
+            return df
+        inc = _reg(inc)
+        alt = _reg(alt)
 
     # KPIs
     kpis = []

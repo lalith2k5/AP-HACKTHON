@@ -66,10 +66,20 @@ export const endpoints = {
     api(`/api/v1/incidents${params ? `?${new URLSearchParams(params)}` : ""}`),
   incident: (id: string) => api(`/api/v1/incidents/${id}`),
   replay: (id: string) => api(`/api/v1/replay/${id}`),
+  patchIncident: (id: string, body: Record<string, unknown>) =>
+    api(`/api/v1/incidents/${id}`, { method: "PATCH", body }),
+  addNote: (id: string, body: { actor: string; note: string }) =>
+    api(`/api/v1/incidents/${id}/notes`, { method: "POST", body }),
+  timeline: (id: string) =>
+    api(`/api/v1/incidents/${id}/timeline`),
   alerts: (params?: Record<string, string>) =>
     api(`/api/v1/alerts${params ? `?${new URLSearchParams(params)}` : ""}`),
-  brief: (regionId: string, params?: Record<string, string>) =>
-    api(`/api/v1/briefs/${regionId}${params ? `?${new URLSearchParams(params)}` : ""}`),
+  ackAlert: (id: string, body: { actor: string; note?: string }) =>
+    api(`/api/v1/alerts/${id}/acknowledge`, { method: "POST", body }),
+  resolveAlert: (id: string, body: { actor: string; note?: string }) =>
+    api(`/api/v1/alerts/${id}/resolve`, { method: "POST", body }),
+  overrideAlert: (id: string, body: { actor: string; note: string; decision?: string }) =>
+    api(`/api/v1/alerts/${id}/override`, { method: "POST", body }),
   briefWeekly: () => api("/api/v1/briefs/weekly"),
 } as const;
 

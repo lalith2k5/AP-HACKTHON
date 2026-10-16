@@ -228,16 +228,41 @@ scaffold pulled latest), Turbopack, Tailwind v4 (CSS-first via
   (incidents parquet has no region_id column today, so it silently no-ops).
 - Added CORSMiddleware to api.py allowing origins :3300 and :8501.
 
-**Known honest gaps still open in web/:**
-- Incident "Actions" tab is a disabled shell. Backend endpoints
-  `PATCH /api/v1/incidents/{id}` and `POST /api/v1/incidents/{id}/notes`
-  are in spec 14.2 but not implemented. Buttons render but are disabled.
-- Incident "Timeline" tab shows first_seen/last_seen only. Full transition
-  history needs a backend audit endpoint that does not exist yet.
-- Alerts page does NOT wire `POST /alerts/{id}/review` or `/assign`.
-  Read-only today.
-- Reports page calls `/api/v1/briefs/HYD` then falls back to showing raw
-  `/api/v1/briefs/weekly` output. Real brief shape needs mapping once known.
+**All Phase 1 gaps CLOSED (2026-10-16 ~14:20):**
+- Incident Actions tab: fully wired. Owner + status selectors, Save,
+  Mark resolved, Add note. Uses `PATCH /api/v1/incidents/{id}` and
+  `POST /api/v1/incidents/{id}/notes`.
+- Incident Timeline tab: real events from `GET /api/v1/incidents/{id}/timeline`
+  (first_seen + last_seen + every override + every note, sorted).
+- Alerts page: Ack / Resolve / Override (with required reason) all wired.
+  Uses `POST /api/v1/alerts/{id}/acknowledge|resolve|override`.
+- Reports page: renders real `/api/v1/briefs/weekly` shape (region_name,
+  week_start/end, total_feedback + delta, top_issues with trend/severity,
+  mandatory-risk section derived from escalation_rule prefix).
+- Overview `region_id` filter: now derives region from store_id prefix
+  (S-DEL-001 -> DEL). Previously no-op.
+
+**Backend endpoints added this session (all in src/storesignal/api.py):**
+    GET    /api/v1/overview                          (composed dashboard)
+    PATCH  /api/v1/incidents/{id}                    (owner/status/priority)
+    POST   /api/v1/incidents/{id}/notes              (append note)
+    GET    /api/v1/incidents/{id}/timeline           (first/last/overrides/notes)
+    POST   /api/v1/alerts/{id}/acknowledge
+    POST   /api/v1/alerts/{id}/resolve
+    POST   /api/v1/alerts/{id}/override              (requires reason)
+    GET    /api/v1/briefs/weekly                     (region_id now optional)
+Also fixed: get_brief region_id was mandatory positional; now optional.
+
+**State persistence pattern:**
+    Overrides and notes are append-only JSONL in data/processed/:
+      data/processed/incident_overrides.jsonl
+      data/processed/alert_overrides.jsonl
+      data/processed/incident_notes.jsonl
+    Latest value wins per (id, field). Every mutation also writes to the
+    audit log. Re-running the pipeline does NOT erase overrides — they
+    live separately from the derived parquet artifacts. Demo reset
+    (POST /api/v1/demo/reset) also does NOT currently clear them;
+    if a hard reset is ever needed, delete those 3 JSONL files manually.
 - Turbopack + Next 16 cacheComponents gave us a build error on the
   dynamic `[id]` route. Working fix: pure Server Component page that renders
   `<Suspense>` + Client child using `useParams()` with NO generic type

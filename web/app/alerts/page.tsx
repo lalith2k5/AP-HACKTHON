@@ -21,6 +21,7 @@ type Alert = {
   first_seen: string;
   last_seen: string;
   uncertainty: number;
+  status?: string;
 };
 
 const SEV_COLOR: Record<string, string> = {
@@ -34,17 +35,45 @@ export default function AlertsPage() {
   const [items, setItems] = useState<Alert[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "critical" | "high">("all");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = (await endpoints.alerts({ limit: "100" })) as Alert[];
-        setItems(data);
-      } catch (e) {
-        setErr((e as ApiError).message);
-      }
-    })();
-  }, []);
+  async function load() {
+    try {
+      const data = (await endpoints.alerts({ limit: "100" })) as Alert[];
+      setItems(data);
+    } catch (e) {
+      setErr((e as ApiError).message);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  function notify(msg: string) {
+    setFlash(msg);
+    setTimeout(() => setFlash(null), 2500);
+  }
+
+  async function doAction(id: string, label: string, fn: () => Promise<unknown>) {
+    setBusyId(id);
+    try {
+      await fn();
+      await load();
+      notify(label);
+    } catch (e) {
+      setErr((e as ApiError).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function overridePrompt(id: string) {
+    const reason = window.prompt("Override reason (required):");
+    if (!reason || !reason.trim()) return;
+    doAction(id, "Alert overridden", () =>
+      endpoints.overrideAlert(id, { actor: "demo-operator", note: reason, decision: "suppressed" })
+    );
+  }
 
   const filtered = items
     ? filter === "all"
@@ -72,56 +101,102 @@ export default function AlertsPage() {
         </div>
       </div>
 
+      {flash && (
+        <div className="mb-4 rounded-lg border border-[var(--status-ok)]/30 bg-[color-mix(in_oklch,var(--status-ok),transparent_92%)] px-3 py-2 text-xs text-[var(--status-ok)]">
+          {flash}
+        </div>
+      )}
+
       {err && (
-        <div className="rounded-xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-4 text-sm text-[var(--status-critical)]">
+        <div className="mb-4 rounded-xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-4 text-sm text-[var(--status-critical)]">
           {err}
         </div>
       )}
 
       {filtered && (
         <ul className="space-y-2">
-          {filtered.map((a) => (
-            <li key={a.alert_id} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      aria-hidden
-                      className="inline-block size-2.5 rounded-full"
-                      style={{ background: SEV_COLOR[a.severity] ?? "var(--muted-foreground)" }}
-                    />
-                    <span
-                      className="text-xs font-semibold uppercase tracking-wide"
-                      style={{ color: SEV_COLOR[a.severity] }}
+          {filtered.map((a) => {
+            const busy = busyId === a.alert_id;
+            const status = a.status ?? "open";
+            return (
+              <li key={a.alert_id} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="inline-block size-2.5 rounded-full"
+                        style={{ background: SEV_COLOR[a.severity] ?? "var(--muted-foreground)" }}
+                      />
+                      <span
+                        className="text-xs font-semibold uppercase tracking-wide"
+                        style={{ color: SEV_COLOR[a.severity] }}
+                      >
+                        {a.severity}
+                      </span>
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+                        {a.trigger_type}
+                      </span>
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+                        {status}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm">{a.reason}</p>
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>Store {a.store_id}</span>
+                      <span>Owner {a.owner_function}</span>
+                      <span>{a.record_count} records</span>
+                      <span>uncertainty {a.uncertainty.toFixed(3)}</span>
+                    </div>
+                    {a.evidence && (
+                      <p className="mt-2 line-clamp-1 text-xs italic text-muted-foreground">
+                        {a.evidence}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-1.5">
+                    <Link
+                      href={"/incidents/" + a.incident_id}
+                      className="rounded-lg border border-border px-2.5 py-1 text-center text-xs font-medium hover:bg-muted"
                     >
-                      {a.severity}
-                    </span>
-                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
-                      {a.trigger_type}
-                    </span>
+                      Open
+                    </Link>
+                    {status === "open" && (
+                      <button
+                        disabled={busy}
+                        onClick={() => doAction(a.alert_id, "Alert acknowledged", () =>
+                          endpoints.ackAlert(a.alert_id, { actor: "demo-operator" })
+                        )}
+                        className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted disabled:opacity-50"
+                      >
+                        Ack
+                      </button>
+                    )}
+                    {(status === "open" || status === "acknowledged") && (
+                      <>
+                        <button
+                          disabled={busy}
+                          onClick={() => doAction(a.alert_id, "Alert resolved", () =>
+                            endpoints.resolveAlert(a.alert_id, { actor: "demo-operator" })
+                          )}
+                          className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted disabled:opacity-50"
+                        >
+                          Resolve
+                        </button>
+                        <button
+                          disabled={busy}
+                          onClick={() => overridePrompt(a.alert_id)}
+                          className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-[var(--status-medium)] hover:bg-muted disabled:opacity-50"
+                        >
+                          Override
+                        </button>
+                      </>
+                    )}
                   </div>
-                  <p className="mt-2 text-sm">{a.reason}</p>
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    <span>Store {a.store_id}</span>
-                    <span>Owner {a.owner_function}</span>
-                    <span>{a.record_count} records</span>
-                    <span>uncertainty {a.uncertainty.toFixed(3)}</span>
-                  </div>
-                  {a.evidence && (
-                    <p className="mt-2 line-clamp-1 text-xs italic text-muted-foreground">
-                      {a.evidence}
-                    </p>
-                  )}
                 </div>
-                <Link
-                  href={"/incidents/" + a.incident_id}
-                  className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"
-                >
-                  Open
-                </Link>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </AppShell>
