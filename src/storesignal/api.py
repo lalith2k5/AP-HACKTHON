@@ -48,6 +48,21 @@ app = FastAPI(
     version="0.3.0",
     description="Voice-of-Store Engine — early-warning and incident-resolution intelligence layer.",
 )
+
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3300",
+        "http://127.0.0.1:3300",
+        "http://localhost:8501",
+        "http://127.0.0.1:8501",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 install_envelope(app)
 
 install_security(app)
@@ -334,6 +349,71 @@ def generate_brief(region_id: str = Query(...)):
 @app.get("/api/v1/replay/{incident_id}")
 def replay(incident_id: str):
     return get_incident(incident_id)
+
+
+@app.get("/api/v1/overview")
+def overview(region_id: str | None = None):
+    """Composed dashboard payload for the Next.js Overview screen (spec 14.2)."""
+    import pandas as _pd
+
+    inc = incidents().copy()
+    alt = alerts().copy()
+    if region_id and "region_id" in inc.columns:
+        inc = inc[inc["region_id"] == region_id]
+        alt = alt[alt["region_id"] == region_id] if "region_id" in alt.columns else alt
+
+    # KPIs
+    kpis = []
+    kpis.append({"label": "Open incidents", "value": int(len(inc))})
+    kpis.append({"label": "Escalated alerts", "value": int(len(alt))})
+    crit = int((alt["severity"] == "critical").sum()) if "severity" in alt.columns else 0
+    kpis.append({"label": "Critical alerts", "value": crit})
+    # Accuracy from metrics if the file exists
+    try:
+        m = metrics()
+        acc = m.get("classification", {}).get("accuracy")
+        if acc is not None:
+            kpis.append({"label": "Model accuracy", "value": round(float(acc), 3)})
+    except Exception:
+        pass
+
+    # Urgent queue: top alerts by priority, fallback to severity ordering
+    if "priority" in alt.columns:
+        urgent = alt.sort_values("priority", ascending=False).head(8)
+    elif "severity" in alt.columns:
+        order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        urgent = alt.assign(_o=alt["severity"].map(order).fillna(9)).sort_values("_o").head(8)
+    else:
+        urgent = alt.head(8)
+    urgent_queue = [
+        {
+            "id": str(r.get("alert_id") or r.get("incident_id") or ""),
+            "title": str(r.get("reason") or r.get("predicted_category") or "Alert"),
+            "severity": str(r.get("severity") or "unknown"),
+        }
+        for _, r in urgent.iterrows()
+    ]
+
+    # Categories from incidents
+    categories = []
+    if "predicted_category" in inc.columns and len(inc):
+        counts = inc["predicted_category"].value_counts().head(12)
+        categories = [{"category": str(k), "count": int(v)} for k, v in counts.items()]
+
+    # Freshness
+    freshness = None
+    if "last_seen" in inc.columns and len(inc):
+        try:
+            freshness = str(_pd.to_datetime(inc["last_seen"]).max())
+        except Exception:
+            freshness = str(inc["last_seen"].max())
+
+    return {
+        "kpis": kpis,
+        "urgent_queue": urgent_queue,
+        "categories": categories,
+        "freshness": freshness,
+    }
 
 
 @app.get("/api/v1/metrics")

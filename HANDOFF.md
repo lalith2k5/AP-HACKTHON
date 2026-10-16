@@ -193,6 +193,85 @@ Next.js frontend matches all 5 target screens. Then `ui.py` is deleted and
 - `screen_trends` now reads `radar["predicted_category"]`
 - `use_container_width=True` -> `width="stretch"` everywhere
 
+## 5b. Next.js frontend — Phase 1 status (updated 2026-10-16 ~14:10)
+
+**All 5 Phase 1 screens scaffolded and building.** Next.js 16.4.2 (not 15 —
+scaffold pulled latest), Turbopack, Tailwind v4 (CSS-first via
+@tailwindcss/turbopack, no tailwind.config), shadcn base-nova style
+(NOT the old default — uses @base-ui/react, so Button takes `render={<Link/>}`
++ `nativeButton={false}` instead of `asChild`), motion v11 (`motion/react`).
+
+**Ports (changed from earlier plan to avoid learntrace collision):**
+- FastAPI:  **8790** (was 8000)
+- Next dev:  **3300** (was 3000)
+- Streamlit: 8501 (unchanged)
+
+**Files added under web/:**
+    app/layout.tsx                       Apple font stack applied
+    app/page.tsx                         Welcome / Sign-in (screen 1)
+    app/overview/page.tsx                KPIs + urgent queue (screen 2)
+    app/incidents/page.tsx               Incidents list
+    app/incidents/[id]/page.tsx          Server wrapper w/ Suspense
+    app/incidents/[id]/incident-detail-client.tsx  Detail w/ 4 tabs (screen 3)
+    app/alerts/page.tsx                  Alert queue w/ severity filter (screen 4)
+    app/reports/page.tsx                 Weekly brief (screen 5)
+    components/app-shell.tsx             Sidebar + topbar layout
+    components/ui/button.tsx             shadcn
+    lib/api.ts                           Fetch wrapper for FastAPI @ :8790
+    lib/tokens.ts                        Apple motion/spacing/status tokens
+    lib/utils.ts                         shadcn cn() helper
+
+**Backend changes made this session:**
+- Added `GET /api/v1/overview` to api.py (was missing despite spec 14.2).
+  Composes kpis + urgent_queue + categories + freshness from existing
+  incidents/alerts/metrics artifacts. `region_id` filter is best-effort
+  (incidents parquet has no region_id column today, so it silently no-ops).
+- Added CORSMiddleware to api.py allowing origins :3300 and :8501.
+
+**Known honest gaps still open in web/:**
+- Incident "Actions" tab is a disabled shell. Backend endpoints
+  `PATCH /api/v1/incidents/{id}` and `POST /api/v1/incidents/{id}/notes`
+  are in spec 14.2 but not implemented. Buttons render but are disabled.
+- Incident "Timeline" tab shows first_seen/last_seen only. Full transition
+  history needs a backend audit endpoint that does not exist yet.
+- Alerts page does NOT wire `POST /alerts/{id}/review` or `/assign`.
+  Read-only today.
+- Reports page calls `/api/v1/briefs/HYD` then falls back to showing raw
+  `/api/v1/briefs/weekly` output. Real brief shape needs mapping once known.
+- Turbopack + Next 16 cacheComponents gave us a build error on the
+  dynamic `[id]` route. Working fix: pure Server Component page that renders
+  `<Suspense>` + Client child using `useParams()` with NO generic type
+  argument (`useParams()` then cast). Any reintroduction of the generic
+  re-triggers the SWC error.
+
+**How to run (all three services):**
+    # Terminal A — FastAPI on 8790
+    set +H
+    cd "$HOME/storesignal-ai"
+    "$HOME/storesignal-ai/.venv/bin/uvicorn" storesignal.api:app --port 8790 --reload
+
+    # Terminal B — Next.js on 3300
+    set +H
+    cd "$HOME/storesignal-ai/web"
+    npm run dev -- --port 3300
+
+    # Terminal C — Streamlit (still runs, parallel, for comparison)
+    set +H
+    cd "$HOME/storesignal-ai"
+    "$HOME/storesignal-ai/.venv/bin/streamlit" run src/storesignal/ui.py --server.port 8501
+
+**Session log (what broke and how it was fixed):**
+1. shadcn init wrote `--font-sans: var(--font-sans);` self-ref -> patched to
+   font-geist-sans + SF Pro fallback chain.
+2. shadcn base-nova Button has no `asChild` -> replaced with `render={<Link/>}`
+   + `nativeButton={false}` (Base UI's API).
+3. No `/api/v1/overview` existed -> added to api.py.
+4. No CORS on FastAPI -> added CORSMiddleware.
+5. Port 8000/3000 collisions with learntrace project -> moved to 8790/3300.
+6. Next 16 `cacheComponents:true` + dynamic `[id]` route -> fixed with
+   Server Component parent + `<Suspense>` + Client child with untyped
+   `useParams()`.
+
 ## 6. Current verified metrics (unchanged from baseline)
 
 | Metric | Value |
