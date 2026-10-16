@@ -66,14 +66,14 @@ export default function DataHealthPage() {
 
         {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
         {job && (
-          <div className="card-soft p-6">
+          <div className="glass p-6">
             <h2 className="text-[15px] font-semibold tracking-tight">Job {job.job_id ?? job.evaluation_run_id}</h2>
             <p className="mt-1 text-xs text-muted-foreground">status: {job.status} · stage: {job.stage}</p>
             {job.error && <p className="mt-2 text-xs text-red-600">{job.error}</p>}
           </div>
         )}
 
-        <div className="card-soft p-6">
+        <div className="glass p-6">
           <h2 className="text-[15px] font-semibold tracking-tight">Current metrics</h2>
           <pre className="mt-3 overflow-auto rounded-lg bg-muted/40 p-3 text-[11px]">
             {metrics ? JSON.stringify(metrics, null, 2) : "Loading..."}

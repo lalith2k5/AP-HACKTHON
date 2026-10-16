@@ -17,9 +17,9 @@ export default function StoresPage() {
       {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
       {!rows && !err && <p className="text-sm text-muted-foreground">Loading...</p>}
       {rows && (
-        <div className="card-soft overflow-hidden">
+        <div className="glass overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_96%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
+            <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_94%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
               <tr>
                 <th className="px-4 py-2.5">Store</th>
                 <th>Region</th>

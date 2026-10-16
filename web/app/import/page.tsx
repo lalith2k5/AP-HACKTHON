@@ -21,10 +21,10 @@ export default function ImportPage() {
   return (
     <AppShell active="/import" title="Import data">
       <div className="max-w-2xl space-y-4">
-        <div className="card-soft p-6">
+        <div className="glass p-6">
           <label htmlFor="import-source-path" className="text-sm font-medium">Source file (server path)</label>
           <input id="import-source-path" value={path} onChange={(e) => setPath(e.target.value)}
-            className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm font-mono" />
+            className="mt-2 w-full glass-thin px-4 py-3 text-sm font-mono" />
           <p className="mt-2 text-xs text-muted-foreground">
             CSV / JSONL / Parquet. Column mapping defaults will be applied if omitted.
           </p>
@@ -35,7 +35,7 @@ export default function ImportPage() {
         </div>
         {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
         {result && (
-          <div className="card-soft p-6">
+          <div className="glass p-6">
             <p className="text-sm">Job accepted: <span className="font-mono">{result.import_id}</span></p>
             <p className="mt-1 text-xs text-muted-foreground">Poll status below.</p>
             <Poll id={result.import_id} />

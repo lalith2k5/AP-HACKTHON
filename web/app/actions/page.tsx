@@ -20,7 +20,7 @@ export default function ActionsPage() {
       {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
       <div className="grid gap-3 md:grid-cols-2">
         {(rows ?? []).map((r) => (
-          <div key={r.incident_id} className="card-soft p-5">
+          <div key={r.incident_id} className="glass p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link href={`/incidents/${r.incident_id}`} className="text-sm font-semibold hover:text-[var(--primary)]">

@@ -87,7 +87,7 @@ export default function AlertsPage() {
     <AppShell active="/alerts" title="Alerts">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-[22px] font-semibold tracking-tight">Alerts</h2>
-        <div className="flex gap-1 card-soft p-0.5 text-xs">
+        <div className="flex gap-1 glass p-0.5 text-xs">
           {(["all", "critical", "high"] as const).map((f) => (
             <button
               key={f}
@@ -121,7 +121,7 @@ export default function AlertsPage() {
             const busy = busyId === a.alert_id;
             const status = a.status ?? "open";
             return (
-              <li key={a.alert_id} className="card-soft p-5">
+              <li key={a.alert_id} className="glass p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -242,7 +242,7 @@ function OverrideModal({
           onChange={(e) => setReason(e.target.value)}
           rows={3}
           placeholder="Why is this alert being overridden?"
-          className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm"
+          className="mt-3 w-full glass-thin px-4 py-3 text-sm"
         />
         <div className="mt-4 flex justify-end gap-2">
           <button

@@ -102,18 +102,18 @@ export default function ReportsPage() {
       {data && (
         <div className="space-y-8">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="card-soft p-5">
+            <div className="glass p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Region</div>
               <div className="mt-1 text-lg font-semibold">{data.region_name}</div>
               <div className="text-xs text-muted-foreground">{data.region_id}</div>
             </div>
-            <div className="card-soft p-5">
+            <div className="glass p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Week</div>
               <div className="mt-1 text-sm font-medium">
                 {data.week_start} → {data.week_end}
               </div>
             </div>
-            <div className="card-soft p-5">
+            <div className="glass p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Feedback</div>
               <div className="mt-1 text-lg font-semibold">{data.total_feedback.toLocaleString()}</div>
               <div
@@ -124,7 +124,7 @@ export default function ReportsPage() {
                 {delta} vs previous week
               </div>
             </div>
-            <div className="card-soft p-5">
+            <div className="glass p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Escalation precision
               </div>
@@ -143,7 +143,7 @@ export default function ReportsPage() {
 
           <section>
             <h3 className="mb-2 text-sm font-semibold tracking-tight">Top issues</h3>
-            <ul className="divide-y divide-border card-soft">
+            <ul className="divide-y divide-border glass">
               {data.top_issues.map((t) => (
                 <li key={t.category} className="p-4">
                   <div className="flex items-start justify-between gap-4">

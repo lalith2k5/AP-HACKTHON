@@ -18,7 +18,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
+      <body className="relative min-h-full flex flex-col bg-background text-foreground font-sans">
+        <div aria-hidden className="app-atmosphere" />
         {children}
       </body>
     </html>

@@ -100,7 +100,7 @@ function LoadedOverview({ data }: { data: Overview }) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {kpis.map((k) => (
-              <div key={k.label} className="card-soft p-5">
+              <div key={k.label} className="glass p-5">
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {k.label}
                 </div>
@@ -116,7 +116,7 @@ function LoadedOverview({ data }: { data: Overview }) {
         {!data.urgent_queue?.length ? (
           <EmptyCard label="No urgent items" />
         ) : (
-          <ul className="divide-y divide-border card-soft">
+          <ul className="divide-y divide-border glass">
             {data.urgent_queue.map((u) => (
               <li key={u.id} className="flex items-center justify-between px-4 py-3">
                 <span className="text-sm">{u.title}</span>

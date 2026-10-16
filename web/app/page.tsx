@@ -18,7 +18,7 @@ export default function WelcomePage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={motionTokens.spring}
-        className="relative w-full max-w-xl"
+        className="glass glass-rim relative w-full max-w-xl p-10 sm:p-12"
       >
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">

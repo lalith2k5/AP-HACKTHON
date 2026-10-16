@@ -40,7 +40,7 @@ export default function TrendsPage() {
 
         {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
 
-        <section className="card-soft p-6">
+        <section className="glass p-6">
           <h2 className="text-[15px] font-semibold tracking-tight">Category totals</h2>
           {top.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">No data for this filter.</p>
@@ -59,7 +59,7 @@ export default function TrendsPage() {
           )}
         </section>
 
-        <section className="card-soft p-6">
+        <section className="glass p-6">
           <h2 className="text-[15px] font-semibold tracking-tight">Anomalies flagged ({data?.anomalies.length ?? 0})</h2>
           {data?.anomalies.length ? (
             <table className="mt-3 w-full text-sm">

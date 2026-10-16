@@ -18,7 +18,7 @@ export default function StoreDetailClient() {
       {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
       {data && (
         <div className="space-y-10">
-          <div className="card-soft p-6">
+          <div className="glass p-6">
             <h2 className="text-lg font-semibold">{data.store.store_name ?? id}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {data.store.city} · Region {data.store.region_id} · {data.store.store_format ?? "n/a"}
@@ -27,9 +27,9 @@ export default function StoreDetailClient() {
               Footfall: {data.store.weekly_footfall ?? "n/a"} · Incidents: {data.incident_count}
             </p>
           </div>
-          <div className="card-soft overflow-hidden">
+          <div className="glass overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_96%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
+              <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_94%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
                 <tr><th className="px-4 py-2.5">Incident</th><th>Category</th><th>Severity</th><th>Owner</th><th>Records</th></tr>
               </thead>
               <tbody>

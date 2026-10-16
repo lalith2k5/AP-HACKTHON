@@ -114,7 +114,7 @@ export default function IncidentDetailClient() {
           </header>
 
           {(data.escalation_rule || data.next_action) && (
-            <div className="mb-5 card-soft p-5">
+            <div className="mb-5 glass p-5">
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -190,7 +190,7 @@ function TabOverview({ d }: { d: Incident }) {
   return (
     <dl className="grid gap-3 sm:grid-cols-2">
       {rows.map(([k, v]) => (
-        <div key={k} className="card-soft p-4">
+        <div key={k} className="glass p-4">
           <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{k}</dt>
           <dd className="mt-1 text-sm">{v}</dd>
         </div>
@@ -205,7 +205,7 @@ function TabEvidence({ d }: { d: Incident }) {
   }
   return (
     <div className="space-y-6">
-      <div className="card-soft p-5">
+      <div className="glass p-5">
         <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sample</div>
         <p className="mt-2 text-sm italic">&ldquo;{d.sample_text}&rdquo;</p>
       </div>
@@ -312,7 +312,7 @@ function TabActions({
         </div>
       )}
 
-      <div className="card-soft p-5">
+      <div className="glass p-5">
         <h3 className="mb-3 text-sm font-semibold tracking-tight">Assign owner & status</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
@@ -321,7 +321,7 @@ function TabActions({
               value={owner}
               onChange={(e) => setOwner(e.target.value)}
               disabled={busy}
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm"
+              className="w-full glass-thin px-4 py-3 text-sm"
             >
               {OWNERS.map((o) => <option key={o}>{o}</option>)}
             </select>
@@ -332,7 +332,7 @@ function TabActions({
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               disabled={busy}
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm"
+              className="w-full glass-thin px-4 py-3 text-sm"
             >
               {STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
@@ -360,7 +360,7 @@ function TabActions({
         </div>
       </div>
 
-      <div className="card-soft p-5">
+      <div className="glass p-5">
         <h3 className="mb-3 text-sm font-semibold tracking-tight">Add note</h3>
         <textarea
           value={note}
@@ -368,7 +368,7 @@ function TabActions({
           disabled={busy}
           rows={3}
           placeholder="Investigation update, action taken, follow-up…"
-          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm"
+          className="w-full glass-thin px-4 py-3 text-sm"
         />
         <button
           disabled={busy || !note.trim()}
@@ -383,7 +383,7 @@ function TabActions({
       </div>
 
       {d.notes && d.notes.length > 0 && (
-        <div className="card-soft p-5">
+        <div className="glass p-5">
           <h3 className="mb-3 text-sm font-semibold tracking-tight">Notes ({d.notes.length})</h3>
           <ul className="space-y-2">
             {d.notes.map((n, i) => (

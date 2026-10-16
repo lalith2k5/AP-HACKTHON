@@ -55,7 +55,7 @@ export default function IncidentsPage() {
         </div>
       )}
       {items && (
-        <ul className="divide-y divide-border card-soft">
+        <ul className="divide-y divide-border glass">
           {items.map((it) => (
             <li key={it.incident_id}>
               <Link

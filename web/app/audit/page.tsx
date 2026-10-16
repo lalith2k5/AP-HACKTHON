@@ -28,9 +28,9 @@ export default function AuditPage() {
             className="rounded-2xl border border-border bg-background px-3 py-1.5 text-sm" />
         </div>
         {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
-        <div className="card-soft overflow-hidden">
+        <div className="glass overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_96%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
+            <thead className="bg-[color-mix(in_oklch,var(--foreground),transparent_94%)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
               <tr><th className="px-4 py-2.5">When</th><th>Event</th><th>Actor</th><th>Object</th><th>Detail</th></tr>
             </thead>
             <tbody>
