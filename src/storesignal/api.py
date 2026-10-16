@@ -25,8 +25,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from storesignal import state as _state
 from storesignal import settings as _settings
+from storesignal import state as _state
 from storesignal.api_envelope import install as install_envelope
 from storesignal.api_extras import router as _extras_router
 from storesignal.api_jobs import router as _jobs_router
