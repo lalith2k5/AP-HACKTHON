@@ -1,3 +1,5 @@
+> **Deployment:** see [DEPLOYMENT.md](DEPLOYMENT.md). **Handoff context:** see [HANDOFF.md](HANDOFF.md).
+
 # StoreSignal AI — Voice-of-Store Engine
 
 **Repo:** https://github.com/lalith2k5/AP-HACKTHON  

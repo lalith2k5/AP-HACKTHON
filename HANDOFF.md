@@ -439,4 +439,58 @@ Do NOT paste code until user says what they want.
 
 ---
 
+## 14. Final state (2026-10-16 ~14:25, commit 0cea101)
+
+**Phase 1 Next.js frontend: complete end to end. All gaps closed.**
+
+Verified green:
+- pytest: 18/18
+- ruff: clean
+- Frontend build: 6 routes, no TypeScript errors
+- All 5 screens pull real data from FastAPI
+- All mutation endpoints (PATCH incident, POST note, alert ack/resolve/override)
+  work with x-api-key and persist to append-only JSONL
+- Demo reset clears state + rebuilds pipeline (27s)
+
+Screens:
+    1. /                     Welcome / Sign-in
+    2. /overview             KPIs + urgent queue, region filter functional
+    3. /incidents            List with severity color
+    4. /incidents/[id]       Overview / Evidence / Timeline / Actions
+                             Actions: owner+status+save, mark resolved,
+                             add note. All persist.
+    5. /alerts               Filter, Ack / Resolve / Override (modal, reason
+                             required)
+    6. /reports              Real weekly brief
+
+Backend endpoints added this session (all RBAC-guarded, all audit-logged):
+    GET    /api/v1/overview
+    PATCH  /api/v1/incidents/{id}
+    POST   /api/v1/incidents/{id}/notes
+    GET    /api/v1/incidents/{id}/timeline
+    POST   /api/v1/alerts/{id}/acknowledge
+    POST   /api/v1/alerts/{id}/resolve
+    POST   /api/v1/alerts/{id}/override
+    GET    /api/v1/briefs/weekly           (region_id now optional)
+    POST   /api/v1/demo/reset              (clears overrides + notes)
+
+Auth: x-api-key header, demo key `demo-key-storesignal` (admin role).
+Frontend reads NEXT_PUBLIC_STORESIGNAL_API_KEY from web/.env.local.
+
+Ports:
+    8790  FastAPI
+    3300  Next.js
+    8501  Streamlit (legacy, still running, ui.py untouched)
+
+Deployment guide: see DEPLOYMENT.md.
+
+Known honest limitations (not hidden, not blocking local demo):
+- Static NEXT_PUBLIC key visible in client bundle. Local-only acceptable;
+  production needs session-scoped tokens (spec 18).
+- No optimistic UI; mutations block until server responds.
+- Streamlit ui.py not yet retired (per HANDOFF 5a plan, delete only after
+  Next.js reaches full parity — Streamlit still has 15 views, Next.js has 6).
+- No offline / no-network mode.
+- No automated browser tests (Playwright). Manual verification done.
+
 **END OF HANDOFF**
