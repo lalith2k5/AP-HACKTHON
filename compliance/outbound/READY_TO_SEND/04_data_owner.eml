@@ -1,0 +1,32 @@
+To: [data-owner@company.com]
+Cc: [your-email@company.com]
+Subject: Sign-off request - StoreSignal AI data processing
+
+Dear [Data owner],
+
+StoreSignal AI is ready to move from simulated demo data to real
+operational data, pending your sign-off. Attached is a one-page form
+(05_data_owner_signoff.md) covering:
+
+- The six data classes the system touches and their retention windows
+- The seven-role access matrix
+- Six declarations you are being asked to confirm
+- A signature block
+
+Key points:
+- Everything runs locally. No cloud, no external transmission, no
+  third-party AI service.
+- PII in feedback text is redacted at the normalization stage and never
+  appears in normal UI, logs, or exports.
+- Staff-conduct incidents are restricted to HR/risk roles; every access is
+  audit-logged.
+- We are asking you to confirm lawful basis, retention schedule, access
+  matrix, SAR procedure, and that no real data will be loaded without a
+  fresh sign-off.
+
+Can we get 30 minutes on the calendar to walk through it? We need a signed
+copy back before any real data is loaded.
+
+Best regards,
+[Name]
+[Title]
