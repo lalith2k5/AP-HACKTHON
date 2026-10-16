@@ -1,207 +1,134 @@
 # StoreSignal AI — Deployment Guide
 
-**Scope:** local-first MVP deployment. Per spec section 20.5, multi-user
-production deployment requires additional work (TLS, SSO, RBAC with real
-identity, transactional storage) that is out of scope for this build.
+Local-first, end-to-end deployable. Two auth modes. SQLite transactional
+state. Optional TLS via Caddy.
 
-## Architecture (as deployed)
+## Ports
+    8790  FastAPI (backend)
+    3300  Next.js (frontend)
+    8180  Keycloak (only when OIDC mode is enabled)
+    8443  Caddy TLS (optional, via scripts/serve-tls.sh)
+    8501  retired (Streamlit removed)
 
-    Browser (localhost:3300)
-        |
-        v
-    Next.js 16 frontend (web/, Node)
-        |
-        v  x-api-key header
-    FastAPI backend (src/storesignal/api.py, :8790)
-        |
-        +--> data/processed/*.parquet  (pipeline artifacts)
-        +--> data/processed/*.jsonl    (overrides, notes, audit)
-        +--> models/baseline_model.joblib
-
-    Streamlit UI (src/storesignal/ui.py, :8501) — legacy, parallel, read-only.
-
-## Prerequisites
-
-- macOS 14+, Apple Silicon
-- Python 3.11.17 with .venv at $HOME/storesignal-ai/.venv
-- Node 20+ / npm 10+ (verified on Node 26.10.0 / npm 11.19.1)
-- 97 GB free disk (recommended)
-
-## First-time setup
-
+## Startup (Mode A — static key, default)
+    # Terminal 1
     set +H
     cd "$HOME/storesignal-ai"
+    ./scripts/run-api.sh
 
-    # Python side
-    "$HOME/storesignal-ai/.venv/bin/python" -m pip install -r requirements.txt
-
-    # Run pipeline once to generate artifacts (~30s)
-    "$HOME/storesignal-ai/.venv/bin/python" -m storesignal.pipeline
-
-    # Node side
-    cd web
-    npm install
-
-    # Verify
-    "$HOME/storesignal-ai/.venv/bin/python" -m pytest -q tests
-    "$HOME/storesignal-ai/.venv/bin/python" -m ruff check src tests
-    cd web && npm run build
-
-## Running (3 terminals)
-
-Terminal A — FastAPI on 8790:
-
-    set +H
-    cd "$HOME/storesignal-ai"
-    "$HOME/storesignal-ai/.venv/bin/uvicorn" storesignal.api:app --port 8790
-
-Terminal B — Next.js on 3300:
-
+    # Terminal 2
     set +H
     cd "$HOME/storesignal-ai/web"
     npm run dev -- --port 3300
-    # open http://localhost:3300
 
-Terminal C — Streamlit on 8501 (optional, legacy comparison):
+    # Open http://localhost:3300
 
+## Startup (Mode B — OIDC via local Keycloak)
+    # Terminal 1 — Keycloak
+    set +H
+    cd "$HOME/storesignal-ai/deploy/keycloak"
+    docker compose up -d
+
+    # Terminal 2 — API (with .env OIDC vars set)
     set +H
     cd "$HOME/storesignal-ai"
-    "$HOME/storesignal-ai/.venv/bin/streamlit" run src/storesignal/ui.py --server.port 8501
-
-## Configuration
-
-Backend: `.env` at project root (loaded by settings.py). All 12
-STORESIGNAL_* variables documented in `.env.example`.
-
-Key defaults:
-    STORESIGNAL_API_KEY=demo-key-storesignal
-    STORESIGNAL_DEMO_MODE=true
-    STORESIGNAL_ENV=development
-
-Frontend: `web/.env.local` (gitignored).
-
-    NEXT_PUBLIC_API_URL=http://localhost:8790
-    NEXT_PUBLIC_STORESIGNAL_API_KEY=demo-key-storesignal
-
-## Demo reset (deterministic clean slate)
-
-    set +H
-    curl -X POST http://127.0.0.1:8790/api/v1/demo/reset \
-      -H "x-api-key: demo-key-storesignal"
-
-Clears user overrides + notes JSONL, reruns full pipeline (~27s).
-Useful before judges walk up.
-
-## Smoke checks
-
-    set +H
-    curl -s http://127.0.0.1:8790/health
-    curl -s -X PATCH "http://127.0.0.1:8790/api/v1/incidents/INC-..." \
-      -H "Content-Type: application/json" \
-      -H "x-api-key: demo-key-storesignal" \
-      -d '{"actor":"smoke","status":"triaged"}'
-
-## Ports used by this project
-
-    8790  FastAPI
-    3300  Next.js dev
-    8501  Streamlit (optional)
-
-Ports 3000, 8000 are NOT used to avoid collision with user's other project.
-
-## What is NOT covered here
-
-- TLS, HTTPS termination
-- SSO / OIDC authentication
-- Multi-user RBAC with real identity
-- Transactional database
-- Cloud LLM or external APIs (no external dependency)
-- Production monitoring/alerting
-- Legal/compliance review for real customer data
-
-See PRODUCTION_READINESS.md (spec 20.5) for the full multi-user checklist.
-
-## TLS (optional, for LAN or remote access)
-
-    brew install caddy    # already installed if serve-tls.sh works
-    ./scripts/serve-tls.sh
-
-Caddy fronts both FastAPI (:8790) and Next.js (:3300) on
-https://localhost:8443 with a self-signed cert. Browser will warn once.
-
-For a real domain: edit `deploy/tls/Caddyfile`, replace `:8443` with your
-hostname, delete `tls internal`, and re-run. Caddy auto-provisions
-Let's Encrypt.
-
-## State store
-
-SQLite at `data/processed/storesignal.db` (WAL mode).
-Migrating from legacy JSONL (one time):
-
-    .venv/bin/python scripts/migrate_state.py
-
-Backup: `./scripts/backup.sh` includes the DB. Restore:
-`./scripts/restore.sh backups/storesignal-YYYYMMDDTHHMMSSZ.tar.gz`.
-
-## Auth note
-
-Static `x-api-key` header (value: `demo-key-storesignal` by default).
-Frontend never sees the key — requests flow through the Next.js proxy
-at `/api/proxy/[...path]`.
-
-For multi-user: see HANDOFF section 15 (SSO replacement path).
-
-## Legal / privacy
-
-Before processing real customer or staff data, read:
-- DATA_INVENTORY.md
-- RETENTION_POLICY.md
-- PRIVACY_NOTES.md
-
-These are drafts. Legal and DPO sign-off required.
-
-## SSO / OIDC
-
-Two auth modes:
-
-**Mode A — static key (default, no IdP needed):**
-    set +H; cd "$HOME/storesignal-ai"
     ./scripts/run-api.sh
-    # separate tab:
-    cd web && npm run dev -- --port 3300
 
-**Mode B — OIDC via local Keycloak:**
+    # Terminal 3 — Web (with web/.env.local OIDC vars set)
+    set +H
+    cd "$HOME/storesignal-ai/web"
+    npm run dev -- --port 3300
 
-    set +H; cd "$HOME/storesignal-ai/deploy/keycloak"
-    docker compose up -d
-    # wait ~30s; realm discovery should return 200:
-    curl -s -o /dev/null -w "%{http_code}\n" \
-      http://localhost:8180/realms/storesignal/.well-known/openid-configuration
+    # Enable OIDC marker
+    touch web/.oidc-enabled
+    # Restart both servers.
 
-    # enable OIDC in backend .env:
-    #   STORESIGNAL_OIDC_ENABLED=true
-    #   STORESIGNAL_OIDC_ISSUER=http://localhost:8180/realms/storesignal
-    #   STORESIGNAL_OIDC_AUDIENCE=
-    #   STORESIGNAL_OIDC_ROLE_CLAIM=realm_access.roles
+## Enabling / disabling OIDC
+    Enable:   touch web/.oidc-enabled
+              Add STORESIGNAL_OIDC_ENABLED=true to .env
+              Restart both servers.
+    Disable:  rm web/.oidc-enabled
+              Remove STORESIGNAL_OIDC_ENABLED from .env
+              Restart both servers.
 
-    # enable OIDC in web/.env.local (see file for commented vars)
-    # create web/.oidc-enabled marker:
-    touch "$HOME/storesignal-ai/web/.oidc-enabled"
+## Critical gotcha
+    uvicorn does NOT read .env automatically.
+    ALWAYS start the backend via ./scripts/run-api.sh, not bare uvicorn.
+    Bare `uvicorn storesignal.api:app` silently runs with OIDC disabled.
 
-    # restart both:
-    cd "$HOME/storesignal-ai" && ./scripts/run-api.sh
-    # new tab:
-    cd web && npm run dev -- --port 3300
+## Test suites
+    # Python (31 tests)
+    set +H
+    cd "$HOME/storesignal-ai"
+    .venv/bin/python -m pytest -q tests
 
-Test users (all password `password`):
-    admin, ops, reviewer, hr
+    # Lint
+    .venv/bin/python -m ruff check src tests
 
-Test E2E:
-    cd web && npx playwright test
+    # Frontend E2E
+    set +H
+    cd "$HOME/storesignal-ai/web"
+    npx playwright test
 
-**CRITICAL:** always start the backend with `./scripts/run-api.sh`, NOT
-bare `uvicorn`. Bare uvicorn does not read `.env`, so OIDC stays off.
+## Docker
+    set +H
+    cd "$HOME/storesignal-ai"
+    docker compose build
+    docker compose up
 
-Swap to a real IdP (Auth0 / Google / Azure / Okta) by changing the 4
-AUTH_OIDC_* vars in `web/.env.local` and the 3 STORESIGNAL_OIDC_* vars
-in `.env`. No code change.
+    Note: Docker daemon must be running. If `docker info` fails, start
+    Docker Desktop. First build downloads ~200MB of base images.
+
+## State persistence
+    data/processed/storesignal.db         SQLite (WAL) — overrides, notes, audit
+    data/processed/*.parquet              Derived pipeline artifacts
+    Re-running the pipeline does NOT erase overrides/notes (separate store).
+    Hard reset: POST /api/v1/demo/reset, or delete the SQLite DB manually.
+
+## Full API surface (39 endpoints)
+    /health
+    /api/v1/overview
+    /api/v1/incidents  +  /{id}  +  /{id}/notes  +  /{id}/timeline
+    /api/v1/alerts     +  /{id}/acknowledge|resolve|override|review|assign
+    /api/v1/briefs/weekly  +  /weekly/generate  +  /{region_id}
+    /api/v1/stores     +  /{store_id}
+    /api/v1/trends
+    /api/v1/audit
+    /api/v1/metrics
+    /api/v1/forecasts
+    /api/v1/replay     (POST)  +  /replay/{incident_id}  (GET)
+    /api/v1/pipeline/run       +  /pipeline/{run_id}
+    /api/v1/ingest             +  /ingest/{job_id}
+    /api/v1/evaluation/run     +  /evaluation/{run_id}
+    /api/v1/jobs/{job_id}
+    /api/v1/feedback/batch     +  /feedback/{record_id}
+    /api/v1/classify
+    /api/v1/tracking/summary
+    /api/v1/actions
+    /api/v1/demo/reset
+    /api/v1/me
+
+## Frontend routes (17 pages)
+    /                     Welcome / Sign-in
+    /login                SSO sign-in
+    /overview             KPIs + urgent queue
+    /incidents            List
+    /incidents/[id]       Detail (Overview / Evidence / Timeline / Actions)
+    /alerts               Alert queue
+    /trends               Baseline vs current + anomalies
+    /stores               Ranked store list
+    /stores/[id]          Store detail
+    /actions              Action queue
+    /reports              Weekly brief
+    /import               Import wizard
+    /data-health          Pipeline controls + metrics
+    /settings             Health + session + config
+    /audit                Audit event log
+
+## Known limitations (documented, not hidden)
+    - Single-worker uvicorn only (job registry is in-process).
+    - No optimistic UI; mutations block until server responds (~200ms local).
+    - Config editing via UI is intentionally disabled; edit YAML on disk.
+    - TLS via self-signed cert for LAN; swap Caddyfile site line for real domain.
+    - Legal/compliance review, pen testing, real-corp IdP swap are outside scope
+      (spec §20.5, §24).

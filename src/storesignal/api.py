@@ -27,6 +27,8 @@ from pydantic import BaseModel, Field
 
 from storesignal import state as _state
 from storesignal.api_envelope import install as install_envelope
+from storesignal.api_extras import router as _extras_router
+from storesignal.api_jobs import router as _jobs_router
 from storesignal.config_loader import load_config
 from storesignal.paths import (
     CODE_ROOT,
@@ -798,3 +800,7 @@ def get_job(job_id: str):
 def whoami(x_api_key: str | None = Header(default=None)):
     role = resolve_role(x_api_key) or "anonymous"
     return {"role": role}
+
+app.include_router(_extras_router)
+
+app.include_router(_jobs_router)

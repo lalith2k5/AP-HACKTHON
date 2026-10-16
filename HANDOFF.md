@@ -624,3 +624,44 @@ vars in .env. No code change.
     8501  Streamlit legacy
 
 **END OF HANDOFF**
+
+---
+
+## 16. Gap-closure pass (2026-10-16 ~22:00)
+
+**All code-achievable gaps closed.**
+
+### Backend
+- New: `src/storesignal/api_extras.py` — /stores, /stores/{id}, /trends, /audit
+- New: `src/storesignal/api_jobs.py` — /pipeline/run, /pipeline/{id}, /ingest,
+  /ingest/{id}, /evaluation/run, /evaluation/{id}, POST /replay, /briefs/{region}
+- api.py mounts both routers. Total /api/v1 routes: 38 (+ /health = 39).
+- All new routes auth-guarded by the global middleware; all mutations audit-logged.
+- Idempotency keys accepted on /pipeline/run, /ingest, /evaluation/run.
+
+### Frontend
+- 7 new pages: /trends, /stores, /stores/[id], /actions, /import, /data-health,
+  /settings, /audit
+- Sidebar NAV extended to 11 items.
+- `web/lib/api.ts` extended with 14 new endpoint wrappers.
+- `next build` green: 18 static + dynamic routes.
+
+### Streamlit retired
+- `src/storesignal/ui.py` -> `legacy/ui.py.retired`
+- Makefile `ui` target removed; `serve` port corrected to 8790.
+- docker-compose `ui` service removed.
+- Dockerfile streamlit references cleared.
+
+### Tests
+- New: `tests/test_api_extras.py` (13 tests)
+- Total: 31 passed (was 18).
+- ruff clean across src + tests.
+
+### Docs
+- DEPLOYMENT.md rewritten for the current topology (17 pages, 39 endpoints,
+  both auth modes, Docker).
+- Makefile: `serve` target now matches HANDOFF port 8790.
+
+### Still outside code reach (spec §20.5 / §24)
+Legal review, pen test, real-corp IdP swap, data-owner sign-off, stakeholder
+acceptance. Documented in DEPLOYMENT.md, not hidden.

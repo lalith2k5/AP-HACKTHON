@@ -1,10 +1,17 @@
 import Link from "next/link";
 
 const NAV = [
-  { href: "/overview", label: "Overview",  icon: "◎" },
-  { href: "/incidents", label: "Incidents", icon: "▦" },
-  { href: "/alerts",    label: "Alerts",    icon: "!" },
-  { href: "/reports",   label: "Reports",   icon: "▤" },
+  { href: "/overview",    label: "Overview",    icon: "◎" },
+  { href: "/incidents",   label: "Incidents",   icon: "▦" },
+  { href: "/alerts",      label: "Alerts",      icon: "!" },
+  { href: "/trends",      label: "Trends",      icon: "∿" },
+  { href: "/stores",      label: "Stores",      icon: "▤" },
+  { href: "/actions",     label: "Actions",     icon: "✓" },
+  { href: "/reports",     label: "Reports",     icon: "▤" },
+  { href: "/import",      label: "Import",      icon: "⇣" },
+  { href: "/data-health", label: "Data Health", icon: "○" },
+  { href: "/settings",    label: "Settings",    icon: "⚙" },
+  { href: "/audit",       label: "Audit",       icon: "≡" },
 ] as const;
 
 export function AppShell({

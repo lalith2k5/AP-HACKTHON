@@ -83,6 +83,23 @@ export const endpoints = {
   overrideAlert: (id: string, body: { actor: string; note: string; decision?: string }) =>
     api(`/api/v1/alerts/${id}/override`, { method: "POST", body }),
   briefWeekly: () => api("/api/v1/briefs/weekly"),
+  stores: (params?: Record<string, string>) =>
+    api(`/api/v1/stores${params ? `?${new URLSearchParams(params)}` : ""}`),
+  store: (id: string) => api(`/api/v1/stores/${id}`),
+  trends: (params?: Record<string, string>) =>
+    api(`/api/v1/trends${params ? `?${new URLSearchParams(params)}` : ""}`),
+  audit: (params?: Record<string, string>) =>
+    api(`/api/v1/audit${params ? `?${new URLSearchParams(params)}` : ""}`),
+  metrics: () => api("/api/v1/metrics"),
+  jobs: (id: string) => api(`/api/v1/jobs/${id}`),
+  pipelineRun: () => api("/api/v1/pipeline/run", { method: "POST", body: {} }),
+  evaluationRun: () => api("/api/v1/evaluation/run", { method: "POST", body: {} }),
+  ingest: (body: Record<string, unknown>) =>
+    api("/api/v1/ingest", { method: "POST", body }),
+  ingestStatus: (id: string) => api(`/api/v1/ingest/${id}`),
+  pipelineStatus: (id: string) => api(`/api/v1/pipeline/${id}`),
+  evaluationStatus: (id: string) => api(`/api/v1/evaluation/${id}`),
+  demoReset: () => api("/api/v1/demo/reset", { method: "POST", body: {} }),
 } as const;
 
 export { API_BASE };
