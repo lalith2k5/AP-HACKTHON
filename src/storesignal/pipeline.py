@@ -38,12 +38,15 @@ STAGES = [
 
 def run():
     t0 = time.time()
+    log_event(log, "pipeline.start", stage="all")
     for module, desc in STAGES:
         print()
         print("=" * 72)
         print(f"[pipeline] {desc}")
         print(f"[pipeline] storesignal.{module}")
         print("=" * 72)
+        t_stage = time.time()
+        log_event(log, "stage.start", stage=module)
         r = subprocess.run(
             [str(PY), "-m", f"storesignal.{module}"],
             check=False, cwd=str(ROOT),
@@ -59,7 +62,7 @@ def run():
     print("=" * 72)
     print(f"[pipeline] DONE in {time.time() - t0:.1f}s")
     print("=" * 72)
-
+    log_event(log, "pipeline.done", duration_ms=int((time.time() - t0) * 1000))
 
 if __name__ == "__main__":
     run()
