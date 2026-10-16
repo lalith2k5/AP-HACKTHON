@@ -9,12 +9,14 @@ import subprocess
 import sys
 import time
 
+from storesignal.logging_setup import get_logger, log_event
 from storesignal.paths import (
     CODE_ROOT,
 )
 
 ROOT = CODE_ROOT
 PY = ROOT / ".venv" / "bin" / "python"
+log = get_logger("pipeline")
 
 STAGES = [
     ("generate_mock_data", "Generate mock dataset (40k, 3 seeded)"),
@@ -46,9 +48,13 @@ def run():
             [str(PY), "-m", f"storesignal.{module}"],
             check=False, cwd=str(ROOT),
         )
+        dur = int((time.time() - t_stage) * 1000)
         if r.returncode != 0:
+            log_event(log, "stage.failed", level="error", stage=module,
+                      duration_ms=dur, error_code=f"exit_{r.returncode}")
             print(f"[pipeline] FAILED: {module}", file=sys.stderr)
             sys.exit(r.returncode)
+        log_event(log, "stage.done", stage=module, duration_ms=dur)
     print()
     print("=" * 72)
     print(f"[pipeline] DONE in {time.time() - t0:.1f}s")

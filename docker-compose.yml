@@ -10,7 +10,7 @@ services:
       - ./models:/app/models
     command: >
       sh -c "python -m storesignal.pipeline &&
-             uvicorn api:app --app-dir /app/src --host 0.0.0.0 --port 8000"
+             uvicorn storesignal.api:app --host 0.0.0.0 --port 8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

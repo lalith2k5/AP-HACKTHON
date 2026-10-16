@@ -8,3 +8,5 @@ htmlcov/
 data/processed/
 data/evaluation/reports/
 data/evaluation/coverage/
+.env
+logs/

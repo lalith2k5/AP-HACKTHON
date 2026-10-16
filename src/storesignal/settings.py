@@ -10,6 +10,23 @@ from pathlib import Path
 
 ROOT = Path.home() / "storesignal-ai"
 
+def _load_env_file() -> None:
+    """Load .env if present (does not override existing env vars)."""
+    env_path = ROOT / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        k, v = k.strip(), v.strip().strip('"').strip("'")
+        if k and k not in os.environ:
+            os.environ[k] = v
+
+
+_load_env_file()
+
 
 def _bool(name: str, default: bool) -> bool:
     v = os.getenv(name)
