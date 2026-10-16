@@ -1,0 +1,37 @@
+# Email — Legal Counsel
+
+**Subject:** Legal review request — StoreSignal AI voice-of-store system (DPDP + FSSAI)
+
+Dear [Counsel name],
+
+We need a legal review of StoreSignal AI, an internal retail operations
+intelligence system we have built for a controlled pilot. Attached are two
+documents that frame the review:
+
+- `01_legal_review_brief.md` — what the system does and does not do, plus
+  seven specific questions
+- `02_regulatory_checklist.md` — the India-specific obligations we believe
+  are in scope (FSSAI, DPDP Act 2023, Shops and Establishments, POSH,
+  Consumer Protection Act 2019)
+
+**What the system does:** ingests multilingual retail feedback from four
+channels (customer reviews, app comments, staff shift notes, call-centre
+excerpts), classifies it into operational categories, applies a mandatory
+high-risk policy engine, groups related signals into incidents, and routes
+them to owning teams.
+
+**What it does not do:** no automated disciplinary decisions, no cloud LLM,
+no machine translation, no external data transmission, no scraping, no
+access to real customer or staff systems, no raw PII in UI or logs. These
+exclusions are enforced in code, not policy.
+
+We would like a written opinion on the seven questions in the brief,
+particularly the DPDP lawful-basis question, retention schedule, and how to
+honour erasure requests given our append-only audit design.
+
+Proposed timeline: [date]. Happy to walk through the system in a 30-minute
+call first if useful.
+
+Best regards,
+[Name]
+[Title]
