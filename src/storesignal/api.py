@@ -12,7 +12,15 @@ from collections import defaultdict as _defaultdict
 from collections import deque as _deque
 
 import pandas as pd
-from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -309,7 +317,7 @@ def get_incident(incident_id: str):
     rec = {k: _coerce(v) for k, v in row.iloc[0].to_dict().items()}
     rec = _apply_overrides(rec, "incident", "incident_id", incident_id)
     rec["evidence"] = links()[links()["incident_id"] == incident_id]["record_id"].tolist()
-    rec["notes"] = [n for n in _read_jsonl(_notes_path()) if n.get("incident_id") == incident_id]
+    rec["notes"] = _state.notes_for(incident_id)
     return rec
 
 
