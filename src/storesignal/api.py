@@ -25,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from storesignal import state as _state
 from storesignal.api_envelope import install as install_envelope
 from storesignal.config_loader import load_config
 from storesignal.paths import (
@@ -43,7 +44,6 @@ from storesignal.security import (
 )
 from storesignal.tracking import record_event
 from storesignal.tracking import summarize as tracking_summary
-from storesignal import state as _state
 
 ROOT = CODE_ROOT
 PROC = PROCESSED_DIR
@@ -334,7 +334,7 @@ def patch_incident(incident_id: str, body: IncidentPatch):
     updates = body.model_dump(exclude_none=True, exclude={"actor", "reason"})
     if not updates:
         raise HTTPException(status_code=422, detail="no fields to update")
-    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     for field, value in updates.items():
         _state.append_incident_override(
             incident_id, field, value, body.actor, body.reason,
