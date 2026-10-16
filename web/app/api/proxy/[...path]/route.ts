@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { auth } from "@/auth";
 
 const BACKEND = process.env.STORESIGNAL_API_BASE ?? "http://localhost:8790";
 const API_KEY = process.env.STORESIGNAL_API_KEY ?? "demo-key-storesignal";
@@ -6,12 +7,27 @@ const API_KEY = process.env.STORESIGNAL_API_KEY ?? "demo-key-storesignal";
 async function forward(req: NextRequest, params: Promise<{ path: string[] }>) {
   const { path } = await params;
   const target = `${BACKEND}/${path.join("/")}${req.nextUrl.search}`;
+
   const headers = new Headers();
   req.headers.forEach((v, k) => {
-    if (k.toLowerCase() === "host") return;
+    const lk = k.toLowerCase();
+    if (lk === "host") return;
+    if (lk === "authorization") return; // strip browser-supplied auth
     headers.set(k, v);
   });
-  headers.set("x-api-key", API_KEY);
+
+  // Prefer the OIDC access token from the Auth.js session (server-side).
+  // Fall back to the static x-api-key when OIDC is not configured.
+  try {
+    const session = await auth();
+    if (session?.accessToken) {
+      headers.set("authorization", `Bearer ${session.accessToken}`);
+    } else {
+      headers.set("x-api-key", API_KEY);
+    }
+  } catch {
+    headers.set("x-api-key", API_KEY);
+  }
 
   const body =
     req.method === "GET" || req.method === "HEAD" ? undefined : await req.text();
