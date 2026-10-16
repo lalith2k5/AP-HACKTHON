@@ -85,7 +85,7 @@ state. Optional TLS via Caddy.
     Re-running the pipeline does NOT erase overrides/notes (separate store).
     Hard reset: POST /api/v1/demo/reset, or delete the SQLite DB manually.
 
-## Full API surface (39 endpoints)
+## Full API surface (37 paths)
     /health
     /api/v1/overview
     /api/v1/incidents  +  /{id}  +  /{id}/notes  +  /{id}/timeline

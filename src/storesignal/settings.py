@@ -72,8 +72,10 @@ def validate_startup() -> list[str]:
         errors.append(f"config directory not found: {CONFIG_DIR}")
     if not (ROOT / "src" / "storesignal" / "api.py").exists():
         errors.append("api module missing from package")
-    if not (ROOT / "src" / "storesignal" / "ui.py").exists():
-        errors.append("ui module missing from package")
+    if not (ROOT / "src" / "storesignal" / "api_extras.py").exists():
+        errors.append("api_extras module missing from package")
+    if not (ROOT / "src" / "storesignal" / "api_jobs.py").exists():
+        errors.append("api_jobs module missing from package")
     return errors
 
 

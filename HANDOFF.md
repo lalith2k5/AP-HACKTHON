@@ -635,7 +635,7 @@ vars in .env. No code change.
 - New: `src/storesignal/api_extras.py` — /stores, /stores/{id}, /trends, /audit
 - New: `src/storesignal/api_jobs.py` — /pipeline/run, /pipeline/{id}, /ingest,
   /ingest/{id}, /evaluation/run, /evaluation/{id}, POST /replay, /briefs/{region}
-- api.py mounts both routers. Total /api/v1 routes: 38 (+ /health = 39).
+- api.py mounts both routers. Total routes: 37 (including /health).
 - All new routes auth-guarded by the global middleware; all mutations audit-logged.
 - Idempotency keys accepted on /pipeline/run, /ingest, /evaluation/run.
 

@@ -161,4 +161,4 @@ what is missing is the operational hardening, listed line by line.
 - 0.9432 escalation precision
 - 3/3 seeded incidents, 3.67 mean lead days
 - 1.0000 policy compliance (1260/1260)
-- 39 API endpoints, 17 frontend pages, 31 tests passing
+- 37 API endpoints, 17 frontend pages, 31 tests passing
