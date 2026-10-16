@@ -22,6 +22,9 @@ type Incident = {
   verification_status: string;
   evidence?: string[];
   notes?: { ts: string; actor: string; note: string }[];
+  escalation_rule?: string | null;
+  next_action?: string | null;
+  sla_hours?: number | null;
 };
 
 type TimelineEvent = {
@@ -109,6 +112,39 @@ export default function IncidentDetailClient() {
               <span className="rounded bg-muted px-1.5 py-0.5">{data.verification_status}</span>
             </div>
           </header>
+
+          {(data.escalation_rule || data.next_action) && (
+            <div className="mb-5 rounded-xl border border-border bg-card p-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Escalation rule
+                  </div>
+                  <div className="mt-1 text-sm font-medium">
+                    {data.escalation_rule
+                      ? data.escalation_rule.split(":").join(" \u00b7 ")
+                      : "\u2014"}
+                  </div>
+                  {data.escalation_rule?.startsWith("mandatory_policy") && (
+                    <div className="mt-1 text-xs font-medium" style={{ color: "var(--status-critical)" }}>
+                      Mandatory \u2014 bypasses trend volume
+                    </div>
+                  )}
+                </div>
+                <div className="sm:col-span-2">
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Next action
+                  </div>
+                  <div className="mt-1 text-sm">{data.next_action ?? "\u2014"}</div>
+                </div>
+              </div>
+              {data.sla_hours != null && (
+                <div className="mt-3 text-xs text-muted-foreground">
+                  SLA: {data.sla_hours}h from first seen
+                </div>
+              )}
+            </div>
+          )}
 
           <div role="tablist" className="mb-4 flex gap-1 border-b border-border">
             {TABS.map((t) => (

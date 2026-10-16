@@ -25,6 +25,14 @@ type Brief = {
   top_issues: TopIssue[];
 };
 
+type Metrics = {
+  escalation?: {
+    escalated_total?: number;
+    escalation_precision?: number;
+    escalation_recall?: number;
+  };
+};
+
 const SEV_COLOR: Record<string, string> = {
   critical: "var(--status-critical)",
   high: "var(--status-high)",
@@ -36,10 +44,19 @@ const TREND_COLOR: Record<string, string> = {
   UP: "var(--status-critical)",
   DOWN: "var(--status-ok)",
   FLAT: "var(--muted-foreground)",
+  NEW: "var(--status-high)",
+};
+
+const TREND_GLYPH: Record<string, string> = {
+  UP: "\u2191",
+  DOWN: "\u2193",
+  FLAT: "\u2192",
+  NEW: "\u2726",
 };
 
 export default function ReportsPage() {
   const [data, setData] = useState<Brief | null>(null);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,6 +66,12 @@ export default function ReportsPage() {
         setData(d);
       } catch (e) {
         setErr((e as ApiError).message);
+      }
+      try {
+        const m = (await endpoints.metrics()) as Metrics;
+        setMetrics(m);
+      } catch {
+        // metrics optional
       }
     })();
   }, []);
@@ -78,7 +101,7 @@ export default function ReportsPage() {
 
       {data && (
         <div className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Region</div>
               <div className="mt-1 text-lg font-semibold">{data.region_name}</div>
@@ -101,6 +124,21 @@ export default function ReportsPage() {
                 {delta} vs previous week
               </div>
             </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Escalation precision
+              </div>
+              <div className="mt-1 text-lg font-semibold">
+                {metrics?.escalation?.escalation_precision != null
+                  ? (metrics.escalation.escalation_precision * 100).toFixed(1) + "%"
+                  : "\u2014"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {metrics?.escalation?.escalated_total != null
+                  ? metrics.escalation.escalated_total.toLocaleString() + " escalated"
+                  : "of escalated, truly actionable"}
+              </div>
+            </div>
           </div>
 
           <section>
@@ -121,8 +159,9 @@ export default function ReportsPage() {
                         <span
                           className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold"
                           style={{ color: TREND_COLOR[t.trend] }}
+                          title={"Trend vs previous week: " + t.trend}
                         >
-                          {t.trend}
+                          {(TREND_GLYPH[t.trend] ?? "?") + " " + t.trend}
                         </span>
                       </div>
                       {t.next_action && (

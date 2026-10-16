@@ -418,6 +418,36 @@ def get_incident(incident_id: str):
     rec = _apply_overrides(rec, "incident", "incident_id", incident_id)
     rec["evidence"] = links()[links()["incident_id"] == incident_id]["record_id"].tolist()
     rec["notes"] = _state.notes_for(incident_id)
+
+    # Spec R5: "each issue tagged with owning function and a severity level,
+    # with the escalation rule stated." Pull the escalation_rule from the
+    # routing parquet via any evidence record_id belonging to this incident.
+    try:
+        rt = routing()
+        rec_ids = rec.get("evidence") or []
+        if rec_ids:
+            matched = rt[rt["record_id"].isin(rec_ids)]
+            if not matched.empty:
+                if "escalation_rule" in matched.columns:
+                    rules = matched["escalation_rule"].dropna().unique().tolist()
+                    # Prefer mandatory_policy over severity_based over routine
+                    for pref in ("mandatory_policy", "severity_based", "routine_review"):
+                        hit = [r for r in rules if str(r).startswith(pref)]
+                        if hit:
+                            rec["escalation_rule"] = hit[0]
+                            break
+                    else:
+                        rec["escalation_rule"] = rules[0] if rules else None
+                if "next_action" in matched.columns:
+                    na = matched["next_action"].dropna().unique().tolist()
+                    rec["next_action"] = na[0] if na else None
+                if "sla_hours" in matched.columns:
+                    sla = matched["sla_hours"].dropna().unique().tolist()
+                    rec["sla_hours"] = int(sla[0]) if sla else None
+    except Exception as exc:
+        rec["escalation_rule"] = None
+        rec["escalation_rule_error"] = str(exc)
+
     return rec
 
 
