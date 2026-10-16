@@ -290,6 +290,17 @@ def store_coords() -> dict:
     return out
 
 
+
+def _region_store_ids(region_id: str) -> set[str]:
+    p = REF / "store_master.csv"
+    if not p.exists():
+        return set()
+    df = pd.read_csv(p)
+    if "region_id" not in df.columns or "store_id" not in df.columns:
+        return set()
+    return set(df[df["region_id"] == region_id]["store_id"].astype(str).tolist())
+
+
 def filter_by_region(df, region_id: str):
     if df is None or region_id in (None, "ALL", ""):
         return df
@@ -298,16 +309,3 @@ def filter_by_region(df, region_id: str):
         return df
     return df[df["store_id"].astype(str).isin(ids)]
 
-
-def store_coords() -> dict:
-    """store_id -> (lat, lon) via city lookup in store_master.csv."""
-    p = REF / "store_master.csv"
-    if not p.exists():
-        return {}
-    df = pd.read_csv(p)
-    out = {}
-    for _, r in df.iterrows():
-        city = str(r.get("city", "")).strip()
-        if city in CITY_COORDS and r.get("store_id"):
-            out[str(r["store_id"])] = CITY_COORDS[city]
-    return out
