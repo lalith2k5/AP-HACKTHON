@@ -22,8 +22,8 @@ export default function ImportPage() {
     <AppShell active="/import" title="Import data">
       <div className="max-w-2xl space-y-4">
         <div className="rounded-xl border border-border bg-card p-5">
-          <label className="text-sm font-medium">Source file (server path)</label>
-          <input value={path} onChange={(e) => setPath(e.target.value)}
+          <label htmlFor="import-source-path" className="text-sm font-medium">Source file (server path)</label>
+          <input id="import-source-path" value={path} onChange={(e) => setPath(e.target.value)}
             className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono" />
           <p className="mt-2 text-xs text-muted-foreground">
             CSV / JSONL / Parquet. Column mapping defaults will be applied if omitted.
