@@ -4,6 +4,7 @@ StoreSignal AI — Typer CLI
 Single entry point: python -m storesignal.cli <command>
 """
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -169,6 +170,17 @@ def imports():
     for b in list_batches():
         table.add_row(b["batch_id"], str(b.get("rows_valid", "?")), b.get("completed_at", "?"))
     console.print(table)
+
+
+@app.command()
+def process_import(batch_id: str = typer.Argument(..., help="Batch ID from import-data")):
+    """Run classification + mandatory policy on an imported batch."""
+    from storesignal.process_import import process
+    result = process(batch_id)
+    if "error" in result:
+        console.print(f"[red]{result['error']}[/red]")
+        raise typer.Exit(code=1)
+    console.print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":
