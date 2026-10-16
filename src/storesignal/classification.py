@@ -8,7 +8,6 @@ Severity and actionability are assigned by category using config.yaml rules.
 
 import json
 from datetime import timedelta
-from pathlib import Path
 
 import joblib
 import pandas as pd
@@ -18,16 +17,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, f1_score
 from sklearn.pipeline import FeatureUnion
 
-from storesignal.weak_labels import weak_label_frame
-
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
 )
+from storesignal.weak_labels import weak_label_frame
 
 # ---------------------------------------------------------------------------
 # Paths

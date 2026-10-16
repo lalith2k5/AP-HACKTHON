@@ -13,18 +13,13 @@ Rules (from R5 spec):
 """
 
 import json
-from pathlib import Path
 
 import pandas as pd
 import yaml
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
 )
 
 ROOT = CODE_ROOT

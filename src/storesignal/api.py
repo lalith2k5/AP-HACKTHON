@@ -7,7 +7,6 @@ idempotency keys, spec-compliant classify response.
 
 import json
 import uuid
-from pathlib import Path
 
 import pandas as pd
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -15,6 +14,12 @@ from pydantic import BaseModel, Field
 
 from storesignal.api_envelope import install as install_envelope
 from storesignal.config_loader import load_config
+from storesignal.paths import (
+    CODE_ROOT,
+    PROCESSED_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
 from storesignal.security import (
     audit,
     check_idempotency,
@@ -26,14 +31,6 @@ from storesignal.security import (
 from storesignal.tracking import record_event
 from storesignal.tracking import summarize as tracking_summary
 
-from storesignal.paths import (
-    CODE_ROOT,
-    DATA_DIR,
-    PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
-)
 ROOT = CODE_ROOT
 PROC = PROCESSED_DIR
 TAXONOMY_CSV = REFERENCE_DIR / "taxonomy.csv"

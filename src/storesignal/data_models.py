@@ -6,18 +6,15 @@ We materialize them as standalone Parquet files for schema parity.
 """
 
 import json
-from pathlib import Path
 
 import pandas as pd
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
     REFERENCE_DIR,
-    REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 REF = REFERENCE_DIR
 PROC = PROCESSED_DIR

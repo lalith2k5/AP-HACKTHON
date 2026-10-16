@@ -17,12 +17,10 @@ from pathlib import Path
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
-    PROCESSED_DIR,
     RAW_DIR,
-    REFERENCE_DIR,
     REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 CONFIG_DIR = ROOT / "config"
 DATA_RAW = RAW_DIR

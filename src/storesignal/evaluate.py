@@ -28,15 +28,18 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import classification_report, f1_score
 
-from storesignal.versioning import stamp_run
-
-from storesignal.paths import (
-
 # ---------------------------------------------------------------------------
 # Hidden-label isolation guard (spec 17.2). Refuses to read the hidden-label
 # file unless STORESIGNAL_ALLOW_HIDDEN_EVAL is true.
 # ---------------------------------------------------------------------------
 from storesignal import settings as _ssettings
+from storesignal.paths import (
+    CODE_ROOT,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REPORTS_DIR,
+)
+from storesignal.versioning import stamp_run
 
 
 def _guard_hidden_eval() -> None:
@@ -49,13 +52,6 @@ def _guard_hidden_eval() -> None:
 
 _guard_hidden_eval()
 
-    CODE_ROOT,
-    DATA_DIR,
-    PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
-)
 
 ROOT = CODE_ROOT
 HIDDEN = RAW_DIR / "hidden_labels.jsonl"

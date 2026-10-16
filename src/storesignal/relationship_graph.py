@@ -10,19 +10,16 @@ Exports:
 """
 
 import json
-from pathlib import Path
 
 import networkx as nx
 import pandas as pd
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
     REFERENCE_DIR,
-    REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 PROC = PROCESSED_DIR
 REF = REFERENCE_DIR

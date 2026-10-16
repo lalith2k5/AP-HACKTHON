@@ -20,11 +20,7 @@ import pandas as pd
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
 )
 
 # ---------------------------------------------------------------------------

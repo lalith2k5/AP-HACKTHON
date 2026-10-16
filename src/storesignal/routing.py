@@ -7,19 +7,14 @@ recommended next action and SLA.
 """
 
 import json
-from pathlib import Path
 
 import pandas as pd
 
 from storesignal.config_loader import load_config
-
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
     REFERENCE_DIR,
-    REPORTS_DIR,
 )
 
 _cfg = load_config()

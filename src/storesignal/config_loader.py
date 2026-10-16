@@ -6,22 +6,16 @@ and returns a single typed object. Existing modules can keep reading
 config.yaml directly for backward compatibility.
 """
 
-from pathlib import Path
 from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
 
 from storesignal import settings as _ssettings
-
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
-    PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 CONFIG_DIR = _ssettings.CONFIG_DIR
 

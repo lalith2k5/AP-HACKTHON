@@ -8,16 +8,11 @@ stamps the evaluation with hashes.
 import subprocess
 import sys
 import time
-from pathlib import Path
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
-    PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 PY = ROOT / ".venv" / "bin" / "python"
 

@@ -8,16 +8,12 @@ Provides a queryable summary of alert lifecycle.
 import json
 import time
 import uuid
-from pathlib import Path
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 LOG = PROCESSED_DIR / "actions.jsonl"
 LOG.parent.mkdir(parents=True, exist_ok=True)

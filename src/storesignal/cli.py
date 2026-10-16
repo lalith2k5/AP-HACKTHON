@@ -13,12 +13,10 @@ from rich.table import Table
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
     REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 PY = ROOT / ".venv" / "bin" / "python"
 

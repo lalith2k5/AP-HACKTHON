@@ -13,22 +13,17 @@ import time
 import uuid
 from collections import defaultdict, deque
 from collections.abc import Callable
-from pathlib import Path
 
 from fastapi import Header, HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from storesignal.config_loader import load_config
-
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
-    REPORTS_DIR,
 )
+
 ROOT = CODE_ROOT
 AUDIT_LOG = PROCESSED_DIR / "audit.log"
 AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)

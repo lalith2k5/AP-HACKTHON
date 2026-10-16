@@ -11,17 +11,13 @@ source evidence is preserved.
 
 import json
 import uuid
-from pathlib import Path
 
 import pandas as pd
 from rapidfuzz import fuzz
 
 from storesignal.paths import (
     CODE_ROOT,
-    DATA_DIR,
     PROCESSED_DIR,
-    RAW_DIR,
-    REFERENCE_DIR,
     REPORTS_DIR,
 )
 
