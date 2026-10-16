@@ -10,3 +10,6 @@ data/evaluation/reports/
 data/evaluation/coverage/
 .env
 logs/
+
+# backup tarballs (regenerate with scripts/backup.sh)
+backups/

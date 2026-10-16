@@ -11,6 +11,7 @@ import uuid
 
 import pandas as pd
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, Request
+from collections import defaultdict as _defaultdict, deque as _deque
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -69,8 +70,6 @@ app.add_middleware(
 # Rate limiting (spec 18) — in-memory, per-IP, 300 req/min.
 # For multi-user production: replace with a shared store (Redis).
 # ---------------------------------------------------------------------------
-from collections import defaultdict as _defaultdict, deque as _deque
-
 _RATE_BUCKETS: dict = _defaultdict(_deque)
 _RATE_LIMIT = 300
 _RATE_WINDOW = 60.0
