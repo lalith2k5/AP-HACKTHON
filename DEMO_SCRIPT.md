@@ -1,51 +1,164 @@
-# StoreSignal AI — 3-Minute Demo Script
+# StoreSignal AI — Demo Script for Judges
 
-Setup: `make serve` (Terminal 1) and `make ui` (Terminal 2).
+Maps to spec section 22. Target runtime: 7 minutes live, 3 minutes Q&A.
 
-## 0:00 — The problem
-> Head office is drowning in unstructured feedback. Real operational
-> problems — a broken freezer, a mislabelled allergen, a rude billing
-> counter — surface weeks late. StoreSignal AI turns chatter into action.
+## Pre-flight (do this 15 minutes before)
 
-## 0:20 — Command Center
-Show: 40,000 records, 32 categories, 1,260 escalations, 1,320 alerts.
-Line: "Reproducible pipeline — this is not a snapshot."
+Run the checklist at the bottom of this file. Do not skip step 6.
 
-## 0:45 — Early-Warning Radar (killer feature)
-Show: flag table with robust z-scores.
-Line: "Three incidents were planted. We never look at hidden labels during
-detection. The radar found all three, 3.67 days before each peak."
+## The story in one sentence
 
-## 1:25 — Incident Explorer + fusion
-Show: cross-channel incident with pipes in `channels` column.
-Line: "Same allergen concern across call + app + review becomes one
-incident — not three counts. Every source record is preserved."
+StoreSignal turns scattered store chatter into traceable incidents, escalates
+safety issues regardless of volume, and shows the evidence behind every claim.
 
-## 1:55 — Regional Action Brief
-Show: North region markdown brief.
-Line: "Top 5 issues, evidence quotes, affected stores, trend arrows,
-owner, next action. Every claim traces back to source data."
+## Beat 1 — Frame (30 seconds)
 
-## 2:30 — Model & Trust
-Show: evaluation report.
-Line: "Macro-F1 0.9167 on hidden labels. Escalation precision 0.9432.
-3/3 seeded detected. 3.67 days mean lead time. Precision over recall,
-because that is what the spec asked for."
+"StoreSignal is not a sentiment dashboard. It is an early-warning and
+incident-resolution layer. The output is not a score — it is an incident with
+an owner and an audit trail."
 
-## 2:50 — Close
-Line: "make clean && make pipeline regenerates every number on this screen."
+Point at the sidebar: "This workspace is simulated data, clearly labelled."
 
-## Backup answers
+## Beat 2 — Overview (60 seconds)
 
-Q: Why TF-IDF, not transformers?
-A: Baseline first. Char n-grams handle code-mixed noise; 0.92 macro-F1.
-   The spec says evaluate embeddings only if the baseline shows limits.
+Open http://localhost:3300/overview
 
-Q: How is the mandatory-escalation invariant enforced?
-A: Separate module (risk_policy.py). Fires on category OR weak-category OR
-   severity. Tests enforce zero mandatory records dropped, even below 0.4
-   confidence.
+- "Four channels: reviews, app comments, staff notes, call centre."
+- Point at KPIs: "40,053 records classified. Accuracy 0.891 on the hidden
+  test set. Macro-F1 0.917."
+- Point at the urgent queue: "This is not sorted by volume. It is sorted by
+  policy severity."
+- Change the region filter to DEL. "Filter is real. It re-queries the
+  backend."
 
-Q: Is this production-ready?
-A: Production-shaped. Containerization, transactional state, CI/CD are
-   listed as future work per the spec.
+Do not linger. The overview is the map, not the territory.
+
+## Beat 3 — The safety boundary (90 seconds) ← THE MOMENT
+
+Open the alerts page: http://localhost:3300/alerts
+
+- Filter to `mandatory_policy`.
+- Pick any allergen or food-safety alert. Open it.
+- "One record. One signal. It escalates anyway."
+- Point at the reason field: "This is not the classifier's opinion. This is a
+  mandatory policy rule that fires independently of confidence and volume."
+
+Open the incident. Show the Evidence tab.
+
+- "Here is the quote, the channel, the timestamp, the store, the record ID."
+- "Every alert links back to source records. This is the traceability
+  guarantee."
+
+If asked about false positives, the honest answer is: "Escalation recall is
+0.066 by design — we fire on the safety boundary, not on precision. False
+positives are cheaper than missed food-safety signals."
+
+## Beat 4 — Emerging trend (60 seconds)
+
+Open http://localhost:3300/trends
+
+- "This is the baseline-versus-current view. The robust z-score uses MAD, not
+  standard deviation, so a single spike does not create an alert."
+- Point at the anomalies table: "Three seeded incidents, all detected. Mean
+  lead time 3.67 days before peak."
+- "The denominator is weekly footfall where available. When it is not, the
+  rate lift is marked not-calculable. We do not invent numbers."
+
+## Beat 5 — Assignment and audit (60 seconds)
+
+Open any incident, Actions tab.
+
+- Change owner to `supply_chain`.
+- Add a note: "Demo note — rehearse."
+- Click Save.
+- Show the Timeline tab: "The note and the status change are in the timeline.
+  Every mutation writes an audit event."
+
+Open http://localhost:3300/audit
+
+- "Append-only. No UI to edit or delete. Timestamp, actor, object, reason."
+
+## Beat 6 — Regional brief (60 seconds)
+
+Open http://localhost:3300/reports
+
+- Point at the structure: "Executive summary, top five issues, mandatory-risk
+  section, evidence links, owner, next action."
+- "Every sentence derives from a query. No LLM. No invented causal language."
+- "Note the mandatory-risk section sits separately from the top five. Risk
+  does not compete with volume."
+
+## Beat 7 — Evaluation honesty (45 seconds)
+
+Open http://localhost:3300/data-health
+
+- "Metrics come from a hidden-label evaluator that normal pipeline code
+  cannot read. Environment guard enforces it."
+- Show the job controls: "The pipeline can be re-run from the UI. It takes
+  about 27 seconds. We do not re-run it during the demo because it overwrites
+  artifacts."
+
+## Beat 8 — Close (30 seconds)
+
+"Three things make this different:
+
+1. Safety overrides volume. Always.
+2. Every claim has an evidence trail back to a source record.
+3. It runs locally, end to end. No cloud, no external AI, no data leaves
+   the machine.
+
+What we have not done is listed honestly in DEPLOYMENT.md — legal review,
+pen test, real IdP swap, data-owner sign-off. Those are process items, not
+engineering gaps."
+
+## Rehearsal checklist
+
+- [ ] Backend running: `./scripts/run-api.sh` (NOT bare uvicorn)
+- [ ] Frontend running: `cd web && npm run dev -- --port 3300`
+- [ ] Browser open at http://localhost:3300, clean profile, no other tabs
+- [ ] Font size bumped to 125% for projection
+- [ ] Do not show terminal tabs during the demo
+- [ ] Demo reset done in advance: `POST /api/v1/demo/reset` — then re-run
+      pipeline (27s) so state is fresh but artifacts are populated
+- [ ] One dry run end to end, stopwatch on, under 7:30
+
+## The one slide
+
+If a slide is required:
+
+    StoreSignal AI
+    Voice-of-Store Engine
+
+    Safety-first escalation
+    Evidence-backed incidents
+    Local, auditable, deterministic
+
+    github.com/lalith2k5/AP-HACKTHON
+
+## Three questions you will be asked
+
+**Q: What stops a false accusation from ruining someone's career?**
+A: No automated disciplinary action. The system flags risk for human review.
+Staff-misconduct incidents are restricted to HR/risk roles, and every access
+is audit-logged. We do not infer truth from feedback.
+
+**Q: What if the model is wrong?**
+A: Multi-label classification produces scores and uncertainty. Low-confidence
+cases route to human review. And the mandatory policy engine runs
+independently of the model — a safety signal does not depend on the
+classifier being right.
+
+**Q: How does this scale?**
+A: The baseline is deterministic and local. For scale, the honest answer is
+in section 24 of the spec: background workers, transactional DB (we have
+SQLite), managed secrets, real IdP, monitoring. We have the architecture;
+what is missing is the operational hardening, listed line by line.
+
+## Numbers you should have memorised
+
+- 40,053 records
+- 0.8910 accuracy, 0.9167 macro-F1
+- 0.9432 escalation precision
+- 3/3 seeded incidents, 3.67 mean lead days
+- 1.0000 policy compliance (1260/1260)
+- 39 API endpoints, 17 frontend pages, 31 tests passing
