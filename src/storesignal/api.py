@@ -8,10 +8,11 @@ idempotency keys, spec-compliant classify response.
 import json
 import time
 import uuid
+from collections import defaultdict as _defaultdict
+from collections import deque as _deque
 
 import pandas as pd
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, Request
-from collections import defaultdict as _defaultdict, deque as _deque
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
