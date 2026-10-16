@@ -17,3 +17,4 @@ backups/
 # sqlite WAL/SHM
 *.db-wal
 *.db-shm
+demo_recordings/
