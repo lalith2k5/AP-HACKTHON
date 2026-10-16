@@ -26,6 +26,7 @@ from storesignal.paths import (
 )
 
 ROOT = CODE_ROOT
+_LOCAL_IPS = {"127.0.0.1", "::1", "localhost", "testclient"}
 AUDIT_LOG = PROCESSED_DIR / "audit.log"
 AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
 IDEMPOTENCY_DB = PROCESSED_DIR / "idempotency.jsonl"
@@ -169,6 +170,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable):
         client = request.client.host if request.client else "unknown"
+        from storesignal import settings as _settings
+        if _settings.DEMO_MODE and client in _LOCAL_IPS:
+            return await call_next(request)
         now = time.time()
         q = self.buckets[client]
         while q and now - q[0] > self.window:
