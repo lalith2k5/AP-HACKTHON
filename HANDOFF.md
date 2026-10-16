@@ -2,7 +2,21 @@
 
 **Purpose:** Give a new AI assistant full context on the ongoing project.
 
-**Read this entire file before doing anything.** Then confirm with the user
+**Read this entire file before doing anything.**
+
+## 0. If you are a new AI reading this mid-build
+
+The user switches chats when context limits hit. Before doing anything:
+
+1. `set +H`
+2. `cd "$HOME/storesignal-ai"`
+3. `git log --oneline -3` — see last landed commit
+4. `"$HOME/storesignal-ai/.venv/bin/python" -m pytest -q tests` — confirm 18/18
+5. `"$HOME/storesignal-ai/.venv/bin/python" -m ruff check src tests` — confirm clean
+6. Read section 11 (honest gaps) and ask user which gap to close next.
+
+Do NOT re-run the pipeline unless asked — it takes 30s and overwrites artifacts.
+ Then confirm with the user
 that you have understood the state and ask what they want to do next.
 
 ---
@@ -35,6 +49,22 @@ that you have understood the state and ask what they want to do next.
 - Virtualenv: `$HOME/storesignal-ai/.venv/`
 - Shell: zsh. **CRITICAL:** prefix every paste with `set +H`.
 - Avoid `→`, `·`, em-dashes inside pasted code blocks when possible.
+
+
+## 3a. GitHub repository
+
+- **URL:** https://github.com/lalith2k5/AP-HACKTHON
+- **Visibility:** public
+- **Default branch:** `master`
+- **Remote:** `origin` -> https://github.com/lalith2k5/AP-HACKTHON.git
+- **Owner account:** `lalith2k5` (via `gh` CLI, authed)
+- **Push command:**
+      git add -A
+      git -c user.name="StoreSignal Build" -c user.email="build@local" \
+          commit -m "message"
+      git push
+- **Note:** `models/baseline_model.joblib` (6.4 MB) is committed. If future
+  pushes time out, `git config http.postBuffer 524288000` and retry.
 
 ## 4. Folder structure (post-v2.0)
 

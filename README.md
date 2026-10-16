@@ -1,5 +1,8 @@
 # StoreSignal AI — Voice-of-Store Engine
 
+**Repo:** https://github.com/lalith2k5/AP-HACKTHON  
+**Hackathon:** Talent AP Mega Hackathon — Track R5
+
 Retail operations intelligence layer. Early-warning and incident-resolution
 for multilingual store feedback.
 
