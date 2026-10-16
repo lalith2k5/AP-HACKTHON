@@ -1,0 +1,35 @@
+services:
+  api:
+    build: .
+    image: storesignal-ai:latest
+    container_name: storesignal-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    command: >
+      sh -c "python src/run_pipeline.py &&
+             uvicorn api:app --app-dir /app/src --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  ui:
+    build: .
+    image: storesignal-ai:latest
+    container_name: storesignal-ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    command: >
+      streamlit run src/ui.py
+        --server.port 8501
+        --server.address 0.0.0.0
+        --server.headless true
+    depends_on:
+      - api

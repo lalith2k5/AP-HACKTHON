@@ -1,0 +1,44 @@
+[project]
+name = "storesignal-ai"
+version = "0.1.0"
+description = "Voice-of-Store Engine — early-warning and incident-resolution intelligence layer."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+# Core correctness + real-bug rules only. Stylistic rules are documented below.
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+
+ignore = [
+    # --- Correctness-adjacent but intentional in this codebase -------------
+    "E701",    # `if x: df = ...` one-liner — readable in pipeline code
+    "E702",    # `a = ...; b = ...` one-liner — used sparingly in api.py
+    "E712",    # `== True` on a boolean column — explicit for pandas clarity
+    "B007",    # Loop variable intentionally named even when unused (self-documenting)
+    "B905",    # zip() without strict= — we want silent length-mismatch tolerance
+    "PLW2901", # Reassigning loop variable is used deliberately to normalize DataFrames
+
+    # --- Style choices documented so future runs stay clean ----------------
+    "RUF046",  # int(len(...)) is a deliberate defensive cast for JSON serialization
+    "RUF005",  # List concatenation with + is clearer than *-unpacking in UI code
+    "FURB105", # print("") is used as an explicit blank-line separator
+    "FURB122", # write-loop is clearer than writelines for JSONL
+    "UP017",   # timezone.utc is fine; datetime.UTC alias is optional
+    "SIM118",  # dict.keys() is explicit and readable
+    "C401",    # generator-in-set() vs set-comprehension is stylistic
+    "E501",    # long lines are occasionally justified in generated strings
+    "PLC0415", # local import of joblib is intentional (lazy, only for /classify)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Pipeline modules are single-purpose scripts with linear flows.
+# "Too many statements" (PLR0915) and "magic values" (PLR2004) are fine here.
+"src/*"   = ["PLR0915", "PLR2004", "PLW0603", "PL"]
+"tests/*" = ["PLR2004"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

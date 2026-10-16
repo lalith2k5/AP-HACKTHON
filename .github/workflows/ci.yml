@@ -1,0 +1,81 @@
+name: StoreSignal AI CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+jobs:
+  build-test-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ruff lint
+        run: ruff check src tests
+
+      - name: Verify config loads
+        run: python src/config_loader.py
+
+      - name: Build full pipeline
+        run: python src/run_pipeline.py
+        env:
+          PYTHONPATH: src
+
+      - name: Run tests
+        run: pytest -q tests
+
+      - name: Enforce evaluation thresholds
+        run: |
+          python - <<'EOF'
+          import json, sys
+          from pathlib import Path
+          r = json.loads(Path("data/evaluation/reports/evaluation_report.json").read_text())
+          c = r["classification"]; e = r["escalation"]; s = r["seeded_incidents"]
+          ok = True
+          def check(name, value, minimum):
+              global ok
+              passed = value is not None and value >= minimum
+              print(f"  {name}: {value} {'>=' if passed else '<'} {minimum}")
+              ok = ok and passed
+          check("macro_f1", c["macro_f1"], 0.85)
+          check("escalation_precision", e["escalation_precision"], 0.85)
+          check("seeded_detected", s["detected"], 3)
+          if not ok:
+              sys.exit("Acceptance thresholds not met.")
+          print("All evaluation thresholds met.")
+          EOF
+
+      - name: Verify API boot
+        run: |
+          uvicorn api:app --app-dir src --host 127.0.0.1 --port 8010 &
+          AP=$!
+          sleep 5
+          curl -s http://127.0.0.1:8010/health | tee /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+          kill $AP || true
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storesignal-artifacts
+          path: |
+            data/evaluation/reports/
+            data/processed/briefs/
+            data/processed/forecasts.parquet
+          retention-days: 14

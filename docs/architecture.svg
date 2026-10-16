@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 900"
+     font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif">
+  <defs>
+    <style>
+      .box { fill:#ffffff; stroke:#374151; stroke-width:1.5; rx:8; ry:8; }
+      .box-src { fill:#f0f9ff; stroke:#0369a1; stroke-width:1.5; rx:6; ry:6; }
+      .box-core { fill:#fefce8; stroke:#a16207; stroke-width:1.5; rx:8; ry:8; }
+      .box-risk { fill:#fef2f2; stroke:#b91c1c; stroke-width:1.5; rx:8; ry:8; }
+      .box-ops  { fill:#f0fdf4; stroke:#166534; stroke-width:1.5; rx:8; ry:8; }
+      .box-out  { fill:#faf5ff; stroke:#7e22ce; stroke-width:1.5; rx:8; ry:8; }
+      .title { font-size:20px; font-weight:700; fill:#111827; }
+      .subtitle { font-size:12px; fill:#6b7280; }
+      .label { font-size:13px; font-weight:600; fill:#111827; }
+      .detail { font-size:10px; fill:#4b5563; }
+      .arrow { stroke:#374151; stroke-width:1.5; fill:none; }
+      .arrow-strong { stroke:#111827; stroke-width:2.2; fill:none; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <rect width="1100" height="900" fill="#fafafa"/>
+
+  <text x="550" y="38" text-anchor="middle" class="title">StoreSignal AI — System Architecture</text>
+  <text x="550" y="60" text-anchor="middle" class="subtitle">Modular monolith · batch pipeline · thin API layer · Streamlit dashboard</text>
+
+  <!-- INPUTS -->
+  <text x="40" y="105" class="label">INPUTS (4 channels)</text>
+  <rect x="40"  y="115" width="200" height="46" class="box-src"/>
+  <text x="140" y="137" text-anchor="middle" class="label">Online reviews</text>
+  <text x="140" y="152" text-anchor="middle" class="detail">20006</text>
+
+  <rect x="255" y="115" width="200" height="46" class="box-src"/>
+  <text x="355" y="137" text-anchor="middle" class="label">In-app comments</text>
+  <text x="355" y="152" text-anchor="middle" class="detail">10021</text>
+
+  <rect x="470" y="115" width="200" height="46" class="box-src"/>
+  <text x="570" y="137" text-anchor="middle" class="label">Staff shift notes</text>
+  <text x="570" y="152" text-anchor="middle" class="detail">5012</text>
+
+  <rect x="685" y="115" width="200" height="46" class="box-src"/>
+  <text x="785" y="137" text-anchor="middle" class="label">Call transcripts</text>
+  <text x="785" y="152" text-anchor="middle" class="detail">5014</text>
+
+  <!-- INGESTION -->
+  <rect x="240" y="205" width="620" height="60" class="box-core"/>
+  <text x="550" y="228" text-anchor="middle" class="label">Ingestion &amp; Data Quality</text>
+  <text x="550" y="246" text-anchor="middle" class="detail">Pydantic schema · provenance · PII redaction · dedup on record_id</text>
+
+  <line x1="550" y1="161" x2="550" y2="205" class="arrow-strong" marker-end="url(#arrow)"/>
+
+  <!-- NORMALIZATION -->
+  <rect x="240" y="295" width="620" height="60" class="box-core"/>
+  <text x="550" y="318" text-anchor="middle" class="label">Normalization</text>
+  <text x="550" y="336" text-anchor="middle" class="detail">NFKC · zero-width · whitespace · abbreviation expansion · PII pass 2</text>
+
+  <line x1="550" y1="265" x2="550" y2="295" class="arrow-strong" marker-end="url(#arrow)"/>
+
+  <!-- CLASSIFICATION -->
+  <rect x="240" y="385" width="620" height="70" class="box-core"/>
+  <text x="550" y="408" text-anchor="middle" class="label">Classification — TF-IDF (word + char n-grams) + Logistic Regression</text>
+  <text x="550" y="426" text-anchor="middle" class="detail">Category · Severity · Actionability · Confidence</text>
+  <text x="550" y="443" text-anchor="middle" class="detail">Macro-F1 on hidden labels: 0.9167</text>
+
+  <line x1="550" y1="355" x2="550" y2="385" class="arrow-strong" marker-end="url(#arrow)"/>
+
+  <!-- FORK -->
+  <line x1="400" y1="455" x2="400" y2="490" class="arrow-strong" marker-end="url(#arrow)"/>
+  <line x1="700" y1="455" x2="700" y2="490" class="arrow-strong" marker-end="url(#arrow)"/>
+
+  <!-- RISK POLICY -->
+  <rect x="180" y="490" width="340" height="80" class="box-risk"/>
+  <text x="350" y="514" text-anchor="middle" class="label">Risk Policy (mandatory)</text>
+  <text x="350" y="532" text-anchor="middle" class="detail">Allergen · Safety · Hygiene · Misconduct</text>
+  <text x="350" y="548" text-anchor="middle" class="detail">Escalates regardless of volume</text>
+  <text x="350" y="564" text-anchor="middle" class="detail">Precision: 0.9432</text>
+
+  <!-- RADAR -->
+  <rect x="580" y="490" width="340" height="80" class="box-risk"/>
+  <text x="750" y="514" text-anchor="middle" class="label">Early-Warning Radar</text>
+  <text x="750" y="532" text-anchor="middle" class="detail">Robust z-score vs MAD baseline</text>
+  <text x="750" y="548" text-anchor="middle" class="detail">Per-store · per-category · 28-day window</text>
+  <text x="750" y="564" text-anchor="middle" class="detail">107 flags · 3/3 seeded detected</text>
+
+  <!-- MERGE -->
+  <line x1="350" y1="570" x2="350" y2="610" class="arrow"/>
+  <line x1="750" y1="570" x2="750" y2="610" class="arrow"/>
+  <line x1="350" y1="610" x2="750" y2="610" class="arrow"/>
+  <line x1="550" y1="610" x2="550" y2="630" class="arrow-strong" marker-end="url(#arrow)"/>
+
+  <!-- FUSION -->
+  <rect x="240" y="630" width="620" height="60" class="box-ops"/>
+  <text x="550" y="653" text-anchor="middle" class="label">Incident Fusion &amp; Routing</text>
+  <text x="550" y="671" text-anchor="middle" class="detail">40053 records → 37342 incidents · 1538 cross-channel merges · owner assigned</text>
+
+  <line x1="550" y1="690" x2="550" y2="720" class="arrow-strong" marker-end="url(#arrow)"/>
+
+  <!-- ALERTS -->
+  <rect x="240" y="720" width="620" height="60" class="box-ops"/>
+  <text x="550" y="743" text-anchor="middle" class="label">Evidence-Backed Alerts</text>
+  <text x="550" y="761" text-anchor="middle" class="detail">1320 alerts · 1237 policy · 83 radar · evidence record IDs preserved</text>
+
+  <line x1="550" y1="780" x2="550" y2="810" class="arrow-strong" marker-end="url(#arrow)"/>
+
+  <!-- OUTPUTS -->
+  <rect x="60"  y="810" width="230" height="60" class="box-out"/>
+  <text x="175" y="833" text-anchor="middle" class="label">Regional Briefs</text>
+  <text x="175" y="851" text-anchor="middle" class="detail">5 regions · top-5 issues · .md</text>
+
+  <rect x="310" y="810" width="230" height="60" class="box-out"/>
+  <text x="425" y="833" text-anchor="middle" class="label">FastAPI</text>
+  <text x="425" y="851" text-anchor="middle" class="detail">20+ endpoints · auth · audit</text>
+
+  <rect x="560" y="810" width="230" height="60" class="box-out"/>
+  <text x="675" y="833" text-anchor="middle" class="label">Streamlit UI</text>
+  <text x="675" y="851" text-anchor="middle" class="detail">5 views · live artifacts</text>
+
+  <rect x="810" y="810" width="230" height="60" class="box-out"/>
+  <text x="925" y="833" text-anchor="middle" class="label">Evaluation Report</text>
+  <text x="925" y="851" text-anchor="middle" class="detail">.json + .md · hashed run</text>
+
+  <line x1="550" y1="810" x2="175" y2="810" class="arrow"/>
+  <line x1="550" y1="810" x2="425" y2="810" class="arrow"/>
+  <line x1="550" y1="810" x2="675" y2="810" class="arrow"/>
+  <line x1="550" y1="810" x2="925" y2="810" class="arrow"/>
+</svg>

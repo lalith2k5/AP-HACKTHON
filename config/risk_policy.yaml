@@ -1,0 +1,6 @@
+mandatory_categories:
+  - safety_hazard
+  - allergen_or_labeling
+  - food_safety_or_hygiene
+  - staff_misconduct
+min_confidence_for_suppression: 0.0

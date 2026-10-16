@@ -1,0 +1,33 @@
+category_id,category_name,default_owner,mandatory_escalation
+equipment_or_refrigeration,Equipment or Refrigeration Failure,Store Ops,false
+store_cleanliness,Store Cleanliness,Store Ops,false
+queue_or_wait_time,Queue or Wait Time,Store Ops,false
+checkout_experience,Checkout Experience,Store Ops,false
+store_lighting_or_ambience,Store Lighting or Ambience,Store Ops,false
+restroom_condition,Restroom Condition,Store Ops,false
+trolley_or_basket_availability,Trolley or Basket Availability,Store Ops,false
+parking_or_entrance,Parking or Entrance,Store Ops,false
+store_hours_or_closure,Store Hours or Closure,Store Ops,false
+safety_hazard,Safety Hazard,Store Ops,true
+allergen_or_labeling,Allergen or Labeling Concern,Store Ops,true
+food_safety_or_hygiene,Food Safety or Hygiene,Store Ops,true
+out_of_stock,Out of Stock,Supply Chain,false
+stock_shortage_or_allocation,Stock Shortage or Allocation,Supply Chain,false
+product_quality_or_freshness,Product Quality or Freshness,Supply Chain,false
+delivery_or_receiving,Delivery or Receiving,Supply Chain,false
+cold_chain_integrity,Cold Chain Integrity,Supply Chain,false
+expired_or_near_expiry,Expired or Near Expiry,Merchandising,false
+pricing_or_price_tag_error,Pricing or Price Tag Error,Merchandising,false
+promotion_or_offer_issue,Promotion or Offer Issue,Merchandising,false
+planogram_or_shelf_layout,Planogram or Shelf Layout,Merchandising,false
+product_assortment,Product Assortment,Merchandising,false
+packaging_or_labeling,Packaging or Labeling,Merchandising,false
+app_crash_or_bug,App Crash or Bug,Digital,false
+app_login_or_account,App Login or Account,Digital,false
+app_offer_or_loyalty,App Offer or Loyalty,Digital,false
+online_order_fulfillment,Online Order Fulfillment,Digital,false
+app_payment_issue,App Payment Issue,Digital,false
+staff_conduct,Staff Conduct,HR,false
+staff_helpfulness,Staff Helpfulness,HR,false
+billing_staff_behaviour,Billing Staff Behaviour,HR,false
+staff_misconduct,Staff Misconduct,HR,true

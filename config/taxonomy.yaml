@@ -1,0 +1,37 @@
+severity_map:
+  critical:
+    - safety_hazard
+    - allergen_or_labeling
+    - food_safety_or_hygiene
+    - staff_misconduct
+  high:
+    - equipment_or_refrigeration
+    - cold_chain_integrity
+    - expired_or_near_expiry
+    - out_of_stock
+    - stock_shortage_or_allocation
+    - product_quality_or_freshness
+    - app_payment_issue
+    - staff_conduct
+    - billing_staff_behaviour
+    - queue_or_wait_time
+    - pricing_or_price_tag_error
+    - online_order_fulfillment
+  medium:
+    - store_cleanliness
+    - checkout_experience
+    - restroom_condition
+    - delivery_or_receiving
+    - promotion_or_offer_issue
+    - app_crash_or_bug
+    - app_login_or_account
+    - app_offer_or_loyalty
+    - packaging_or_labeling
+    - planogram_or_shelf_layout
+  low:
+    - store_lighting_or_ambience
+    - trolley_or_basket_availability
+    - parking_or_entrance
+    - store_hours_or_closure
+    - product_assortment
+    - staff_helpfulness

@@ -1,0 +1,10 @@
+random_seed: 20260214
+paths:
+  data_raw: "data/raw"
+  data_reference: "data/reference"
+  data_processed: "data/processed"
+  models: "models"
+api:
+  require_api_key: false
+  api_key: "demo-key-storesignal"
+  rate_limit_per_minute: 120

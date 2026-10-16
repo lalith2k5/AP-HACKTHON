@@ -1,0 +1,14 @@
+.venv
+data/processed
+data/evaluation
+data/raw
+__pycache__
+*.pyc
+.git
+.pytest_cache
+.ruff_cache
+docs
+PITCH_DECK.md
+DEMO_SCRIPT.md
+*.md
+!README.md

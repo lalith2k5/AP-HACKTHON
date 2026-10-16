@@ -1,0 +1,19 @@
+classification:
+  validation_days: 3
+  tfidf_word_ngram_min: 1
+  tfidf_word_ngram_max: 2
+  tfidf_char_ngram_min: 3
+  tfidf_char_ngram_max: 5
+  tfidf_max_features_word: 20000
+  tfidf_max_features_char: 30000
+  tfidf_min_df: 2
+  logistic_C: 4.0
+  logistic_max_iter: 400
+  logistic_class_weight: "balanced"
+
+detection:
+  historical_window_days: 28
+  min_historical_periods: 14
+  robust_z_threshold: 3.0
+  min_count: 2
+  min_rate_increase: 2.0

@@ -1,0 +1,71 @@
+# StoreSignal AI - Central Configuration
+random_seed: 20260214
+
+paths:
+  data_raw: "data/raw"
+  data_reference: "data/reference"
+  data_processed: "data/processed"
+  models: "models"
+
+classification:
+  # Time-aware holdout: last N days become validation
+  validation_days: 3
+  tfidf_word_ngram_min: 1
+  tfidf_word_ngram_max: 2
+  tfidf_char_ngram_min: 3
+  tfidf_char_ngram_max: 5
+  tfidf_max_features_word: 20000
+  tfidf_max_features_char: 30000
+  tfidf_min_df: 2
+  logistic_C: 4.0
+  logistic_max_iter: 400
+  logistic_class_weight: "balanced"
+
+risk_policy:
+  # Any of these categories triggers mandatory escalation regardless of volume
+  mandatory_categories:
+    - safety_hazard
+    - allergen_or_labeling
+    - food_safety_or_hygiene
+    - staff_misconduct
+  # Confidence below this must NOT suppress mandatory escalation
+  min_confidence_for_suppression: 0.0
+
+severity_map:
+  # Default severity assigned by category family (weak assignment)
+  critical:
+    - safety_hazard
+    - allergen_or_labeling
+    - food_safety_or_hygiene
+    - staff_misconduct
+  high:
+    - equipment_or_refrigeration
+    - cold_chain_integrity
+    - expired_or_near_expiry
+    - out_of_stock
+    - stock_shortage_or_allocation
+    - product_quality_or_freshness
+    - app_payment_issue
+    - staff_conduct
+    - billing_staff_behaviour
+    - queue_or_wait_time
+    - pricing_or_price_tag_error
+    - online_order_fulfillment
+  medium:
+    - store_cleanliness
+    - checkout_experience
+    - restroom_condition
+    - delivery_or_receiving
+    - promotion_or_offer_issue
+    - app_crash_or_bug
+    - app_login_or_account
+    - app_offer_or_loyalty
+    - packaging_or_labeling
+    - planogram_or_shelf_layout
+  low:
+    - store_lighting_or_ambience
+    - trolley_or_basket_availability
+    - parking_or_entrance
+    - store_hours_or_closure
+    - product_assortment
+    - staff_helpfulness

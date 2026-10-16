@@ -1,0 +1,13 @@
+next_action_by_owner:
+  Store Ops: "Dispatch store ops review within 24h; verify on-site condition."
+  Supply Chain: "Confirm stock position and reallocate from nearest DC."
+  Merchandising: "Verify shelf/price/promo execution; correct labels on site."
+  Digital: "File product bug and attach affected order/offer IDs."
+  HR: "Open HR case; preserve evidence; assign reviewer."
+
+sla_hours_by_severity:
+  critical: 4
+  review_required: 4
+  high: 24
+  medium: 72
+  low: 168
