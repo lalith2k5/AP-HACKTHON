@@ -199,7 +199,7 @@ def record_audit(event_type: str, actor: str, detail: str = "", extra: dict | No
     conn = _conn()
     conn.execute(
         """
-        INSERT INTO audit_events (ts, event_type, actor, detail, extra_json)
+        INSERT INTO audit_events (ts, event_type, actor, detail, extra)
         VALUES (?, ?, ?, ?, ?)
         """,
         (

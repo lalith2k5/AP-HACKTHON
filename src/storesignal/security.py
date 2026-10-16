@@ -7,6 +7,8 @@ StoreSignal AI — Security Layer
 - Request correlation IDs
 - Idempotency key store
 """
+from storesignal import state as _state
+import contextlib
 
 import json
 import time
@@ -91,10 +93,10 @@ def has_permission(role, permission):
 def audit(event_type, actor, detail="", **extra):
     # Mirror to the SQLite audit_events table (was previously JSONL-only,
     # leaving the audit_events table empty in the UI).
-    try:
-        _state.record_audit(event_type=event_type, actor=str(actor), detail=detail, extra=extra)
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        _state.record_audit(
+            event_type=event_type, actor=str(actor), detail=detail, extra=extra
+        )
     rec = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "event_type": event_type,
