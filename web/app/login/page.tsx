@@ -1,3 +1,5 @@
+export const instant = false;
+
 import { signIn, auth, oidcConfigured } from "@/auth";
 import { redirect } from "next/navigation";
 

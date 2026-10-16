@@ -40,8 +40,13 @@ def _issuer() -> str:
     return os.environ.get("STORESIGNAL_OIDC_ISSUER", "").rstrip("/")
 
 
-def _audience() -> str:
-    return os.environ.get("STORESIGNAL_OIDC_AUDIENCE", "storesignal-api")
+def _audience():
+    """Returns list of expected audiences, or None to skip audience check."""
+    raw = os.environ.get("STORESIGNAL_OIDC_AUDIENCE", "").strip()
+    if not raw:
+        return None
+    parts = raw.split()
+    return parts if len(parts) > 1 else parts[0]
 
 
 def _role_claim() -> str:
@@ -110,14 +115,17 @@ def verify_token(token: str) -> dict:
     except Exception as e:
         raise OIDCError(f"could not build public key: {e}") from e
 
+    aud = _audience()
+    options = {"verify_exp": True, "verify_iss": True,
+               "verify_aud": aud is not None}
     try:
         claims = jwt.decode(
             token,
             pubkey,
             algorithms=[key.get("alg", "RS256")],
-            audience=_audience(),
+            audience=aud,
             issuer=_issuer(),
-            options={"verify_exp": True, "verify_aud": True, "verify_iss": True},
+            options=options,
         )
     except jwt.ExpiredSignatureError as e:
         raise OIDCError("token expired") from e
@@ -137,7 +145,14 @@ def role_from_claims(claims: dict) -> str | None:
         "admin", "analyst", "regional_ops_lead", "store_manager",
         "hr_sensitive", "food_safety_risk", "reviewer", "supply_chain",
     }
-    raw = claims.get(_role_claim())
+    path = _role_claim()
+    raw = claims
+    for key in path.split("."):
+        if isinstance(raw, dict) and key in raw:
+            raw = raw[key]
+        else:
+            raw = None
+            break
     if raw is None:
         return None
     if isinstance(raw, str):

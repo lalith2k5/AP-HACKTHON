@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+
+const oidcOn = fs.existsSync(path.join(__dirname, "..", ".oidc-enabled"));
+test.skip(oidcOn, "OIDC enabled — see sso.spec.ts");
 
 test("welcome loads", async ({ page }) => {
   await page.goto("/");

@@ -159,3 +159,49 @@ Before processing real customer or staff data, read:
 - PRIVACY_NOTES.md
 
 These are drafts. Legal and DPO sign-off required.
+
+## SSO / OIDC
+
+Two auth modes:
+
+**Mode A — static key (default, no IdP needed):**
+    set +H; cd "$HOME/storesignal-ai"
+    ./scripts/run-api.sh
+    # separate tab:
+    cd web && npm run dev -- --port 3300
+
+**Mode B — OIDC via local Keycloak:**
+
+    set +H; cd "$HOME/storesignal-ai/deploy/keycloak"
+    docker compose up -d
+    # wait ~30s; realm discovery should return 200:
+    curl -s -o /dev/null -w "%{http_code}\n" \
+      http://localhost:8180/realms/storesignal/.well-known/openid-configuration
+
+    # enable OIDC in backend .env:
+    #   STORESIGNAL_OIDC_ENABLED=true
+    #   STORESIGNAL_OIDC_ISSUER=http://localhost:8180/realms/storesignal
+    #   STORESIGNAL_OIDC_AUDIENCE=
+    #   STORESIGNAL_OIDC_ROLE_CLAIM=realm_access.roles
+
+    # enable OIDC in web/.env.local (see file for commented vars)
+    # create web/.oidc-enabled marker:
+    touch "$HOME/storesignal-ai/web/.oidc-enabled"
+
+    # restart both:
+    cd "$HOME/storesignal-ai" && ./scripts/run-api.sh
+    # new tab:
+    cd web && npm run dev -- --port 3300
+
+Test users (all password `password`):
+    admin, ops, reviewer, hr
+
+Test E2E:
+    cd web && npx playwright test
+
+**CRITICAL:** always start the backend with `./scripts/run-api.sh`, NOT
+bare `uvicorn`. Bare uvicorn does not read `.env`, so OIDC stays off.
+
+Swap to a real IdP (Auth0 / Google / Azure / Okta) by changing the 4
+AUTH_OIDC_* vars in `web/.env.local` and the 3 STORESIGNAL_OIDC_* vars
+in `.env`. No code change.

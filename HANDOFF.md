@@ -523,13 +523,74 @@ For real domain: swap site line in Caddyfile to your hostname and remove
     PRIVACY_NOTES.md      design principles + threat model + boundaries
 These are DRAFTS. Not compliance certifications. Legal review still required.
 
-### SSO — deliberately skipped
-Decision (2026-10-16): keep static x-api-key auth for the hackathon demo.
-Rationale: no IdP chosen; shipping SSO against an unspecified provider
-would produce dead code and add attack surface.
-Path forward when needed: pick Auth0 / Keycloak / Google OIDC / Azure AD,
-then replace `resolve_role(api_key)` in security.py with a JWT-claim
-resolver. Role->permission map already exists and does not need to change.
+### SSO — wired and verified end to end (2026-10-16 21:35)
+
+**Status: WORKING. 3/3 SSO Playwright tests pass against local Keycloak.**
+
+Full flow verified:
+  1. Unauthenticated /overview -> 302 to /login
+  2. Click "Sign in with SSO" -> Keycloak login page
+  3. Fill credentials -> redirect back to /overview
+  4. Session established -> KPI cards render
+  5. Backend accepts Bearer token (401 without, 200 with)
+
+**Backend (FastAPI :8790)**
+  - `src/storesignal/auth_oidc.py` — provider-agnostic JWT verifier
+    - JWKS auto-discovery + 1h cache
+    - dotted-path role claim (realm_access.roles works)
+    - audience optional (skip when env empty)
+  - `src/storesignal/security.py` — accepts `x-api-key` OR `Bearer <JWT>`
+  - `src/storesignal/api.py` — global `_auth_middleware` enforces auth
+    on all `/api/v1/*` when either static key or OIDC is enabled
+  - `scripts/run-api.sh` — sources `.env` before launching uvicorn
+    (critical: bare uvicorn does not load .env)
+
+**Frontend (Next.js :3300)**
+  - `web/auth.ts` — Auth.js v5 config, provider-agnostic OIDC
+  - `web/app/api/auth/[...nextauth]/route.ts` — OAuth callback
+  - `web/proxy.ts` — Next.js 16 middleware (redirects when OIDC on)
+  - `web/app/login/page.tsx` — sign-in button
+  - `web/app/api/proxy/[...path]/route.ts` — server-side token injection
+    (reads Auth.js session, sets Authorization: Bearer)
+  - `web/types/next-auth.d.ts` — module augmentation
+
+**Keycloak (local, :8180)**
+  - `deploy/keycloak/docker-compose.yml` + `realm.json`
+  - Realm: storesignal, Client: storesignal-api
+  - Users: admin / ops / reviewer / hr (password: `password`)
+  - VERIFY_PROFILE required action disabled
+  - Role mapper: realm_access.roles claim in tokens
+
+**Env (backend `.env`)**
+    STORESIGNAL_OIDC_ENABLED=true
+    STORESIGNAL_OIDC_ISSUER=http://localhost:8180/realms/storesignal
+    STORESIGNAL_OIDC_AUDIENCE=
+    STORESIGNAL_OIDC_ROLE_CLAIM=realm_access.roles
+
+**Env (web/.env.local)**
+    AUTH_OIDC_ISSUER=http://localhost:8180/realms/storesignal
+    AUTH_OIDC_CLIENT_ID=storesignal-api
+    AUTH_OIDC_CLIENT_SECRET=storesignal-dev-secret
+    AUTH_OIDC_ROLE_CLAIM=realm_access.roles
+
+**To swap providers** (Auth0, Google, Azure, Okta):
+change the 4 AUTH_OIDC_* vars in web/.env.local + 3 STORESIGNAL_OIDC_*
+vars in .env. No code change.
+
+**To disable OIDC** (fall back to static key):
+    rm web/.oidc-enabled
+    strip STORESIGNAL_OIDC_ENABLED from .env
+    restart both servers
+
+**One gotcha to remember:**
+`uvicorn` does NOT load `.env` automatically. Always start it via
+`./scripts/run-api.sh` (which sources `.env` first). Bare
+`uvicorn storesignal.api:app` will silently run with OIDC disabled.
+
+**Playwright notes:**
+- smoke.spec.ts skips when `web/.oidc-enabled` exists
+- sso.spec.ts runs only when that file exists
+- Test creds: KC_TEST_USER / KC_TEST_PASS env vars (default: admin/password)
 
 ### Full endpoint list (final)
     GET    /health

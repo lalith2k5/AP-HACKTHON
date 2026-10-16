@@ -13,20 +13,41 @@
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "standardFlowEnabled": true,
-      "redirectUris": ["http://localhost:3300/api/auth/callback"],
-      "webOrigins": ["http://localhost:3300"]
+      "redirectUris": [
+        "http://localhost:3300/api/auth/callback/storesignal-oidc",
+        "http://localhost:3300/api/auth/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:3300"
+      ]
     }
   ],
   "roles": {
     "realm": [
-      {"name": "admin"},
-      {"name": "analyst"},
-      {"name": "regional_ops_lead"},
-      {"name": "store_manager"},
-      {"name": "hr_sensitive"},
-      {"name": "food_safety_risk"},
-      {"name": "reviewer"},
-      {"name": "supply_chain"}
+      {
+        "name": "admin"
+      },
+      {
+        "name": "analyst"
+      },
+      {
+        "name": "regional_ops_lead"
+      },
+      {
+        "name": "store_manager"
+      },
+      {
+        "name": "hr_sensitive"
+      },
+      {
+        "name": "food_safety_risk"
+      },
+      {
+        "name": "reviewer"
+      },
+      {
+        "name": "supply_chain"
+      }
     ]
   },
   "users": [
@@ -35,32 +56,83 @@
       "enabled": true,
       "email": "admin@storesignal.local",
       "emailVerified": true,
-      "credentials": [{"type": "password", "value": "password", "temporary": false}],
-      "realmRoles": ["admin"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ],
+      "firstName": "Admin",
+      "lastName": "User"
     },
     {
       "username": "ops",
       "enabled": true,
       "email": "ops@storesignal.local",
       "emailVerified": true,
-      "credentials": [{"type": "password", "value": "password", "temporary": false}],
-      "realmRoles": ["regional_ops_lead"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "regional_ops_lead"
+      ],
+      "firstName": "Ops",
+      "lastName": "User"
     },
     {
       "username": "reviewer",
       "enabled": true,
       "email": "reviewer@storesignal.local",
       "emailVerified": true,
-      "credentials": [{"type": "password", "value": "password", "temporary": false}],
-      "realmRoles": ["reviewer"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "reviewer"
+      ],
+      "firstName": "Reviewer",
+      "lastName": "User"
     },
     {
       "username": "hr",
       "enabled": true,
       "email": "hr@storesignal.local",
       "emailVerified": true,
-      "credentials": [{"type": "password", "value": "password", "temporary": false}],
-      "realmRoles": ["hr_sensitive"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "hr_sensitive"
+      ],
+      "firstName": "Hr",
+      "lastName": "User"
+    }
+  ],
+  "requiredActions": [
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 90,
+      "config": {}
     }
   ]
 }
