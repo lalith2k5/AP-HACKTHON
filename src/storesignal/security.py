@@ -7,9 +7,7 @@ StoreSignal AI — Security Layer
 - Request correlation IDs
 - Idempotency key store
 """
-from storesignal import state as _state
 import contextlib
-
 import json
 import time
 import uuid
@@ -21,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from storesignal import auth_oidc
+from storesignal import state as _state
 from storesignal.config_loader import load_config
 from storesignal.paths import (
     CODE_ROOT,

@@ -311,7 +311,7 @@ export default function WelcomePage() {
             </Link>
           </div>
           <p className="tiny muted" style={{ marginTop: 40 }}>
-            Local · Demo mode · SIMULATED DATA · No real customer or staff data
+            Local · Demo mode · Simulated demo data · No real customer or staff data
           </p>
         </Reveal>
       </section>
