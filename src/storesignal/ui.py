@@ -9,6 +9,9 @@ Audit Log, Model & Trust.
 Design tokens in tokens.py. All data reads from data/processed artifacts
 via ui_data.py. Business logic stays in the pipeline modules.
 """
+
+import json
+import pandas as pd
 from pathlib import Path
 
 import streamlit as st

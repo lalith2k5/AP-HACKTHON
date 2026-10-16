@@ -141,40 +141,109 @@ def action_recommendations(incident_id: str) -> list[dict]:
     if rows.empty:
         return []
     row = rows.iloc[0]
-    cat = str(row.get("category", row.get("predicted_category", "unknown")))
+    cat = str(row.get("predicted_category", row.get("category", "unknown")))
     sev = str(row.get("severity", "medium")).lower()
     urgency = {"critical": "critical", "high": "high",
                "medium": "medium", "low": "low"}.get(sev, "medium")
     playbook = {
-        "refrigeration_equipment": [
-            ("Inspect freezer immediately", "Store Ops", "2-4 hrs",
-             "Prevent food-safety risk"),
-            ("Escalate to maintenance team", "Maintenance", "4-8 hrs",
-             "Restore cold chain"),
-        ],
-        "availability_stockout": [
-            ("Trigger replenishment order", "Supply Chain", "1-2 hrs",
-             "Recover lost sales"),
-            ("Audit planogram compliance", "Merchandising", "2-3 hrs",
-             "Prevent repeat"),
-        ],
-        "allergen_risk": [
+        "allergen_or_labeling": [
             ("Verify allergen labeling on shelf", "Food Safety", "1 hr",
              "Prevent regulatory exposure"),
-            ("Remove ambiguous product", "Store Ops", "30 min",
+            ("Pull ambiguous SKU from shelf", "Store Ops", "30 min",
              "Immediate safety"),
-        ],
-        "staff_conduct_misconduct": [
-            ("Log restricted case with HR", "HR", "1 hr",
-             "Compliance"),
-            ("Preserve evidence record", "HR", "30 min",
-             "Due process"),
         ],
         "food_safety_or_hygiene": [
             ("Hygiene sweep and log", "Store Ops", "2-4 hrs",
              "Prevent safety incident"),
             ("Review CCTV segment", "Store Ops", "1 hr",
              "Confirm conditions"),
+        ],
+        "safety_hazard": [
+            ("Close off hazard area", "Store Ops", "Immediate",
+             "Prevent injury"),
+            ("File safety incident report", "Store Ops", "1 hr",
+             "Compliance"),
+        ],
+        "equipment_or_refrigeration": [
+            ("Inspect freezer / fridge", "Maintenance", "2-4 hrs",
+             "Protect cold chain"),
+            ("Escalate to maintenance team", "Maintenance", "4-8 hrs",
+             "Restore equipment"),
+        ],
+        "cold_chain_integrity": [
+            ("Verify temperature log", "Store Ops", "1 hr",
+             "Prevent spoilage"),
+            ("Quarantine suspect stock", "Store Ops", "1 hr",
+             "Safety"),
+        ],
+        "expired_or_near_expiry": [
+            ("Sweep shelf for expired SKUs", "Store Ops", "2 hrs",
+             "Prevent sale of expired stock"),
+        ],
+        "out_of_stock": [
+            ("Trigger replenishment order", "Supply Chain", "1-2 hrs",
+             "Recover lost sales"),
+            ("Audit planogram compliance", "Merchandising", "2-3 hrs",
+             "Prevent repeat"),
+        ],
+        "stock_shortage_or_allocation": [
+            ("Reallocate stock from nearby store", "Supply Chain", "4 hrs",
+             "Restore availability"),
+        ],
+        "pricing_or_price_tag_error": [
+            ("Audit price tags vs POS", "Merchandising", "2 hrs",
+             "Prevent billing disputes"),
+            ("Correct shelf labeling", "Store Ops", "1 hr",
+             "Customer trust"),
+        ],
+        "promotion_or_offer_issue": [
+            ("Verify promo setup in POS", "Merchandising", "1 hr",
+             "Honor advertised offer"),
+        ],
+        "queue_or_wait_time": [
+            ("Open additional checkout lane", "Store Ops", "30 min",
+             "Reduce wait time"),
+            ("Review staffing roster", "Store Ops", "1 hr",
+             "Recurring fix"),
+        ],
+        "checkout_experience": [
+            ("Review POS performance logs", "Digital", "2 hrs",
+             "Fix systemic issues"),
+        ],
+        "store_cleanliness": [
+            ("Deep clean affected area", "Store Ops", "2 hrs",
+             "Customer experience"),
+        ],
+        "restroom_condition": [
+            ("Restroom inspection + cleaning", "Store Ops", "1 hr",
+             "Hygiene"),
+        ],
+        "staff_misconduct": [
+            ("Log restricted case with HR", "HR", "1 hr", "Compliance"),
+            ("Preserve evidence record", "HR", "30 min", "Due process"),
+        ],
+        "staff_conduct": [
+            ("Log case with HR", "HR", "1 hr", "Compliance"),
+        ],
+        "billing_staff_behaviour": [
+            ("Review transaction + staff statement", "Store Ops", "2 hrs",
+             "Resolve dispute"),
+        ],
+        "delivery_or_receiving": [
+            ("Audit receiving log", "Supply Chain", "2 hrs",
+             "Prevent recurrence"),
+        ],
+        "online_order_fulfillment": [
+            ("Review picking workflow", "Digital", "2 hrs",
+             "Reduce errors"),
+        ],
+        "app_crash_or_bug": [
+            ("File bug ticket with app team", "Digital", "1 hr",
+             "Ship fix"),
+        ],
+        "app_payment_issue": [
+            ("Escalate payment gateway issue", "Digital", "2 hrs",
+             "Restore revenue"),
         ],
     }
     default = [
