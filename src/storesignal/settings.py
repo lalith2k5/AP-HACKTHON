@@ -4,6 +4,7 @@ StoreSignal AI - Environment variable settings
 Honors all 12 STORESIGNAL_* env vars from spec section 5.1.
 Defaults are chosen so the local demo runs with zero env configuration.
 """
+import contextlib
 import os
 from pathlib import Path
 
@@ -44,10 +45,8 @@ TIMEZONE = os.getenv("STORESIGNAL_TIMEZONE", "Asia/Kolkata")
 
 def ensure_dirs() -> None:
     for d in (DATA_DIR, REPORT_DIR, LOG_DIR, MODEL_DIR):
-        try:
+        with contextlib.suppress(OSError):
             d.mkdir(parents=True, exist_ok=True)
-        except OSError:
-            pass
 
 
 def validate_startup() -> list[str]:

@@ -12,8 +12,9 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field
 
-ROOT = Path.home() / "storesignal-ai"
 from storesignal import settings as _ssettings
+
+ROOT = Path.home() / "storesignal-ai"
 CONFIG_DIR = _ssettings.CONFIG_DIR
 
 

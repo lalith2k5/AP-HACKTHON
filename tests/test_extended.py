@@ -72,5 +72,5 @@ def test_security_module_roles():
     from storesignal import security
     assert "admin" in security.PERMISSIONS
     assert "reviewer" in security.PERMISSIONS
-    assert "regional_manager" in security.PERMISSIONS
+    assert "regional_ops_lead" in security.PERMISSIONS
     assert "store_manager" in security.PERMISSIONS

@@ -124,5 +124,46 @@ def test(): _run_pytest = subprocess.run([str(PY), "-m", "pytest", "-q", "tests"
                                          check=False, cwd=str(ROOT))
 
 
+@app.command()
+def import_data(
+    source: str = typer.Argument(..., help="CSV / JSONL / Parquet file to import"),
+    channel: str = typer.Option(None, "--channel", help="Force channel for all rows"),
+):
+    """Import an external feedback file through the validation wizard."""
+    from storesignal.import_wizard import preview, run_import, mapping_template
+
+    src = Path(source).expanduser().resolve()
+    if not src.exists():
+        console.print(f"[red]not found:[/red] {src}")
+        raise typer.Exit(code=1)
+    pv = preview(src)
+    if "error" in pv:
+        console.print(f"[red]{pv['error']}[/red]")
+        raise typer.Exit(code=1)
+    console.print(f"[cyan]format:[/cyan] {pv['format']}")
+    console.print(f"[cyan]columns:[/cyan] {pv['columns']}")
+    mapping = mapping_template()
+    result = run_import(src, mapping, channel_override=channel)
+    if "error" in result:
+        console.print(f"[red]import failed:[/red] {result}")
+        raise typer.Exit(code=1)
+    table = Table(title=f"Import batch {result['batch_id']}")
+    table.add_column("Field"); table.add_column("Value")
+    for k in ("rows_in", "rows_valid", "rows_rejected", "warnings", "raw_artifact"):
+        table.add_row(k, str(result[k]))
+    console.print(table)
+
+
+@app.command()
+def imports():
+    """List completed import batches."""
+    from storesignal.import_wizard import list_batches
+    table = Table(title="Import history")
+    table.add_column("batch_id"); table.add_column("rows_valid"); table.add_column("completed_at")
+    for b in list_batches():
+        table.add_row(b["batch_id"], str(b.get("rows_valid", "?")), b.get("completed_at", "?"))
+    console.print(table)
+
+
 if __name__ == "__main__":
     app()
