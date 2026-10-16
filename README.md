@@ -1,108 +1,53 @@
 # StoreSignal AI — Voice-of-Store Engine
 
-A multilingual retail operations intelligence system that turns scattered
-customer and employee feedback into prioritized, evidence-backed actions.
-
-**Built for:** Talent AP Mega Hackathon — R5 *Turning Store Chatter Into Action*
-**Environment:** macOS 14+, Apple Silicon M2, Python 3.11
-
----
-
-## What it does
-
-1. **Ingests** ~40,000 feedback records from 4 channels (online reviews,
-   in-app comments, staff shift notes, call-centre transcripts).
-2. **Normalizes** noisy, code-mixed English / Hinglish / Tamil / Marathi
-   text — typos, emojis, truncation, PII redaction.
-3. **Classifies** into ~30 operational categories using TF-IDF
-   (word + char n-grams) + Logistic Regression.
-4. **Escalates by policy** — allergen, safety, hygiene, and staff-misconduct
-   reports are escalated regardless of volume or classifier confidence.
-5. **Detects weak signals early** — per-store, per-category robust z-score
-   anomaly detection with MAD baselines.
-6. **Deduplicates** near-identical reports across channels.
-7. **Routes** each issue to its owning function (Store Ops, Supply Chain,
-   Merchandising, Digital, HR) with next-action and SLA.
-8. **Generates weekly regional briefs** with top-5 issues, evidence quotes,
-   affected stores, and trend arrows.
-
----
+Retail operations intelligence layer. Early-warning and incident-resolution
+for multilingual store feedback.
 
 ## Quick start
 
-    # 1. Setup (one time)
+    set +H
     cd "$HOME/storesignal-ai"
-    uv venv --python 3.11 "$HOME/storesignal-ai/.venv"
-    uv pip install --python "$HOME/storesignal-ai/.venv/bin/python" \
-      pandas pyarrow numpy scipy scikit-learn rapidfuzz \
-      "pydantic>=2" fastapi "uvicorn[standard]" streamlit \
-      typer rich pytest pytest-cov joblib pyyaml ruff
 
-    # 2. Full pipeline
-    make pipeline
+    # Full pipeline (~30s, deterministic)
+    "$HOME/storesignal-ai/.venv/bin/python" -m storesignal.pipeline
 
-    # 3. Dashboard (http://localhost:8501)
-    make ui
+    # Tests + lint
+    "$HOME/storesignal-ai/.venv/bin/python" -m pytest -q tests
+    "$HOME/storesignal-ai/.venv/bin/python" -m ruff check src tests
 
-    # 4. API (http://localhost:8000/docs)
-    make serve
+    # UI (blocks terminal, open http://localhost:8501)
+    "$HOME/storesignal-ai/.venv/bin/streamlit" run src/storesignal/ui.py --server.port 8501
 
----
+    # API (blocks terminal, docs at http://localhost:8000/docs)
+    "$HOME/storesignal-ai/.venv/bin/uvicorn" storesignal.api:app --reload --port 8000
 
-## Results (measured, not fabricated)
+## Package layout
 
-| Metric | Value |
-|---|---|
-| Classification accuracy (hidden) | 0.8910 |
-| Classification macro-F1 (hidden) | 0.9167 |
-| Classification weighted-F1 | 0.9065 |
-| Escalation precision | 0.9432 |
-| Seeded incidents detected | 3/3 |
-| Mean lead time vs peak | 3.67 days |
+- `src/storesignal/` — 30 python modules
+- `config/` — 6 YAML files (taxonomy, routing, risk_policy, thresholds, demo, config)
+- `data/raw/` — 4 channel JSONL + hidden labels + seeded incidents
+- `data/processed/` — pipeline outputs (parquet, json, briefs)
+- `data/evaluation/reports/` — evaluation_report.{json,md}
 
----
+## Environment variables
 
-## Design principles
+All 12 `STORESIGNAL_*` variables from spec 5.1 are honored. See
+`src/storesignal/settings.py`. Override example:
 
-- Feedback is unverified evidence, not automatic proof of a systemic issue.
-- Mandatory escalation is independent of volume and of classifier confidence.
-- Hidden evaluation labels are only consumed inside `evaluate.py` — never
-  for training, tuning, or seeded-incident identification.
-- Every displayed claim traces back to source records.
+    STORESIGNAL_DATA_DIR=/tmp/altdata "$HOME/storesignal-ai/.venv/bin/python" -m storesignal.pipeline
 
----
+## Verified metrics
 
-## Layout
+- Records: 40,053
+- Macro-F1 (hidden): 0.9167
+- Accuracy (hidden): 0.8910
+- Escalation precision: 0.9432
+- Seeded incidents: 3 / 3
+- Mean lead days: 3.67
+- Policy compliance: 100%
+- Tests: 18 / 18
+- Ruff: clean
 
-    config/config.yaml        Central configuration
-    data/raw/                 4 channel JSONL + hidden labels + seeds
-    data/reference/           store_master.csv + taxonomy.csv
-    data/processed/           Parquet artifacts per stage
-    data/processed/briefs/    Regional weekly briefs (.json + .md)
-    data/evaluation/reports/  evaluation_report.{json,md}
-    models/                   baseline_model.joblib
-    src/                      Pipeline modules (15 files)
-    tests/                    Smoke + policy invariant tests
-    Makefile                  Reproducible targets
-    pyproject.toml            Ruff + pytest config
+## Honest limitations
 
----
-
-## Make targets
-
-- `make pipeline` — run every stage end to end
-- `make serve`    — FastAPI on :8000
-- `make ui`       — Streamlit on :8501
-- `make test`     — pytest
-- `make lint`     — ruff
-- `make clean`    — remove generated artifacts
-
----
-
-## Limitations & future work
-
-- File-based storage (Parquet/CSV/YAML). Transactional DB is a future extension.
-- Not evaluated: multilingual embeddings, transformer NLP, relationship graph,
-  action-impact simulator.
-- No live retailer integration; no audio transcription.
-- Human review required for safety, compliance, and staff-related decisions.
+See HANDOFF.md section 11 for the honest list of what's stubbed vs built.
