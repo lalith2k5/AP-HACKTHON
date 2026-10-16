@@ -35,6 +35,7 @@ from storesignal.security import (
 )
 from storesignal.tracking import record_event
 from storesignal.tracking import summarize as tracking_summary
+from storesignal import state as _state
 
 ROOT = CODE_ROOT
 PROC = PROCESSED_DIR
@@ -244,40 +245,14 @@ def classify(
 # ---------------------------------------------------------------------------
 # State overrides (append-only JSONL; latest wins per (id, field))
 # ---------------------------------------------------------------------------
-def _overrides_path(kind):
-    return PROC / f"{kind}_overrides.jsonl"
-
-def _notes_path():
-    return PROC / "incident_notes.jsonl"
-
-def _append_jsonl(path, rec):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
-
-def _read_jsonl(path):
-    if not path.exists():
-        return []
-    out = []
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            import contextlib as _ctx
-            with _ctx.suppress(Exception):
-                out.append(json.loads(line))
-    return out
-
-def _latest_overrides(kind, id_field, id_value):
-    state = {}
-    for rec in _read_jsonl(_overrides_path(kind)):
-        if rec.get(id_field) == id_value:
-            state[rec["field"]] = rec["value"]
-    return state
-
 def _apply_overrides(d, kind, id_field, id_value):
-    ov = _latest_overrides(kind, id_field, id_value)
+    """Apply latest overrides from SQLite state store."""
+    if kind == "incident":
+        ov = _state.latest_incident_overrides(id_value)
+    elif kind == "alert":
+        ov = _state.latest_alert_overrides(id_value)
+    else:
+        ov = {}
     for k, v in ov.items():
         d[k] = v
     d["_overridden_fields"] = sorted(ov.keys())
@@ -353,10 +328,9 @@ def patch_incident(incident_id: str, body: IncidentPatch):
         raise HTTPException(status_code=422, detail="no fields to update")
     ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     for field, value in updates.items():
-        _append_jsonl(_overrides_path("incident"), {
-            "incident_id": incident_id, "field": field, "value": value,
-            "ts": ts, "actor": body.actor, "reason": body.reason,
-        })
+        _state.append_incident_override(
+            incident_id, field, value, body.actor, body.reason,
+        )
     audit("incident.status_changed", body.actor, incident_id,
           before={k: before.get(k) for k in updates},
           after=updates, reason=body.reason)
@@ -372,9 +346,7 @@ def post_incident_note(incident_id: str, body: NoteBody):
         raise HTTPException(status_code=404, detail="incident not found")
     if not body.note.strip():
         raise HTTPException(status_code=422, detail="note cannot be empty")
-    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    rec = {"incident_id": incident_id, "ts": ts, "actor": body.actor, "note": body.note}
-    _append_jsonl(_notes_path(), rec)
+    rec = _state.add_note(incident_id, body.actor, body.note)
     audit("incident.note_added", body.actor, incident_id,
           note_preview=body.note[:120])
     return rec
@@ -394,16 +366,12 @@ def incident_timeline(incident_id: str):
     if _coerce(r.get("last_seen")):
         events.append({"ts": str(_coerce(r.get("last_seen"))), "kind": "last_seen",
                        "label": "Most recent record in window"})
-    for ov in _read_jsonl(_overrides_path("incident")):
-        if ov.get("incident_id") == incident_id:
-            events.append({"ts": ov.get("ts"), "kind": "override",
-                           "label": str(ov.get("field")) + " -> " + str(ov.get("value")),
-                           "actor": ov.get("actor"), "reason": ov.get("reason")})
-    for nt in _read_jsonl(_notes_path()):
-        if nt.get("incident_id") == incident_id:
-            events.append({"ts": nt.get("ts"), "kind": "note",
-                           "label": (nt.get("note") or "")[:200],
-                           "actor": nt.get("actor")})
+    for ov in _state.incident_override_history(incident_id):
+        events.append(ov)
+    for nt in _state.notes_for(incident_id):
+        events.append({"ts": nt.get("ts"), "kind": "note",
+                       "label": (nt.get("note") or "")[:200],
+                       "actor": nt.get("actor")})
     events = [e for e in events if e.get("ts")]
     events.sort(key=lambda e: str(e["ts"]))
     return {"incident_id": incident_id, "events": events}
@@ -442,11 +410,9 @@ def ack_alert(alert_id: str, body: AlertAck):
     df = alerts()
     if df[df["alert_id"] == alert_id].empty:
         raise HTTPException(status_code=404, detail="alert not found")
-    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    _append_jsonl(_overrides_path("alert"), {
-        "alert_id": alert_id, "field": "status", "value": "acknowledged",
-        "ts": ts, "actor": body.actor, "note": body.note,
-    })
+    ts = _state.append_alert_override(
+        alert_id, "status", "acknowledged", body.actor, body.note,
+    )
     audit("alert.acknowledged", body.actor, alert_id)
     return {"alert_id": alert_id, "status": "acknowledged", "ts": ts}
 
@@ -457,11 +423,9 @@ def resolve_alert(alert_id: str, body: AlertAck):
     df = alerts()
     if df[df["alert_id"] == alert_id].empty:
         raise HTTPException(status_code=404, detail="alert not found")
-    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    _append_jsonl(_overrides_path("alert"), {
-        "alert_id": alert_id, "field": "status", "value": "resolved",
-        "ts": ts, "actor": body.actor, "note": body.note,
-    })
+    ts = _state.append_alert_override(
+        alert_id, "status", "resolved", body.actor, body.note,
+    )
     audit("alert.resolved", body.actor, alert_id)
     return {"alert_id": alert_id, "status": "resolved", "ts": ts}
 
@@ -474,12 +438,10 @@ def override_alert(alert_id: str, body: AlertAck):
         raise HTTPException(status_code=404, detail="alert not found")
     if not (body.note and body.note.strip()):
         raise HTTPException(status_code=422, detail="override requires a reason")
-    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    _append_jsonl(_overrides_path("alert"), {
-        "alert_id": alert_id, "field": "status", "value": "suppressed_with_reason",
-        "ts": ts, "actor": body.actor, "note": body.note,
-        "decision": body.decision or "suppressed",
-    })
+    ts = _state.append_alert_override(
+        alert_id, "status", "suppressed_with_reason",
+        body.actor, body.note, body.decision or "suppressed",
+    )
     audit("alert.overridden", body.actor, alert_id,
           decision=body.decision, reason=body.note)
     return {"alert_id": alert_id, "status": "suppressed_with_reason", "ts": ts}
@@ -681,15 +643,8 @@ def _run_reset_bg(job_id: str):
     job = _JOBS[job_id]
     job["status"] = "running"
     try:
-        cleared = []
-        for name in ["incident_overrides.jsonl",
-                     "alert_overrides.jsonl",
-                     "incident_notes.jsonl"]:
-            f = PROC / name
-            if f.exists():
-                f.unlink()
-                cleared.append(name)
-        job["cleared_state_files"] = cleared
+        result = _state.clear_all_state()
+        job["cleared_state_files"] = result["cleared"]
         PY = ROOT / ".venv" / "bin" / "python"
         SRC = ROOT / "src"
         res = subprocess.run(
