@@ -10,10 +10,18 @@ import time
 import uuid
 from pathlib import Path
 
-ROOT = Path.home() / "storesignal-ai"
-LOG = ROOT / "data" / "processed" / "actions.jsonl"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
+LOG = PROCESSED_DIR / "actions.jsonl"
 LOG.parent.mkdir(parents=True, exist_ok=True)
-REPORT = ROOT / "data" / "processed" / "tracking_report.json"
+REPORT = PROCESSED_DIR / "tracking_report.json"
 
 VALID_EVENTS = {"review", "assign", "action", "resolve", "escalate"}
 

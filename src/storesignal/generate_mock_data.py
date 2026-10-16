@@ -15,10 +15,18 @@ import random
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
-DATA_RAW = ROOT / "data" / "raw"
-DATA_REF = ROOT / "data" / "reference"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+
+ROOT = CODE_ROOT
+DATA_RAW = RAW_DIR
+DATA_REF = REFERENCE_DIR
 DATA_RAW.mkdir(parents=True, exist_ok=True)
 DATA_REF.mkdir(parents=True, exist_ok=True)
 

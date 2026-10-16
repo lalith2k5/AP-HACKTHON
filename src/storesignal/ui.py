@@ -20,8 +20,15 @@ from storesignal import settings as S
 from storesignal import tokens as T
 from storesignal import ui_data as D
 
-ROOT = Path.home() / "storesignal-ai"
-
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
 st.set_page_config(
     page_title="StoreSignal AI",
     layout="wide",

@@ -20,20 +20,27 @@ from sklearn.pipeline import FeatureUnion
 
 from storesignal.weak_labels import weak_label_frame
 
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
-
+ROOT = CODE_ROOT
 CONFIG_PATH = ROOT / "config" / "config.yaml"
-NORM_PARQUET = ROOT / "data" / "processed" / "normalized_feedback.parquet"
-PRED_PARQUET = ROOT / "data" / "processed" / "predictions.parquet"
+NORM_PARQUET = PROCESSED_DIR / "normalized_feedback.parquet"
+PRED_PARQUET = PROCESSED_DIR / "predictions.parquet"
 MODELS_DIR = ROOT / "models"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 MODEL_PATH = MODELS_DIR / "baseline_model.joblib"
-REPORT_PATH = ROOT / "data" / "processed" / "classification_report.json"
+REPORT_PATH = PROCESSED_DIR / "classification_report.json"
 
 SEVERITY_BY_CATEGORY = {}
 ACTIONABLE_BY_SEVERITY = {

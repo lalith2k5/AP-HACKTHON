@@ -15,9 +15,17 @@ from pathlib import Path
 import networkx as nx
 import pandas as pd
 
-ROOT = Path.home() / "storesignal-ai"
-PROC = ROOT / "data" / "processed"
-REF = ROOT / "data" / "reference"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
+PROC = PROCESSED_DIR
+REF = REFERENCE_DIR
 
 OUT_GRAPHML = PROC / "relationship_graph.graphml"
 OUT_JSON = PROC / "relationship_graph.json"

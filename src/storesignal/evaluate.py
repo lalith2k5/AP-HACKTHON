@@ -30,19 +30,44 @@ from sklearn.metrics import classification_report, f1_score
 
 from storesignal.versioning import stamp_run
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
+from storesignal.paths import (
 
-HIDDEN = ROOT / "data" / "raw" / "hidden_labels.jsonl"
-SEEDS = ROOT / "data" / "raw" / "seeded_incidents.json"
-PRED_PARQUET = ROOT / "data" / "processed" / "predictions.parquet"
-ESC_PARQUET = ROOT / "data" / "processed" / "escalations.parquet"
-FLAGS_PARQUET = ROOT / "data" / "processed" / "radar_flags.parquet"
-PROC_ALERTS = ROOT / "data" / "processed" / "alerts.parquet"
-PROC_INCIDENTS = ROOT / "data" / "processed" / "incidents.parquet"
+# ---------------------------------------------------------------------------
+# Hidden-label isolation guard (spec 17.2). Refuses to read the hidden-label
+# file unless STORESIGNAL_ALLOW_HIDDEN_EVAL is true.
+# ---------------------------------------------------------------------------
+from storesignal import settings as _ssettings
+
+
+def _guard_hidden_eval() -> None:
+    if not _ssettings.ALLOW_HIDDEN_EVAL:
+        raise PermissionError(
+            "hidden-label evaluation is disabled; "
+            "set STORESIGNAL_ALLOW_HIDDEN_EVAL=true to enable"
+        )
+
+
+_guard_hidden_eval()
+
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+
+ROOT = CODE_ROOT
+HIDDEN = RAW_DIR / "hidden_labels.jsonl"
+SEEDS = RAW_DIR / "seeded_incidents.json"
+PRED_PARQUET = PROCESSED_DIR / "predictions.parquet"
+ESC_PARQUET = PROCESSED_DIR / "escalations.parquet"
+FLAGS_PARQUET = PROCESSED_DIR / "radar_flags.parquet"
+PROC_ALERTS = PROCESSED_DIR / "alerts.parquet"
+PROC_INCIDENTS = PROCESSED_DIR / "incidents.parquet"
 MANDATORY_CATS = {"safety_hazard", "allergen_or_labeling", "food_safety_or_hygiene", "staff_misconduct"}
 
-OUT_DIR = ROOT / "data" / "evaluation" / "reports"
+OUT_DIR = REPORTS_DIR
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT_JSON = OUT_DIR / "evaluation_report.json"
 OUT_MD = OUT_DIR / "evaluation_report.md"
@@ -263,7 +288,7 @@ def main():
         }
     else:
         # Fallback: join from normalized_feedback
-        norm_path = ROOT / "data" / "processed" / "normalized_feedback.parquet"
+        norm_path = PROCESSED_DIR / "normalized_feedback.parquet"
         if norm_path.exists():
             norm_df = pd.read_parquet(norm_path, engine="pyarrow")[["record_id", "language_hint"]]
             merged = preds_ts.merge(norm_df, on="record_id", how="left", suffixes=("", "_norm"))
@@ -290,7 +315,7 @@ def main():
     # ------------------------------------------------------------------
     # 8. Human override rate + resolution outcomes (from actions.jsonl)
     # ------------------------------------------------------------------
-    actions_log = ROOT / "data" / "processed" / "actions.jsonl"
+    actions_log = PROCESSED_DIR / "actions.jsonl"
     override_count = 0
     resolve_count = 0
     total_events = 0

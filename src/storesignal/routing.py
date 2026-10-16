@@ -13,15 +13,23 @@ import pandas as pd
 
 from storesignal.config_loader import load_config
 
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+
 _cfg = load_config()
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
-TAXONOMY_CSV = ROOT / "data" / "reference" / "taxonomy.csv"
-PRED_PARQUET = ROOT / "data" / "processed" / "predictions.parquet"
-ESC_PARQUET = ROOT / "data" / "processed" / "escalations.parquet"
-OUT_PARQUET = ROOT / "data" / "processed" / "routing.parquet"
-REPORT_PATH = ROOT / "data" / "processed" / "routing_report.json"
+ROOT = CODE_ROOT
+TAXONOMY_CSV = REFERENCE_DIR / "taxonomy.csv"
+PRED_PARQUET = PROCESSED_DIR / "predictions.parquet"
+ESC_PARQUET = PROCESSED_DIR / "escalations.parquet"
+OUT_PARQUET = PROCESSED_DIR / "routing.parquet"
+REPORT_PATH = PROCESSED_DIR / "routing_report.json"
 
 # Next actions per owner (generic defaults; spec allows extension)
 NEXT_ACTION_BY_OWNER = {

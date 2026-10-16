@@ -15,16 +15,24 @@ from pathlib import Path
 
 import pandas as pd
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
-INCIDENTS_PARQUET = ROOT / "data" / "processed" / "incidents.parquet"
-LINKS_PARQUET = ROOT / "data" / "processed" / "incident_links.parquet"
-ESC_PARQUET = ROOT / "data" / "processed" / "escalations.parquet"
-FLAGS_PARQUET = ROOT / "data" / "processed" / "radar_flags.parquet"
-ROUTING_PARQUET = ROOT / "data" / "processed" / "routing.parquet"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
 
-OUT_PARQUET = ROOT / "data" / "processed" / "alerts.parquet"
-REPORT_PATH = ROOT / "data" / "processed" / "alerts_report.json"
+ROOT = CODE_ROOT
+INCIDENTS_PARQUET = PROCESSED_DIR / "incidents.parquet"
+LINKS_PARQUET = PROCESSED_DIR / "incident_links.parquet"
+ESC_PARQUET = PROCESSED_DIR / "escalations.parquet"
+FLAGS_PARQUET = PROCESSED_DIR / "radar_flags.parquet"
+ROUTING_PARQUET = PROCESSED_DIR / "routing.parquet"
+
+OUT_PARQUET = PROCESSED_DIR / "alerts.parquet"
+REPORT_PATH = PROCESSED_DIR / "alerts_report.json"
 
 SEV_RANK = {"critical": 4, "review_required": 4, "high": 3, "medium": 2, "low": 1}
 
@@ -44,7 +52,7 @@ def build():
 
     # Bring text_norm into routing view for evidence
     preds_text = pd.read_parquet(
-        ROOT / "data" / "processed" / "predictions.parquet", engine="pyarrow"
+        PROCESSED_DIR / "predictions.parquet", engine="pyarrow"
     )[["record_id", "text_norm"]]
     routing = routing.merge(preds_text, on="record_id", how="left")
 
@@ -136,7 +144,7 @@ def build():
     conf_by_inc = {}
     if len(links) > 0:
         preds_conf = pd.read_parquet(
-            ROOT / "data" / "processed" / "predictions.parquet", engine="pyarrow"
+            PROCESSED_DIR / "predictions.parquet", engine="pyarrow"
         )[["record_id", "confidence"]]
         link_conf = links.merge(preds_conf, on="record_id", how="left")
         conf_by_inc = link_conf.groupby("incident_id")["confidence"].mean().to_dict()

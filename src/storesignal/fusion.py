@@ -16,14 +16,22 @@ from pathlib import Path
 import pandas as pd
 from rapidfuzz import fuzz
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
-PRED_PARQUET = ROOT / "data" / "processed" / "predictions.parquet"
-ROUTING_PARQUET = ROOT / "data" / "processed" / "routing.parquet"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
 
-INCIDENTS_PARQUET = ROOT / "data" / "processed" / "incidents.parquet"
-LINKS_PARQUET = ROOT / "data" / "processed" / "incident_links.parquet"
-REPORT_PATH = ROOT / "data" / "processed" / "fusion_report.json"
+ROOT = CODE_ROOT
+PRED_PARQUET = PROCESSED_DIR / "predictions.parquet"
+ROUTING_PARQUET = PROCESSED_DIR / "routing.parquet"
+
+INCIDENTS_PARQUET = PROCESSED_DIR / "incidents.parquet"
+LINKS_PARQUET = PROCESSED_DIR / "incident_links.parquet"
+REPORT_PATH = PROCESSED_DIR / "fusion_report.json"
 
 SIMILARITY_THRESHOLD = 88
 ROLLING_WINDOW_DAYS = 7  # R5: fuse the same incident across up to a week
@@ -117,7 +125,7 @@ def fuse():
     links_df = pd.DataFrame(links)
 
     # Merge externally-recorded verifications (from API review calls)
-    verif_path = ROOT / "data" / "evaluation" / "incident_verifications.jsonl"
+    verif_path = REPORTS_DIR.parent / "incident_verifications.jsonl"
     if verif_path.exists():
         latest = {}
         with open(verif_path, encoding="utf-8") as f:

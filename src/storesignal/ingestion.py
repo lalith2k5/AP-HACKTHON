@@ -18,14 +18,23 @@ from pathlib import Path
 import pandas as pd
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
-DATA_RAW = ROOT / "data" / "raw"
-DATA_REF = ROOT / "data" / "reference"
-DATA_PROCESSED = ROOT / "data" / "processed"
+ROOT = CODE_ROOT
+DATA_RAW = RAW_DIR
+DATA_REF = REFERENCE_DIR
+DATA_PROCESSED = PROCESSED_DIR
 DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
 
 CHANNEL_FILES = {

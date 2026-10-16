@@ -21,14 +21,22 @@ import numpy as np
 import pandas as pd
 import yaml
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+
+ROOT = CODE_ROOT
 CONFIG_PATH = ROOT / "config" / "config.yaml"
-PRED_PARQUET = ROOT / "data" / "processed" / "predictions.parquet"
-STORE_CSV = ROOT / "data" / "reference" / "store_master.csv"
-FLAGS_PARQUET = ROOT / "data" / "processed" / "radar_flags.parquet"
-SUMMARY_PARQUET = ROOT / "data" / "processed" / "radar_summary.parquet"
-REPORT_PATH = ROOT / "data" / "processed" / "radar_report.json"
+PRED_PARQUET = PROCESSED_DIR / "predictions.parquet"
+STORE_CSV = REFERENCE_DIR / "store_master.csv"
+FLAGS_PARQUET = PROCESSED_DIR / "radar_flags.parquet"
+SUMMARY_PARQUET = PROCESSED_DIR / "radar_summary.parquet"
+REPORT_PATH = PROCESSED_DIR / "radar_report.json"
 
 HISTORICAL_WINDOW_DAYS = 28
 MIN_HISTORICAL_PERIODS = 14

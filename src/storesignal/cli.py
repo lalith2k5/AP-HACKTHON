@@ -11,7 +11,15 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-ROOT = Path.home() / "storesignal-ai"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
 PY = ROOT / ".venv" / "bin" / "python"
 
 app = typer.Typer(add_completion=False, help="StoreSignal AI command-line interface")
@@ -89,11 +97,11 @@ def status():
         "incidents.parquet", "alerts.parquet",
         "forecasts.parquet", "relationship_graph.json",
     ]:
-        p = ROOT / "data" / "processed" / name
+        p = PROCESSED_DIR / name
         table.add_row(name, "[green]yes[/green]" if p.exists() else "[red]no[/red]")
-    briefs_dir = ROOT / "data" / "processed" / "briefs"
+    briefs_dir = PROCESSED_DIR / "briefs"
     table.add_row("briefs/", "[green]yes[/green]" if briefs_dir.exists() else "[red]no[/red]")
-    evalr = ROOT / "data" / "evaluation" / "reports" / "evaluation_report.json"
+    evalr = REPORTS_DIR / "evaluation_report.json"
     table.add_row("evaluation_report.json", "[green]yes[/green]" if evalr.exists() else "[red]no[/red]")
     console.print(table)
 

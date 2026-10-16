@@ -18,13 +18,20 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
 
+ROOT = CODE_ROOT
 CONFIG_PATH = ROOT / "config" / "config.yaml"
-PRED_PARQUET = ROOT / "data" / "processed" / "predictions.parquet"
-OUT_PARQUET = ROOT / "data" / "processed" / "escalations.parquet"
-REPORT_PATH = ROOT / "data" / "processed" / "risk_policy_report.json"
+PRED_PARQUET = PROCESSED_DIR / "predictions.parquet"
+OUT_PARQUET = PROCESSED_DIR / "escalations.parquet"
+REPORT_PATH = PROCESSED_DIR / "risk_policy_report.json"
 
 
 def load_policy():

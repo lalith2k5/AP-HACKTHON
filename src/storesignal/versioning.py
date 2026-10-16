@@ -15,11 +15,19 @@ import time
 import uuid
 from pathlib import Path
 
-ROOT = Path.home() / "storesignal-ai"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
 CONFIG_DIR = ROOT / "config"
-DATA_RAW = ROOT / "data" / "raw"
+DATA_RAW = RAW_DIR
 MODEL_PATH = ROOT / "models" / "baseline_model.joblib"
-RUNS_LOG = ROOT / "data" / "evaluation" / "runs.jsonl"
+RUNS_LOG = REPORTS_DIR.parent / "runs.jsonl"
 RUNS_LOG.parent.mkdir(parents=True, exist_ok=True)
 
 

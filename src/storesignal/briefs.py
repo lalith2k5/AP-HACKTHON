@@ -15,16 +15,24 @@ from pathlib import Path
 
 import pandas as pd
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
-PRED_PARQUET = ROOT / "data" / "processed" / "predictions.parquet"
-ROUTING_PARQUET = ROOT / "data" / "processed" / "routing.parquet"
-ALERTS_PARQUET = ROOT / "data" / "processed" / "alerts.parquet"
-STORE_CSV = ROOT / "data" / "reference" / "store_master.csv"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
 
-OUT_DIR = ROOT / "data" / "processed" / "briefs"
+ROOT = CODE_ROOT
+PRED_PARQUET = PROCESSED_DIR / "predictions.parquet"
+ROUTING_PARQUET = PROCESSED_DIR / "routing.parquet"
+ALERTS_PARQUET = PROCESSED_DIR / "alerts.parquet"
+STORE_CSV = REFERENCE_DIR / "store_master.csv"
+
+OUT_DIR = PROCESSED_DIR / "briefs"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-REPORT_PATH = ROOT / "data" / "processed" / "briefs_report.json"
+REPORT_PATH = PROCESSED_DIR / "briefs_report.json"
 
 SEV_RANK = {"critical": 4, "review_required": 4, "high": 3, "medium": 2, "low": 1}
 WEEK_START_OVERRIDE = None  # None = use most recent 7 days in data

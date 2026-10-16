@@ -21,10 +21,18 @@ from starlette.responses import JSONResponse
 
 from storesignal.config_loader import load_config
 
-ROOT = Path.home() / "storesignal-ai"
-AUDIT_LOG = ROOT / "data" / "processed" / "audit.log"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
+AUDIT_LOG = PROCESSED_DIR / "audit.log"
 AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
-IDEMPOTENCY_DB = ROOT / "data" / "processed" / "idempotency.jsonl"
+IDEMPOTENCY_DB = PROCESSED_DIR / "idempotency.jsonl"
 IDEMPOTENCY_DB.parent.mkdir(parents=True, exist_ok=True)
 
 _cfg = load_config()

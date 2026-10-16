@@ -13,9 +13,16 @@ from pathlib import Path
 
 import pandas as pd
 
-HOME = Path.home()
-ROOT = HOME / "storesignal-ai"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
 
+ROOT = CODE_ROOT
 # ---------------------------------------------------------------------------
 # Keyword rules — ordered by priority (first match wins)
 # Long multi-word phrases get higher precedence than short single words.

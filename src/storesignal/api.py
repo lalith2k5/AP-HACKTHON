@@ -26,9 +26,17 @@ from storesignal.security import (
 from storesignal.tracking import record_event
 from storesignal.tracking import summarize as tracking_summary
 
-ROOT = Path.home() / "storesignal-ai"
-PROC = ROOT / "data" / "processed"
-TAXONOMY_CSV = ROOT / "data" / "reference" / "taxonomy.csv"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
+PROC = PROCESSED_DIR
+TAXONOMY_CSV = REFERENCE_DIR / "taxonomy.csv"
 _cfg = load_config()
 
 MANDATORY = set(_cfg.risk_policy.mandatory_categories)
@@ -333,7 +341,7 @@ def replay(incident_id: str):
 
 @app.get("/api/v1/metrics")
 def metrics():
-    for p in [ROOT / "data" / "evaluation" / "reports" / "evaluation_report.json",
+    for p in [REPORTS_DIR / "evaluation_report.json",
               PROC / "evaluation_report.json"]:
         if p.exists():
             with open(p, encoding="utf-8") as f:

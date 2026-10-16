@@ -10,9 +10,17 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path.home() / "storesignal-ai"
-REF = ROOT / "data" / "reference"
-PROC = ROOT / "data" / "processed"
+from storesignal.paths import (
+    CODE_ROOT,
+    DATA_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    REFERENCE_DIR,
+    REPORTS_DIR,
+)
+ROOT = CODE_ROOT
+REF = REFERENCE_DIR
+PROC = PROCESSED_DIR
 
 REGIONS_PARQUET = PROC / "regions.parquet"
 ROUTING_RULES_PARQUET = PROC / "routing_rules.parquet"
