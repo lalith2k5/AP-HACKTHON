@@ -18,8 +18,8 @@ from fastapi import Header, HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from storesignal.config_loader import load_config
 from storesignal import auth_oidc
+from storesignal.config_loader import load_config
 from storesignal.paths import (
     CODE_ROOT,
     PROCESSED_DIR,

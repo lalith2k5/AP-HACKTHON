@@ -5,6 +5,6 @@ paths:
   data_processed: "data/processed"
   models: "models"
 api:
-  require_api_key: false
+  require_api_key: true
   api_key: "demo-key-storesignal"
   rate_limit_per_minute: 120
