@@ -442,8 +442,6 @@ def screen_actions() -> None:
         return
     ids = inc["incident_id"].astype(str).head(200).tolist()
     sel = st.selectbox("Incident", ids)
-    row = inc[inc["incident_id"].astype(str) == sel].iloc[0]
-    sev = str(row.get("severity", "medium"))
     recs = D.action_recommendations(sel)
     c1, c2 = st.columns([3, 2])
     with c1:
@@ -461,7 +459,7 @@ def screen_actions() -> None:
         st.markdown("**Impact simulator**")
         st.markdown(
             '<div class="ss-card">Estimated cost range: '
-            '<b>$150 – $300</b><br>'
+            '<b>$150 - $300</b><br>'
             '<div class="ss-muted">Prevent: food safety risk · '
             'reduce complaints · minimize loss</div></div>',
             unsafe_allow_html=True,
@@ -488,6 +486,160 @@ def screen_report() -> None:
     text = (briefs_dir / sel).read_text()
     st.markdown(text)
     st.download_button("Download markdown", text, file_name=sel)
+
+
+# ---------------------------------------------------------------------------
+# Screen 10b — Import Wizard (spec 3.3 / 7)
+# ---------------------------------------------------------------------------
+def screen_import_wizard() -> None:
+    demo_banner()
+    st.markdown("## Import wizard")
+    st.caption("Upload CSV / JSONL / Parquet. Column mapping is auto-filled "
+               "when field names match the canonical schema.")
+    uploaded = st.file_uploader("Drop a file", type=["csv", "jsonl", "ndjson", "parquet"])
+    if uploaded is not None:
+        from storesignal.import_wizard import preview, validate_mapping
+        tmp = Path("/tmp") / uploaded.name
+        tmp.write_bytes(uploaded.getvalue())
+        pv = preview(tmp)
+        if "error" in pv:
+            st.error(pv["error"])
+            return
+        st.markdown(f"**Format:** `{pv['format']}`")
+        st.markdown("**Detected columns:** " + ", ".join(f"`{c}`" for c in pv["columns"]))
+        st.markdown("**Sample rows**")
+        st.dataframe(pd.DataFrame(pv["sample_rows"]).head(5), use_container_width=True)
+
+        from storesignal.import_wizard import CANONICAL_COLUMNS, REQUIRED_COLUMNS
+        st.markdown("### Column mapping")
+        mapping = {}
+        cols = ["(none)", *pv["columns"]]
+        for canon in CANONICAL_COLUMNS:
+            default = canon if canon in pv["columns"] else "(none)"
+            required = canon in REQUIRED_COLUMNS
+            label = f"{canon}{' *' if required else ''}"
+            choice = st.selectbox(label, cols,
+                                  index=cols.index(default) if default in cols else 0,
+                                  key=f"map_{canon}")
+            if choice != "(none)":
+                mapping[canon] = choice
+
+        errs = validate_mapping(pv["columns"], mapping)
+        if errs:
+            st.warning("Mapping issues:\n- " + "\n- ".join(errs))
+        channel_override = st.text_input("Force channel (optional)")
+
+        if st.button("Run import", type="primary", disabled=bool(errs)):
+            from storesignal.import_wizard import run_import
+            result = run_import(tmp, mapping, channel_override=channel_override or None)
+            if "error" in result:
+                st.error(result)
+            else:
+                st.success(f"Imported batch {result['batch_id']}")
+                c1, c2, c3 = st.columns(3)
+                with c1: kpi("Rows in", str(result["rows_in"]))
+                with c2: kpi("Valid", str(result["rows_valid"]))
+                with c3: kpi("Rejected", str(result["rows_rejected"]))
+                st.json(result)
+
+    st.markdown("---")
+    st.markdown("### Import history")
+    from storesignal.import_wizard import list_batches
+    batches = list_batches()
+    if batches:
+        st.dataframe(pd.DataFrame(batches), use_container_width=True)
+    else:
+        st.caption("No imports yet.")
+
+
+# ---------------------------------------------------------------------------
+# Screen 11 — Data Health
+# ---------------------------------------------------------------------------
+def screen_data_health() -> None:
+    demo_banner()
+    st.markdown("## Data health")
+    from storesignal.import_wizard import list_batches
+    batches = list_batches()
+    c1, c2, c3 = st.columns(3)
+    with c1: kpi("Import batches", str(len(batches)))
+    with c2:
+        from storesignal.settings import DATA_DIR
+        raw = DATA_DIR / "raw"
+        n_raw = len(list(raw.glob("*"))) if raw.exists() else 0
+        kpi("Raw files", str(n_raw))
+    with c3:
+        proc = D.PROC
+        n_proc = len(list(proc.glob("*"))) if proc.exists() else 0
+        kpi("Processed artifacts", str(n_proc))
+
+    st.markdown("### Pipeline stage reports")
+    stage_reports = sorted(D.PROC.glob("*_report.json"))
+    if not stage_reports:
+        st.info("No stage reports yet.")
+    else:
+        for p in stage_reports:
+            with st.expander(p.name):
+                st.json(json.loads(p.read_text()))
+
+    st.markdown("### Import batches")
+    if batches:
+        st.dataframe(pd.DataFrame(batches), use_container_width=True)
+    else:
+        st.caption("No import batches yet.")
+
+
+# ---------------------------------------------------------------------------
+# Screen 12 — Settings (validated form)
+# ---------------------------------------------------------------------------
+def screen_settings() -> None:
+    demo_banner()
+    st.markdown("## Settings")
+    st.markdown("### Runtime configuration")
+    st.json(S.snapshot())
+
+    st.markdown("### Risk policy (read-only preview)")
+    from storesignal.config_loader import load_config
+    cfg = load_config()
+    st.markdown("**Mandatory categories**")
+    for c in cfg.risk_policy.mandatory_categories:
+        st.markdown(f"- `{c}`")
+    st.markdown("**Owners**")
+    for o in cfg.routing.next_action_by_owner:
+        st.markdown(f"- `{o}`")
+
+    st.markdown("### Cache")
+    if st.button("Clear UI cache"):
+        st.cache_data.clear()
+        st.success("Cache cleared.")
+
+
+# ---------------------------------------------------------------------------
+# Screen 13 — Audit Log (filtered)
+# ---------------------------------------------------------------------------
+def screen_audit() -> None:
+    demo_banner()
+    st.markdown("## Audit log")
+    log = D.audit_log()
+    if log is None or log.empty:
+        st.info("No audit events yet.")
+        return
+    c1, c2 = st.columns(2)
+    with c1:
+        etypes = ["ALL", *sorted(log["event_type"].dropna().unique().tolist())] if "event_type" in log.columns else ["ALL"]
+        et = st.selectbox("Event type", etypes)
+    with c2:
+        actors = ["ALL", *sorted(log["actor_id"].dropna().unique().tolist())] if "actor_id" in log.columns else ["ALL"]
+        ac = st.selectbox("Actor", actors)
+    sub = log
+    if et != "ALL" and "event_type" in sub.columns:
+        sub = sub[sub["event_type"] == et]
+    if ac != "ALL" and "actor_id" in sub.columns:
+        sub = sub[sub["actor_id"] == ac]
+    st.caption(f"{len(sub)} events")
+    st.dataframe(sub.tail(300), use_container_width=True)
+    st.download_button("Export JSON",
+                       sub.to_json(orient="records", lines=True),
+                       file_name="audit_export.jsonl")
 
 
 # ---------------------------------------------------------------------------
@@ -579,11 +731,9 @@ elif view == "Action Recommendation":
 elif view == "Weekly Report":
     screen_report()
 elif view == "Import Wizard":
-    st.markdown("## Import wizard")
-    st.info("Run `make import-data FILE=path.csv` from the CLI, "
-            "or POST to `/api/v1/ingest`. UI upload arrives in Phase 7C.")
+    screen_import_wizard()
 elif view == "Data Health":
-    st.info("Data health (Phase 7C).")
+    screen_data_health()
 elif view == "Evaluation":
     st.markdown("## Evaluation")
     ev = D.evaluation_report()
@@ -598,15 +748,9 @@ elif view == "Evaluation":
         with c4: kpi("Seeded detected", f"{s['detected']} / {s['total']}")
         st.caption(f"Mean lead time vs peak: {s['mean_lead_days_vs_peak']:.2f} days")
 elif view == "Settings":
-    st.markdown("## Settings")
-    st.json(S.snapshot())
+    screen_settings()
 elif view == "Audit Log":
-    st.markdown("## Audit log")
-    log = D.audit_log()
-    if log is None or log.empty:
-        st.info("No audit events yet.")
-    else:
-        st.dataframe(log.tail(200), use_container_width=True)
+    screen_audit()
 elif view == "Model & Trust":
     st.markdown("## Model & Trust")
     ev = D.evaluation_report()
