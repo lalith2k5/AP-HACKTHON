@@ -539,7 +539,7 @@ def generate_brief(region_id: str = Query(...)):
     import subprocess
     PY = ROOT / ".venv" / "bin" / "python"
     SRC = ROOT / "src"
-    res = subprocess.run([str(PY), str(SRC / "briefs.py")],
+    res = subprocess.run([str(PY), "-m", "storesignal.briefs"],
                          check=False, cwd=str(SRC))
     if res.returncode != 0:
         raise HTTPException(status_code=500, detail="brief regeneration failed")
@@ -656,8 +656,10 @@ def reset():
         if f.exists():
             f.unlink()
             cleared.append(name)
-    res = subprocess.run([str(PY), str(SRC / "run_pipeline.py")],
-                         check=False, cwd=str(SRC))
+    res = subprocess.run(
+        [str(PY), "-m", "storesignal.pipeline"],
+        check=False, cwd=str(SRC),
+    )
     if res.returncode != 0:
         raise HTTPException(status_code=500, detail="pipeline reset failed")
     audit("demo_reset", "api", f"pipeline rebuilt; cleared={cleared}")
