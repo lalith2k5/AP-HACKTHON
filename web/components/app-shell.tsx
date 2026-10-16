@@ -1,25 +1,42 @@
 import Link from "next/link";
+import { PageTransition } from "./page-transition";
+import {
+  LayoutDashboard,
+  ListChecks,
+  Bell,
+  TrendingUp,
+  Store,
+  CheckCircle2,
+  FileText,
+  Upload,
+  Activity,
+  Settings as SettingsIcon,
+  ScrollText,
+} from "lucide-react";
 
-const NAV = [
-  { href: "/overview",    label: "Overview",    icon: "\u25CE" },
-  { href: "/incidents",   label: "Incidents",   icon: "\u25A6" },
-  { href: "/alerts",      label: "Alerts",      icon: "\u25CF" },
-  { href: "/trends",      label: "Trends",      icon: "\u223F" },
-  { href: "/stores",      label: "Stores",      icon: "\u25A4" },
-  { href: "/actions",     label: "Actions",     icon: "\u2713" },
-  { href: "/reports",     label: "Reports",     icon: "\u2263" },
-  { href: "/import",      label: "Import",      icon: "\u21E3" },
-  { href: "/data-health", label: "Data Health", icon: "\u25D4" },
-  { href: "/settings",    label: "Settings",    icon: "\u2699" },
-  { href: "/audit",       label: "Audit",       icon: "\u2261" },
+const NAV_WORKSPACE = [
+  { href: "/overview",  label: "Overview",  Icon: LayoutDashboard },
+  { href: "/incidents", label: "Incidents", Icon: ListChecks },
+  { href: "/alerts",    label: "Alerts",    Icon: Bell },
+  { href: "/trends",    label: "Trends",    Icon: TrendingUp },
+  { href: "/stores",    label: "Stores",    Icon: Store },
+  { href: "/actions",   label: "Actions",   Icon: CheckCircle2 },
+  { href: "/reports",   label: "Reports",   Icon: FileText },
+] as const;
+
+const NAV_DATA = [
+  { href: "/import",      label: "Import",      Icon: Upload },
+  { href: "/data-health", label: "Data Health", Icon: Activity },
+  { href: "/settings",    label: "Settings",    Icon: SettingsIcon },
+  { href: "/audit",       label: "Audit",       Icon: ScrollText },
 ] as const;
 
 const MOBILE = [
-  { href: "/overview",  label: "Home",      icon: "\u25CE" },
-  { href: "/incidents", label: "Incidents", icon: "\u25A6" },
-  { href: "/alerts",    label: "Alerts",    icon: "\u25CF" },
-  { href: "/reports",   label: "Reports",   icon: "\u2263" },
-  { href: "/settings",  label: "More",      icon: "\u2261" },
+  { href: "/overview",  label: "Home",      Icon: LayoutDashboard },
+  { href: "/incidents", label: "Incidents", Icon: ListChecks },
+  { href: "/alerts",    label: "Alerts",    Icon: Bell },
+  { href: "/reports",   label: "Reports",   Icon: FileText },
+  { href: "/settings",  label: "More",      Icon: SettingsIcon },
 ] as const;
 
 export function AppShell({
@@ -41,33 +58,37 @@ export function AppShell({
 
         <nav className="sidebar-nav" aria-label="Primary">
           <div className="sidebar-section">Workspace</div>
-          {NAV.slice(0, 7).map((n) => {
-            const on = active === n.href;
+          {NAV_WORKSPACE.map(({ href, label, Icon }) => {
+            const on = active === href;
             return (
               <Link
-                key={n.href}
-                href={n.href}
+                key={href}
+                href={href}
                 aria-current={on ? "page" : undefined}
                 className={"nav-link" + (on ? " is-active" : "")}
               >
-                <span className="nav-icon" aria-hidden>{n.icon}</span>
-                <span>{n.label}</span>
+                <span className="nav-icon" aria-hidden>
+                  <Icon size={15} strokeWidth={2} />
+                </span>
+                <span>{label}</span>
               </Link>
             );
           })}
 
           <div className="sidebar-section">Data</div>
-          {NAV.slice(7).map((n) => {
-            const on = active === n.href;
+          {NAV_DATA.map(({ href, label, Icon }) => {
+            const on = active === href;
             return (
               <Link
-                key={n.href}
-                href={n.href}
+                key={href}
+                href={href}
                 aria-current={on ? "page" : undefined}
                 className={"nav-link" + (on ? " is-active" : "")}
               >
-                <span className="nav-icon" aria-hidden>{n.icon}</span>
-                <span>{n.label}</span>
+                <span className="nav-icon" aria-hidden>
+                  <Icon size={15} strokeWidth={2} />
+                </span>
+                <span>{label}</span>
               </Link>
             );
           })}
@@ -76,32 +97,30 @@ export function AppShell({
         <div className="sidebar-footer">
           Local · Demo mode
           <br />
-          <strong>SIMULATED DATA</strong>
+          <strong style={{ color: "var(--fg-2)" }}>SIMULATED DATA</strong>
         </div>
       </aside>
 
       <div className="main">
         <header className="topbar">
-          <div>
-            <div className="topbar-title">{title}</div>
-          </div>
+          <div className="topbar-title">{title}</div>
         </header>
 
-        <main className="content">{children}</main>
+        <main className="content"><PageTransition>{children}</PageTransition></main>
       </div>
 
       <nav className="mobile-nav" aria-label="Primary mobile">
-        {MOBILE.map((n) => {
-          const on = active === n.href;
+        {MOBILE.map(({ href, label, Icon }) => {
+          const on = active === href;
           return (
             <Link
-              key={n.href}
-              href={n.href}
+              key={href}
+              href={href}
               aria-current={on ? "page" : undefined}
               className={on ? "is-active" : ""}
             >
-              <span className="nav-icon" aria-hidden>{n.icon}</span>
-              <span>{n.label}</span>
+              <Icon size={18} strokeWidth={2} />
+              <span>{label}</span>
             </Link>
           );
         })}

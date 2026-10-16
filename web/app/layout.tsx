@@ -11,7 +11,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <div aria-hidden className="app-atmosphere" />
+        <div aria-hidden className="app-atmosphere"><div className="app-atmosphere-orbs" /></div>
         {children}
       </body>
     </html>

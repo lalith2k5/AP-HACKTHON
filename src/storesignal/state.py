@@ -190,3 +190,24 @@ def clear_all_state() -> dict:
 
 # Ensure schema on import.
 init_db()
+
+
+def record_audit(event_type: str, actor: str, detail: str = "", extra: dict | None = None) -> None:
+    """Append an audit event to the SQLite audit_events table.
+    This mirrors the JSONL audit log so both trails stay in sync."""
+    import json as _json
+    conn = _conn()
+    conn.execute(
+        """
+        INSERT INTO audit_events (ts, event_type, actor, detail, extra_json)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            _now(),
+            event_type,
+            actor,
+            detail,
+            _json.dumps(extra or {}),
+        ),
+    )
+    conn.commit()
