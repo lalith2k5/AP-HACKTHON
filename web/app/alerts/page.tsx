@@ -37,6 +37,7 @@ export default function AlertsPage() {
   const [filter, setFilter] = useState<"all" | "critical" | "high">("all");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
+  const [overrideId, setOverrideId] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -67,10 +68,11 @@ export default function AlertsPage() {
     }
   }
 
-  function overridePrompt(id: string) {
-    const reason = window.prompt("Override reason (required):");
-    if (!reason || !reason.trim()) return;
-    doAction(id, "Alert overridden", () =>
+  async function submitOverride(reason: string) {
+    if (!overrideId || !reason.trim()) return;
+    const id = overrideId;
+    setOverrideId(null);
+    await doAction(id, "Alert overridden", () =>
       endpoints.overrideAlert(id, { actor: "demo-operator", note: reason, decision: "suppressed" })
     );
   }
@@ -185,7 +187,7 @@ export default function AlertsPage() {
                         </button>
                         <button
                           disabled={busy}
-                          onClick={() => overridePrompt(a.alert_id)}
+                          onClick={() => setOverrideId(a.alert_id)}
                           className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-[var(--status-medium)] hover:bg-muted disabled:opacity-50"
                         >
                           Override
@@ -199,6 +201,65 @@ export default function AlertsPage() {
           })}
         </ul>
       )}
+
+      {overrideId && (
+        <OverrideModal
+          onCancel={() => setOverrideId(null)}
+          onSubmit={submitOverride}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function OverrideModal({
+  onCancel,
+  onSubmit,
+}: {
+  onCancel: () => void;
+  onSubmit: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-base font-semibold tracking-tight">Override alert</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Overriding suppresses this alert. A written reason is required and will be
+          stored in the audit log.
+        </p>
+        <textarea
+          autoFocus
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          placeholder="Why is this alert being overridden?"
+          className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        />
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!reason.trim()}
+            onClick={() => onSubmit(reason)}
+            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            Override
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

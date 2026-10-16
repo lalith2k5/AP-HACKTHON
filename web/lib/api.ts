@@ -5,6 +5,12 @@
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8790";
 
+// Demo API key. Sent on every request. Safe in a local-only MVP because
+// the key maps to the local demo role and never leaves localhost.
+// For multi-user deployment: replace with a session-scoped token (spec 18).
+const API_KEY =
+  process.env.NEXT_PUBLIC_STORESIGNAL_API_KEY ?? "demo-key-storesignal";
+
 export class ApiError extends Error {
   status: number;
   code?: string;
@@ -23,6 +29,7 @@ export async function api<T>(path: string, opts: FetchOpts = {}): Promise<T> {
   const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
   const headers = new Headers(opts.headers);
   headers.set("Accept", "application/json");
+  headers.set("x-api-key", API_KEY);
   let body: BodyInit | undefined;
   if (opts.body !== undefined) {
     headers.set("Content-Type", "application/json");

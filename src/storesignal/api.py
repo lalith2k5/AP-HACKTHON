@@ -11,6 +11,7 @@ import uuid
 
 import pandas as pd
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from storesignal.api_envelope import install as install_envelope
@@ -50,7 +51,6 @@ app = FastAPI(
     description="Voice-of-Store Engine — early-warning and incident-resolution intelligence layer.",
 )
 
-from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -234,10 +234,9 @@ def _read_jsonl(path):
             line = line.strip()
             if not line:
                 continue
-            try:
+            import contextlib as _ctx
+            with _ctx.suppress(Exception):
                 out.append(json.loads(line))
-            except Exception:
-                pass
     return out
 
 def _latest_overrides(kind, id_field, id_value):
@@ -309,7 +308,8 @@ def get_incident(incident_id: str):
     return rec
 
 
-@app.patch("/api/v1/incidents/{incident_id}")
+@app.patch("/api/v1/incidents/{incident_id}",
+          dependencies=[Depends(require_permission("record_action"))])
 def patch_incident(incident_id: str, body: IncidentPatch):
     """MVP demo: no auth dependency (matches read endpoints in demo mode)."""
     inc = incidents()
@@ -334,7 +334,8 @@ def patch_incident(incident_id: str, body: IncidentPatch):
     return {"incident_id": incident_id, "before": before, "after": after}
 
 
-@app.post("/api/v1/incidents/{incident_id}/notes")
+@app.post("/api/v1/incidents/{incident_id}/notes",
+          dependencies=[Depends(require_permission("record_action"))])
 def post_incident_note(incident_id: str, body: NoteBody):
     inc = incidents()
     if inc[inc["incident_id"] == incident_id].empty:
@@ -405,7 +406,8 @@ def list_alerts(
     return records
 
 
-@app.post("/api/v1/alerts/{alert_id}/acknowledge")
+@app.post("/api/v1/alerts/{alert_id}/acknowledge",
+          dependencies=[Depends(require_permission("review_alert"))])
 def ack_alert(alert_id: str, body: AlertAck):
     df = alerts()
     if df[df["alert_id"] == alert_id].empty:
@@ -419,7 +421,8 @@ def ack_alert(alert_id: str, body: AlertAck):
     return {"alert_id": alert_id, "status": "acknowledged", "ts": ts}
 
 
-@app.post("/api/v1/alerts/{alert_id}/resolve")
+@app.post("/api/v1/alerts/{alert_id}/resolve",
+          dependencies=[Depends(require_permission("review_alert"))])
 def resolve_alert(alert_id: str, body: AlertAck):
     df = alerts()
     if df[df["alert_id"] == alert_id].empty:
@@ -433,7 +436,8 @@ def resolve_alert(alert_id: str, body: AlertAck):
     return {"alert_id": alert_id, "status": "resolved", "ts": ts}
 
 
-@app.post("/api/v1/alerts/{alert_id}/override")
+@app.post("/api/v1/alerts/{alert_id}/override",
+          dependencies=[Depends(require_permission("review_alert"))])
 def override_alert(alert_id: str, body: AlertAck):
     df = alerts()
     if df[df["alert_id"] == alert_id].empty:
@@ -645,12 +649,20 @@ def reset():
     import subprocess
     PY = ROOT / ".venv" / "bin" / "python"
     SRC = ROOT / "src"
+    # Clear user-generated state first (overrides + notes)
+    cleared = []
+    for name in ["incident_overrides.jsonl", "alert_overrides.jsonl", "incident_notes.jsonl"]:
+        f = PROC / name
+        if f.exists():
+            f.unlink()
+            cleared.append(name)
     res = subprocess.run([str(PY), str(SRC / "run_pipeline.py")],
                          check=False, cwd=str(SRC))
     if res.returncode != 0:
         raise HTTPException(status_code=500, detail="pipeline reset failed")
-    audit("demo_reset", "api", "pipeline rebuilt")
-    return {"status": "reset_ok", "message": "pipeline rebuilt from seed"}
+    audit("demo_reset", "api", f"pipeline rebuilt; cleared={cleared}")
+    return {"status": "reset_ok", "message": "pipeline rebuilt from seed",
+            "cleared_state_files": cleared}
 
 
 @app.get("/api/v1/me")
