@@ -5,7 +5,6 @@ import sys
 import joblib
 import pandas as pd
 
-from storesignal.config_loader import category_to_severity, load_config
 from storesignal.paths import MODEL_DIR, PROCESSED_DIR
 
 IMPORT_DIR = PROCESSED_DIR / "imports"
@@ -25,13 +24,14 @@ def process(batch_id: str) -> dict:
     bundle = joblib.load(model_path)
     vectorizer = bundle["vectorizer"]
     clf = bundle["classifier"]
-    labels = bundle["labels"]
+    labels = list(bundle["classifier"].classes_)
+    severity_map = bundle["severity_map"]
+    actionable_by_severity = bundle["actionable_by_severity"]
+    mandatory = {c for c, sev in severity_map.items()
+                 if sev in {"critical", "high"}}
     text = df["text_raw"].fillna("").astype(str)
     X = vectorizer.transform(text)
     probs = clf.predict_proba(X)
-    cfg = load_config()
-    severity_map = category_to_severity(cfg)
-    mandatory = set(cfg.risk_policy.mandatory_categories)
     rows = []
     escalations = []
     for i, (_, r) in enumerate(df.iterrows()):
@@ -48,7 +48,7 @@ def process(batch_id: str) -> dict:
             "predicted_category": cat,
             "confidence": conf,
             "severity": sev,
-            "actionable": sev in {"critical", "high"},
+            "actionable": bool(actionable_by_severity.get(sev, False)),
             "batch_id": batch_id,
         })
         if cat in mandatory:
