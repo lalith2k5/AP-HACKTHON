@@ -11,9 +11,9 @@ via ui_data.py. Business logic stays in the pipeline modules.
 """
 
 import json
-import pandas as pd
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
 from storesignal import settings as S
