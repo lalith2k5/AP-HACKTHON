@@ -13,7 +13,8 @@ import yaml
 from pydantic import BaseModel, Field
 
 ROOT = Path.home() / "storesignal-ai"
-CONFIG_DIR = ROOT / "config"
+from storesignal import settings as _ssettings
+CONFIG_DIR = _ssettings.CONFIG_DIR
 
 
 class PathsCfg(BaseModel):

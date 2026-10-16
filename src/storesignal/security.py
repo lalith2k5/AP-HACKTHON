@@ -30,18 +30,47 @@ IDEMPOTENCY_DB.parent.mkdir(parents=True, exist_ok=True)
 _cfg = load_config()
 
 ROLE_KEYS = {
-    _cfg.api.api_key: "admin",
-    "reviewer-key-demo": "reviewer",
-    "store-manager-key-demo": "store_manager",
-    "regional-manager-key-demo": "regional_manager",
+    _cfg.api.api_key:               "admin",
+    "reviewer-key-demo":            "reviewer",
+    "store-manager-key-demo":       "store_manager",
+    "regional-manager-key-demo":    "regional_ops_lead",
+    "food-safety-key-demo":         "food_safety_risk",
+    "supply-chain-key-demo":        "supply_chain",
+    "hr-key-demo":                  "hr_sensitive",
+    "analyst-key-demo":             "analyst",
 }
 
+_READ = {"read_overview", "read_incidents", "read_alerts", "read_trends",
+         "read_stores", "read_briefs", "read_audit", "read_evaluation",
+         "read_data_health"}
+_WRITE = {"review_alert", "assign_alert", "record_action"}
+
 PERMISSIONS = {
-    "reviewer":          {"review_alert", "assign_alert", "record_action"},
-    "store_manager":     {"review_alert", "assign_alert", "record_action"},
-    "regional_manager":  {"review_alert", "assign_alert", "record_action", "generate_brief"},
-    "admin":             {"review_alert", "assign_alert", "record_action", "generate_brief", "reset", "ingest"},
+    "regional_ops_lead": _READ | _WRITE | {"generate_brief", "read_reports"},
+    "store_manager":     _READ | _WRITE,
+    "food_safety_risk":  _READ | _WRITE | {"review_mandatory_risk"},
+    "supply_chain":      _READ | _WRITE,
+    "hr_sensitive":      {"read_incidents", "read_alerts", "review_alert",
+                          "assign_alert", "record_action", "review_mandatory_risk"},
+    "reviewer":          _READ | _WRITE,
+    "analyst":           _READ | {"run_pipeline", "run_evaluation",
+                                  "annotate_classification"},
+    "admin":             _READ | _WRITE | {"generate_brief", "reset", "ingest",
+                                            "manage_config", "read_reports",
+                                            "run_pipeline", "run_evaluation",
+                                            "annotate_classification",
+                                            "review_mandatory_risk"},
 }
+
+SENSITIVE_CATEGORIES = {"staff_misconduct", "staff_conduct", "allergen_or_labeling"}
+
+
+def is_sensitive_category(cat: str) -> bool:
+    return cat in SENSITIVE_CATEGORIES
+
+
+def can_access_sensitive(role: str) -> bool:
+    return role in {"admin", "hr_sensitive", "food_safety_risk"}
 
 
 def resolve_role(api_key):
