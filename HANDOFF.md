@@ -484,13 +484,20 @@ Ports:
 
 Deployment guide: see DEPLOYMENT.md.
 
+Gaps closed this session (final):
+- CLOSED: Client bundle no longer contains the API key. All browser calls
+  route through /api/proxy/[...path] (Next.js server route). The key is
+  read from STORESIGNAL_API_KEY (server-only) and never reaches the client.
+- CLOSED: Playwright E2E tests exist (web/e2e/smoke.spec.ts, 6 tests).
+  Run: cd web && npx playwright test
+
 Known honest limitations (not hidden, not blocking local demo):
-- Static NEXT_PUBLIC key visible in client bundle. Local-only acceptable;
-  production needs session-scoped tokens (spec 18).
-- No optimistic UI; mutations block until server responds.
+- No optimistic UI; mutations block until server responds (~200ms local).
 - Streamlit ui.py not yet retired (per HANDOFF 5a plan, delete only after
   Next.js reaches full parity — Streamlit still has 15 views, Next.js has 6).
+  Streamlit remains available on :8501 for comparison.
 - No offline / no-network mode.
-- No automated browser tests (Playwright). Manual verification done.
+- Production hardening (TLS, SSO, transactional DB) explicitly out of
+  scope for local MVP per spec section 20.5.
 
 **END OF HANDOFF**
