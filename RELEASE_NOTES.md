@@ -77,3 +77,21 @@ See DEPLOYMENT.md. Quickstart:
     cd "$HOME/storesignal-ai/web"
     npm run dev -- --port 3300
     # open http://localhost:3300
+
+## Post-deployment hardening (commit 911149e)
+
+- **SQLite state store** replaces JSONL for overrides + notes. WAL mode,
+  atomic writes, indexed. Survives restarts. Migration script included.
+- **TLS via Caddy** — reverse proxy on :8443 with self-signed cert for LAN.
+  Real-domain mode auto-provisions Let's Encrypt.
+- **Legal / privacy templates** — DATA_INVENTORY.md, RETENTION_POLICY.md,
+  PRIVACY_NOTES.md. Drafts for counsel, not certifications.
+- **SSO** — deliberately deferred. No IdP selected; static x-api-key auth
+  remains. Replacement path documented in HANDOFF section 15.
+
+## Still not covered (requires decisions or vendors)
+- Multi-user identity (SSO)
+- PostgreSQL migration (SQLite is fine through pilot scale)
+- SIEM integration for audit log
+- Retention cron
+- Penetration test before non-localhost exposure

@@ -500,4 +500,66 @@ Known honest limitations (not hidden, not blocking local demo):
 - Production hardening (TLS, SSO, transactional DB) explicitly out of
   scope for local MVP per spec section 20.5.
 
+## 15. Post-deployment hardening (2026-10-16 ~20:45, commit 911149e)
+
+**All identified production gaps addressed or explicitly deferred.**
+
+### SQLite transactional state (was: JSONL)
+    src/storesignal/state.py    WAL-mode SQLite at data/processed/storesignal.db
+    scripts/migrate_state.py    one-shot JSONL -> SQLite importer
+Tables: incident_overrides, alert_overrides, incident_notes, audit_events.
+All mutations atomic. Verified survives backend restart.
+
+### TLS via Caddy
+    deploy/tls/Caddyfile        reverse proxy :8443, security headers
+    scripts/serve-tls.sh        boots Caddy with self-signed TLS (LAN)
+    Caddy installed at /opt/homebrew/bin/caddy
+For real domain: swap site line in Caddyfile to your hostname and remove
+`tls internal` — Caddy auto-provisions Let's Encrypt.
+
+### Legal / privacy templates
+    DATA_INVENTORY.md     data classes, redaction, access, flow
+    RETENTION_POLICY.md   retention windows + SAR procedure + sign-off
+    PRIVACY_NOTES.md      design principles + threat model + boundaries
+These are DRAFTS. Not compliance certifications. Legal review still required.
+
+### SSO — deliberately skipped
+Decision (2026-10-16): keep static x-api-key auth for the hackathon demo.
+Rationale: no IdP chosen; shipping SSO against an unspecified provider
+would produce dead code and add attack surface.
+Path forward when needed: pick Auth0 / Keycloak / Google OIDC / Azure AD,
+then replace `resolve_role(api_key)` in security.py with a JWT-claim
+resolver. Role->permission map already exists and does not need to change.
+
+### Full endpoint list (final)
+    GET    /health
+    GET    /api/v1/overview
+    GET    /api/v1/incidents
+    GET    /api/v1/incidents/{id}
+    PATCH  /api/v1/incidents/{id}
+    POST   /api/v1/incidents/{id}/notes
+    GET    /api/v1/incidents/{id}/timeline
+    GET    /api/v1/alerts
+    POST   /api/v1/alerts/{id}/acknowledge
+    POST   /api/v1/alerts/{id}/resolve
+    POST   /api/v1/alerts/{id}/override
+    GET    /api/v1/briefs/weekly
+    POST   /api/v1/briefs/weekly/generate
+    GET    /api/v1/metrics
+    GET    /api/v1/forecasts
+    GET    /api/v1/replay/{id}
+    POST   /api/v1/demo/reset        (async, returns job_id)
+    GET    /api/v1/jobs/{id}
+    POST   /api/v1/feedback/batch
+    GET    /api/v1/feedback/{id}
+    POST   /api/v1/classify
+    GET    /api/v1/tracking/summary
+    POST   /api/v1/actions
+
+### Ports (unchanged)
+    8790  FastAPI
+    3300  Next.js dev
+    8443  Caddy TLS (optional, when scripts/serve-tls.sh running)
+    8501  Streamlit legacy
+
 **END OF HANDOFF**

@@ -13,3 +13,7 @@ logs/
 
 # backup tarballs (regenerate with scripts/backup.sh)
 backups/
+
+# sqlite WAL/SHM
+*.db-wal
+*.db-shm

@@ -120,3 +120,42 @@ Ports 3000, 8000 are NOT used to avoid collision with user's other project.
 - Legal/compliance review for real customer data
 
 See PRODUCTION_READINESS.md (spec 20.5) for the full multi-user checklist.
+
+## TLS (optional, for LAN or remote access)
+
+    brew install caddy    # already installed if serve-tls.sh works
+    ./scripts/serve-tls.sh
+
+Caddy fronts both FastAPI (:8790) and Next.js (:3300) on
+https://localhost:8443 with a self-signed cert. Browser will warn once.
+
+For a real domain: edit `deploy/tls/Caddyfile`, replace `:8443` with your
+hostname, delete `tls internal`, and re-run. Caddy auto-provisions
+Let's Encrypt.
+
+## State store
+
+SQLite at `data/processed/storesignal.db` (WAL mode).
+Migrating from legacy JSONL (one time):
+
+    .venv/bin/python scripts/migrate_state.py
+
+Backup: `./scripts/backup.sh` includes the DB. Restore:
+`./scripts/restore.sh backups/storesignal-YYYYMMDDTHHMMSSZ.tar.gz`.
+
+## Auth note
+
+Static `x-api-key` header (value: `demo-key-storesignal` by default).
+Frontend never sees the key — requests flow through the Next.js proxy
+at `/api/proxy/[...path]`.
+
+For multi-user: see HANDOFF section 15 (SSO replacement path).
+
+## Legal / privacy
+
+Before processing real customer or staff data, read:
+- DATA_INVENTORY.md
+- RETENTION_POLICY.md
+- PRIVACY_NOTES.md
+
+These are drafts. Legal and DPO sign-off required.
