@@ -1,0 +1,21 @@
+{
+  "total_routed": 40053,
+  "owner_function_counts": {
+    "Store Ops": 17837,
+    "Supply Chain": 6965,
+    "Merchandising": 6101,
+    "Digital": 5427,
+    "HR": 3723
+  },
+  "escalated_owner_function_counts": {
+    "Store Ops": 956,
+    "HR": 304
+  },
+  "sla_hours_by_severity": {
+    "critical": 4,
+    "review_required": 4,
+    "high": 24,
+    "medium": 72,
+    "low": 168
+  }
+}

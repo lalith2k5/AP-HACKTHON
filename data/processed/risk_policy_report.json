@@ -1,0 +1,21 @@
+{
+  "total_predictions": 40053,
+  "total_escalated": 1260,
+  "escalation_rate": 0.0315,
+  "mandatory_categories": [
+    "allergen_or_labeling",
+    "food_safety_or_hygiene",
+    "safety_hazard",
+    "staff_misconduct"
+  ],
+  "escalated_by_category": {
+    "allergen_or_labeling": 349,
+    "safety_hazard": 325,
+    "staff_misconduct": 304,
+    "food_safety_or_hygiene": 282
+  },
+  "escalated_by_severity": {
+    "critical": 1260
+  },
+  "escalated_low_confidence_count": 0
+}

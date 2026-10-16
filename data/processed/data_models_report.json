@@ -1,0 +1,8 @@
+{
+  "regions": 5,
+  "routing_rules": 160,
+  "paths": {
+    "regions": "/Users/lalith.v/storesignal-ai/data/processed/regions.parquet",
+    "routing_rules": "/Users/lalith.v/storesignal-ai/data/processed/routing_rules.parquet"
+  }
+}

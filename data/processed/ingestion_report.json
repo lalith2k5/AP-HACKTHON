@@ -1,0 +1,51 @@
+{
+  "files": {
+    "online_review": {
+      "path": "/Users/lalith.v/storesignal-ai/data/raw/reviews.jsonl",
+      "records": 20006
+    },
+    "app_feedback": {
+      "path": "/Users/lalith.v/storesignal-ai/data/raw/app_feedback.jsonl",
+      "records": 10021
+    },
+    "staff_shift_note": {
+      "path": "/Users/lalith.v/storesignal-ai/data/raw/staff_notes.jsonl",
+      "records": 5012
+    },
+    "call_transcript": {
+      "path": "/Users/lalith.v/storesignal-ai/data/raw/call_transcripts.jsonl",
+      "records": 5014
+    }
+  },
+  "total_files": 4,
+  "total_records_read": 40053,
+  "total_records_valid": 40053,
+  "total_records_invalid": 0,
+  "invalid_store_ids": 0,
+  "duplicate_record_ids": 0,
+  "schema_errors": [],
+  "channel_counts": {
+    "online_review": {
+      "valid": 20006,
+      "invalid": 0
+    },
+    "app_feedback": {
+      "valid": 10021,
+      "invalid": 0
+    },
+    "staff_shift_note": {
+      "valid": 5012,
+      "invalid": 0
+    },
+    "call_transcript": {
+      "valid": 5014,
+      "invalid": 0
+    }
+  },
+  "valid_store_ids_count": 50,
+  "valid_categories_count": 32,
+  "timestamp_range": {
+    "min": "2026-09-03T18:00:22+00:00",
+    "max": "2026-10-01T11:59:51+00:00"
+  }
+}

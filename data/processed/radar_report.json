@@ -1,0 +1,113 @@
+{
+  "historical_window_days": 28,
+  "min_historical_periods": 14,
+  "z_threshold": 3.0,
+  "min_count": 2,
+  "min_rate_increase": 2.0,
+  "total_flags": 107,
+  "unique_store_category_pairs": 83,
+  "unique_stores_flagged": 40,
+  "unique_categories_flagged": 13,
+  "top_10_summary": [
+    {
+      "store_id": "S-KOL-009",
+      "predicted_category": "store_cleanliness",
+      "first_flag_day": "2026-09-19 00:00:00+00:00",
+      "last_flag_day": "2026-09-29 00:00:00+00:00",
+      "num_flag_days": 2,
+      "max_robust_z": 6.0705,
+      "max_count": 12,
+      "total_flagged_count": 20
+    },
+    {
+      "store_id": "S-HYD-005",
+      "predicted_category": "pricing_or_price_tag_error",
+      "first_flag_day": "2026-09-23 00:00:00+00:00",
+      "last_flag_day": "2026-09-29 00:00:00+00:00",
+      "num_flag_days": 3,
+      "max_robust_z": 6.0,
+      "max_count": 7,
+      "total_flagged_count": 15
+    },
+    {
+      "store_id": "S-MUM-005",
+      "predicted_category": "pricing_or_price_tag_error",
+      "first_flag_day": "2026-09-22 00:00:00+00:00",
+      "last_flag_day": "2026-09-25 00:00:00+00:00",
+      "num_flag_days": 3,
+      "max_robust_z": 6.0,
+      "max_count": 7,
+      "total_flagged_count": 15
+    },
+    {
+      "store_id": "S-HYD-005",
+      "predicted_category": "queue_or_wait_time",
+      "first_flag_day": "2026-09-25 00:00:00+00:00",
+      "last_flag_day": "2026-09-25 00:00:00+00:00",
+      "num_flag_days": 1,
+      "max_robust_z": 5.396,
+      "max_count": 6,
+      "total_flagged_count": 6
+    },
+    {
+      "store_id": "S-MUM-001",
+      "predicted_category": "store_cleanliness",
+      "first_flag_day": "2026-09-28 00:00:00+00:00",
+      "last_flag_day": "2026-09-28 00:00:00+00:00",
+      "num_flag_days": 1,
+      "max_robust_z": 5.396,
+      "max_count": 12,
+      "total_flagged_count": 12
+    },
+    {
+      "store_id": "S-DEL-007",
+      "predicted_category": "checkout_experience",
+      "first_flag_day": "2026-09-25 00:00:00+00:00",
+      "last_flag_day": "2026-09-30 00:00:00+00:00",
+      "num_flag_days": 3,
+      "max_robust_z": 5.0,
+      "max_count": 6,
+      "total_flagged_count": 14
+    },
+    {
+      "store_id": "S-DEL-005",
+      "predicted_category": "pricing_or_price_tag_error",
+      "first_flag_day": "2026-09-30 00:00:00+00:00",
+      "last_flag_day": "2026-09-30 00:00:00+00:00",
+      "num_flag_days": 1,
+      "max_robust_z": 5.0,
+      "max_count": 6,
+      "total_flagged_count": 6
+    },
+    {
+      "store_id": "S-MUM-009",
+      "predicted_category": "staff_helpfulness",
+      "first_flag_day": "2026-09-18 00:00:00+00:00",
+      "last_flag_day": "2026-09-18 00:00:00+00:00",
+      "num_flag_days": 1,
+      "max_robust_z": 4.7215,
+      "max_count": 5,
+      "total_flagged_count": 5
+    },
+    {
+      "store_id": "S-DEL-005",
+      "predicted_category": "staff_helpfulness",
+      "first_flag_day": "2026-09-21 00:00:00+00:00",
+      "last_flag_day": "2026-09-21 00:00:00+00:00",
+      "num_flag_days": 1,
+      "max_robust_z": 4.7215,
+      "max_count": 5,
+      "total_flagged_count": 5
+    },
+    {
+      "store_id": "S-HYD-006",
+      "predicted_category": "pricing_or_price_tag_error",
+      "first_flag_day": "2026-09-25 00:00:00+00:00",
+      "last_flag_day": "2026-09-25 00:00:00+00:00",
+      "num_flag_days": 1,
+      "max_robust_z": 4.7215,
+      "max_count": 5,
+      "total_flagged_count": 5
+    }
+  ]
+}

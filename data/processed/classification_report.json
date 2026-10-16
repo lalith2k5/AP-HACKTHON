@@ -1,0 +1,257 @@
+{
+  "rows_total": 40053,
+  "rows_train": 35709,
+  "rows_val": 4344,
+  "validation_cutoff": "2026-09-28T11:59:51+00:00",
+  "validation_macro_f1_vs_weak": 0.9853416605605633,
+  "num_categories_predicted": 32,
+  "predicted_category_counts": {
+    "store_cleanliness": 5249,
+    "out_of_stock": 3598,
+    "queue_or_wait_time": 3365,
+    "checkout_experience": 2273,
+    "staff_helpfulness": 2189,
+    "pricing_or_price_tag_error": 2051,
+    "product_quality_or_freshness": 1747,
+    "equipment_or_refrigeration": 1696,
+    "app_offer_or_loyalty": 1445,
+    "app_crash_or_bug": 1399,
+    "promotion_or_offer_issue": 1197,
+    "product_assortment": 1093,
+    "trolley_or_basket_availability": 1020,
+    "app_login_or_account": 958,
+    "parking_or_entrance": 957,
+    "store_hours_or_closure": 922,
+    "app_payment_issue": 905,
+    "store_lighting_or_ambience": 885,
+    "delivery_or_receiving": 742,
+    "online_order_fulfillment": 720,
+    "staff_conduct": 617,
+    "billing_staff_behaviour": 613,
+    "planogram_or_shelf_layout": 599,
+    "packaging_or_labeling": 583,
+    "expired_or_near_expiry": 578,
+    "stock_shortage_or_allocation": 535,
+    "restroom_condition": 514,
+    "allergen_or_labeling": 349,
+    "cold_chain_integrity": 343,
+    "safety_hazard": 325,
+    "staff_misconduct": 304,
+    "food_safety_or_hygiene": 282
+  },
+  "severity_counts": {
+    "high": 16768,
+    "medium": 14959,
+    "low": 7066,
+    "critical": 1260
+  },
+  "actionable_true_count": 18028,
+  "mean_confidence": 0.9741689860934263,
+  "per_class_report": {
+    "allergen_or_labeling": {
+      "precision": 0.9361702127659575,
+      "recall": 1.0,
+      "f1-score": 0.967032967032967,
+      "support": 44.0
+    },
+    "app_crash_or_bug": {
+      "precision": 0.9664429530201343,
+      "recall": 1.0,
+      "f1-score": 0.9829351535836177,
+      "support": 144.0
+    },
+    "app_login_or_account": {
+      "precision": 0.9831932773109243,
+      "recall": 1.0,
+      "f1-score": 0.9915254237288136,
+      "support": 117.0
+    },
+    "app_offer_or_loyalty": {
+      "precision": 0.9748427672955975,
+      "recall": 0.9872611464968153,
+      "f1-score": 0.9810126582278481,
+      "support": 157.0
+    },
+    "app_payment_issue": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 112.0
+    },
+    "billing_staff_behaviour": {
+      "precision": 0.9850746268656716,
+      "recall": 1.0,
+      "f1-score": 0.9924812030075187,
+      "support": 66.0
+    },
+    "checkout_experience": {
+      "precision": 0.9918032786885246,
+      "recall": 1.0,
+      "f1-score": 0.9958847736625515,
+      "support": 242.0
+    },
+    "cold_chain_integrity": {
+      "precision": 0.918918918918919,
+      "recall": 1.0,
+      "f1-score": 0.9577464788732394,
+      "support": 34.0
+    },
+    "delivery_or_receiving": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 62.0
+    },
+    "equipment_or_refrigeration": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 193.0
+    },
+    "expired_or_near_expiry": {
+      "precision": 0.9833333333333333,
+      "recall": 1.0,
+      "f1-score": 0.9915966386554622,
+      "support": 59.0
+    },
+    "food_safety_or_hygiene": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 40.0
+    },
+    "online_order_fulfillment": {
+      "precision": 0.9736842105263158,
+      "recall": 1.0,
+      "f1-score": 0.9866666666666667,
+      "support": 74.0
+    },
+    "out_of_stock": {
+      "precision": 0.9949622166246851,
+      "recall": 1.0,
+      "f1-score": 0.9974747474747475,
+      "support": 395.0
+    },
+    "packaging_or_labeling": {
+      "precision": 0.9833333333333333,
+      "recall": 1.0,
+      "f1-score": 0.9915966386554622,
+      "support": 59.0
+    },
+    "parking_or_entrance": {
+      "precision": 0.9622641509433962,
+      "recall": 0.9902912621359223,
+      "f1-score": 0.9760765550239234,
+      "support": 103.0
+    },
+    "planogram_or_shelf_layout": {
+      "precision": 0.984375,
+      "recall": 1.0,
+      "f1-score": 0.9921259842519685,
+      "support": 63.0
+    },
+    "pricing_or_price_tag_error": {
+      "precision": 0.9868995633187773,
+      "recall": 1.0,
+      "f1-score": 0.9934065934065934,
+      "support": 226.0
+    },
+    "product_assortment": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 111.0
+    },
+    "product_quality_or_freshness": {
+      "precision": 0.9949748743718593,
+      "recall": 1.0,
+      "f1-score": 0.9974811083123426,
+      "support": 198.0
+    },
+    "promotion_or_offer_issue": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 124.0
+    },
+    "queue_or_wait_time": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 346.0
+    },
+    "restroom_condition": {
+      "precision": 0.98,
+      "recall": 1.0,
+      "f1-score": 0.98989898989899,
+      "support": 49.0
+    },
+    "safety_hazard": {
+      "precision": 0.9761904761904762,
+      "recall": 1.0,
+      "f1-score": 0.9879518072289156,
+      "support": 41.0
+    },
+    "staff_conduct": {
+      "precision": 0.9354838709677419,
+      "recall": 1.0,
+      "f1-score": 0.9666666666666667,
+      "support": 58.0
+    },
+    "staff_helpfulness": {
+      "precision": 0.9868995633187773,
+      "recall": 1.0,
+      "f1-score": 0.9934065934065934,
+      "support": 226.0
+    },
+    "staff_misconduct": {
+      "precision": 0.88,
+      "recall": 1.0,
+      "f1-score": 0.9361702127659575,
+      "support": 44.0
+    },
+    "stock_shortage_or_allocation": {
+      "precision": 0.96,
+      "recall": 0.9795918367346939,
+      "f1-score": 0.9696969696969697,
+      "support": 49.0
+    },
+    "store_cleanliness": {
+      "precision": 0.9945155393053017,
+      "recall": 0.9021558872305141,
+      "f1-score": 0.9460869565217391,
+      "support": 603.0
+    },
+    "store_hours_or_closure": {
+      "precision": 0.9782608695652174,
+      "recall": 1.0,
+      "f1-score": 0.989010989010989,
+      "support": 90.0
+    },
+    "store_lighting_or_ambience": {
+      "precision": 0.9722222222222222,
+      "recall": 1.0,
+      "f1-score": 0.9859154929577465,
+      "support": 105.0
+    },
+    "trolley_or_basket_availability": {
+      "precision": 0.990990990990991,
+      "recall": 1.0,
+      "f1-score": 0.995475113122172,
+      "support": 110.0
+    },
+    "accuracy": 0.9854972375690608,
+    "macro avg": {
+      "precision": 0.9758505375705971,
+      "recall": 0.9956031291436858,
+      "f1-score": 0.9853416605605633,
+      "support": 4344.0
+    },
+    "weighted avg": {
+      "precision": 0.9859604208742614,
+      "recall": 0.9854972375690608,
+      "f1-score": 0.985292251073822,
+      "support": 4344.0
+    }
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "region_id": "R-EAST",
+  "region_name": "East",
+  "week_start": "2026-09-25",
+  "week_end": "2026-10-01",
+  "total_feedback": 1885,
+  "total_feedback_previous_week": 1993,
+  "top_issues": [
+    {
+      "category": "safety_hazard",
+      "current_count": 27,
+      "previous_count": 13,
+      "trend": "UP",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 47.0,
+      "affected_stores": [
+        {
+          "store_id": "S-KOL-003",
+          "count": 5
+        },
+        {
+          "store_id": "S-KOL-004",
+          "count": 5
+        },
+        {
+          "store_id": "S-KOL-001",
+          "count": 4
+        },
+        {
+          "store_id": "S-KOL-002",
+          "count": 3
+        },
+        {
+          "store_id": "S-KOL-009",
+          "count": 3
+        }
+      ],
+      "evidence_quotes": [
+        "Agent: How can I help? Customer: broken glass on aisle floor, unsafe",
+        "Wet floor without warning sign, I lsipped",
+        "Farshavar pani aahe, sign nahi"
+      ]
+    },
+    {
+      "category": "food_safety_or_hygiene",
+      "current_count": 13,
+      "previous_count": 6,
+      "trend": "UP",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 46.65,
+      "affected_stores": [
+        {
+          "store_id": "S-KOL-010",
+          "count": 3
+        },
+        {
+          "store_id": "S-KOL-005",
+          "count": 2
+        },
+        {
+          "store_id": "S-KOL-008",
+          "count": 2
+        },
+        {
+          "store_id": "S-KOL-002",
+          "count": 1
+        },
+        {
+          "store_id": "S-KOL-003",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Shift note: Cooked foodk ept uncovered near billing",
+        "Cooked food kept uncovered near billing",
+        "Deli counter hygiene is very poor 😭"
+      ]
+    },
+    {
+      "category": "allergen_or_labeling",
+      "current_count": 20,
+      "previous_count": 19,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 41.0,
+      "affected_stores": [
+        {
+          "store_id": "S-KOL-001",
+          "count": 4
+        },
+        {
+          "store_id": "S-KOL-006",
+          "count": 3
+        },
+        {
+          "store_id": "S-KOL-007",
+          "count": 3
+        },
+        {
+          "store_id": "S-KOL-004",
+          "count": 2
+        },
+        {
+          "store_id": "S-KOL-005",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "mislabelled product, contains milk but not listed 🙏",
+        "Shift note: Mislabelled porduct, contains milk but not listed",
+        "Label pe allergen nahi likha hai, khatarnak"
+      ]
+    },
+    {
+      "category": "staff_misconduct",
+      "current_count": 20,
+      "previous_count": 20,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "HR",
+      "next_action": "Open HR case; preserve evidence; assign reviewer.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 41.0,
+      "affected_stores": [
+        {
+          "store_id": "S-KOL-005",
+          "count": 4
+        },
+        {
+          "store_id": "S-KOL-001",
+          "count": 3
+        },
+        {
+          "store_id": "S-KOL-004",
+          "count": 3
+        },
+        {
+          "store_id": "S-KOL-002",
+          "count": 2
+        },
+        {
+          "store_id": "S-KOL-007",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Agent: How can I help? Customer: Manager misbehaved with me and shouted",
+        "Manager ne chuki vaagani keli",
+        "Staff asked for personal favour, unacceptable 🥲"
+      ]
+    },
+    {
+      "category": "billing_staff_behaviour",
+      "current_count": 31,
+      "previous_count": 24,
+      "trend": "UP",
+      "severity": "high",
+      "owner_function": "HR",
+      "next_action": "Open HR case; preserve evidence; assign reviewer.",
+      "escalation_rule": "severity_based:high",
+      "priority": 37.0,
+      "affected_stores": [
+        {
+          "store_id": "S-KOL-001",
+          "count": 6
+        },
+        {
+          "store_id": "S-KOL-007",
+          "count": 5
+        },
+        {
+          "store_id": "S-KOL-002",
+          "count": 4
+        },
+        {
+          "store_id": "S-KOL-006",
+          "count": 3
+        },
+        {
+          "store_id": "S-KOL-010",
+          "count": 3
+        }
+      ],
+      "evidence_quotes": [
+        "Billing staff ignore pannaar 😭",
+        "Billing staff ne ignore kiya",
+        "billing staff ne ignore kiya 😞"
+      ]
+    }
+  ],
+  "region_alert_count": 227,
+  "data_limitations": "Feedback is unverified; single reports may not indicate systemic issues. Counts shown are raw, not exposure-normalized."
+}

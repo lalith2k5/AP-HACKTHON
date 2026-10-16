@@ -1,0 +1,51 @@
+{
+  "nodes": 21589,
+  "edges": 43076,
+  "regions": 5,
+  "stores": 50,
+  "categories": 32,
+  "owners": 5,
+  "incidents": 21497,
+  "top_hubs": [
+    {
+      "node": "store_cleanliness",
+      "degree": 3818
+    },
+    {
+      "node": "checkout_experience",
+      "degree": 1056
+    },
+    {
+      "node": "out_of_stock",
+      "degree": 1044
+    },
+    {
+      "node": "queue_or_wait_time",
+      "degree": 1001
+    },
+    {
+      "node": "pricing_or_price_tag_error",
+      "degree": 788
+    },
+    {
+      "node": "product_quality_or_freshness",
+      "degree": 784
+    },
+    {
+      "node": "equipment_or_refrigeration",
+      "degree": 763
+    },
+    {
+      "node": "staff_helpfulness",
+      "degree": 760
+    },
+    {
+      "node": "app_offer_or_loyalty",
+      "degree": 731
+    },
+    {
+      "node": "promotion_or_offer_issue",
+      "degree": 688
+    }
+  ]
+}

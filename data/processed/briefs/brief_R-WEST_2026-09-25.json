@@ -1,0 +1,202 @@
+{
+  "region_id": "R-WEST",
+  "region_name": "West",
+  "week_start": "2026-09-25",
+  "week_end": "2026-10-01",
+  "total_feedback": 1897,
+  "total_feedback_previous_week": 2080,
+  "top_issues": [
+    {
+      "category": "staff_misconduct",
+      "current_count": 16,
+      "previous_count": 15,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "HR",
+      "next_action": "Open HR case; preserve evidence; assign reviewer.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.8,
+      "affected_stores": [
+        {
+          "store_id": "S-MUM-010",
+          "count": 5
+        },
+        {
+          "store_id": "S-MUM-007",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-009",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-001",
+          "count": 1
+        },
+        {
+          "store_id": "S-MUM-002",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Manager ne badtameezi ki 😭",
+        "Manager thappa pesinaar",
+        "Manager ne chuki vaagani keli"
+      ]
+    },
+    {
+      "category": "food_safety_or_hygiene",
+      "current_count": 13,
+      "previous_count": 13,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.65,
+      "affected_stores": [
+        {
+          "store_id": "S-MUM-003",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-004",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-007",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-008",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-001",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Food romba unhygienic",
+        "Deli counter hygiene is very...",
+        "Khana ugach aahe, safai nahi"
+      ]
+    },
+    {
+      "category": "safety_hazard",
+      "current_count": 11,
+      "previous_count": 13,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.55,
+      "affected_stores": [
+        {
+          "store_id": "S-MUM-009",
+          "count": 3
+        },
+        {
+          "store_id": "S-MUM-004",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-005",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-010",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-001",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Floor la water, slip aayiten 😡",
+        "wet floor without warning sign, i slipped 😑",
+        "Agent: How can I help? Customer: Floor la water, slip aayiten"
+      ]
+    },
+    {
+      "category": "allergen_or_labeling",
+      "current_count": 10,
+      "previous_count": 16,
+      "trend": "DOWN",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.5,
+      "affected_stores": [
+        {
+          "store_id": "S-MUM-005",
+          "count": 3
+        },
+        {
+          "store_id": "S-MUM-004",
+          "count": 2
+        },
+        {
+          "store_id": "S-MUM-001",
+          "count": 1
+        },
+        {
+          "store_id": "S-MUM-002",
+          "count": 1
+        },
+        {
+          "store_id": "S-MUM-003",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Mislabelled product, contains milk but not listed 😩",
+        "Peanut allergen not declared on the label 🤦 please",
+        "mislabelled product, cnotains milk..."
+      ]
+    },
+    {
+      "category": "app_payment_issue",
+      "current_count": 42,
+      "previous_count": 42,
+      "trend": "FLAT",
+      "severity": "high",
+      "owner_function": "Digital",
+      "next_action": "File product bug and attach affected order/offer IDs.",
+      "escalation_rule": "severity_based:high",
+      "priority": 31.0,
+      "affected_stores": [
+        {
+          "store_id": "S-MUM-008",
+          "count": 8
+        },
+        {
+          "store_id": "S-MUM-003",
+          "count": 5
+        },
+        {
+          "store_id": "S-MUM-006",
+          "count": 5
+        },
+        {
+          "store_id": "S-MUM-002",
+          "count": 4
+        },
+        {
+          "store_id": "S-MUM-004",
+          "count": 4
+        }
+      ],
+      "evidence_quotes": [
+        "Payment fail zala, paisa...",
+        "Agent: How can I help? Customer: Payment fail aachu, cash pochu 😤",
+        "Payment fail hua, paisa kata"
+      ]
+    }
+  ],
+  "region_alert_count": 207,
+  "data_limitations": "Feedback is unverified; single reports may not indicate systemic issues. Counts shown are raw, not exposure-normalized."
+}

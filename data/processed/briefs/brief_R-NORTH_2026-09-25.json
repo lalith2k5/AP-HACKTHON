@@ -1,0 +1,202 @@
+{
+  "region_id": "R-NORTH",
+  "region_name": "North",
+  "week_start": "2026-09-25",
+  "week_end": "2026-10-01",
+  "total_feedback": 1876,
+  "total_feedback_previous_week": 2028,
+  "top_issues": [
+    {
+      "category": "staff_misconduct",
+      "current_count": 22,
+      "previous_count": 12,
+      "trend": "UP",
+      "severity": "critical",
+      "owner_function": "HR",
+      "next_action": "Open HR case; preserve evidence; assign reviewer.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 47.0,
+      "affected_stores": [
+        {
+          "store_id": "S-DEL-002",
+          "count": 11
+        },
+        {
+          "store_id": "S-DEL-004",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-006",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-007",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-008",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Manager ne chuki vaagani keli",
+        "Shift note: Manager ne badtameezi ki",
+        "Shift note: Manager ne badtameezi ki"
+      ]
+    },
+    {
+      "category": "food_safety_or_hygiene",
+      "current_count": 17,
+      "previous_count": 12,
+      "trend": "UP",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 46.85,
+      "affected_stores": [
+        {
+          "store_id": "S-DEL-009",
+          "count": 3
+        },
+        {
+          "store_id": "S-DEL-001",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-002",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-004",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-005",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "cooked food kept uncovered near billing",
+        "food romba unhygienic",
+        "Shift note: Khana ugach aahe, safai nahi"
+      ]
+    },
+    {
+      "category": "allergen_or_labeling",
+      "current_count": 15,
+      "previous_count": 23,
+      "trend": "DOWN",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.75,
+      "affected_stores": [
+        {
+          "store_id": "S-DEL-004",
+          "count": 3
+        },
+        {
+          "store_id": "S-DEL-001",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-005",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-009",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-010",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "mislabelled product, contains milk but not listed",
+        "Agent: How can I help? Customer: Label var allergen nahi, dhoka",
+        "Mislabelled product, contains milk but not listed"
+      ]
+    },
+    {
+      "category": "safety_hazard",
+      "current_count": 12,
+      "previous_count": 19,
+      "trend": "DOWN",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.6,
+      "affected_stores": [
+        {
+          "store_id": "S-DEL-002",
+          "count": 4
+        },
+        {
+          "store_id": "S-DEL-003",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-006",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-009",
+          "count": 2
+        },
+        {
+          "store_id": "S-DEL-005",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Shift note: Farsh pe paani tha, koi sign nahi 😭",
+        "Agent: How can I help? Customer: Floor la water, slip aaiyten",
+        "Shift note: Farshavar pani aahe, sign nahi"
+      ]
+    },
+    {
+      "category": "stock_shortage_or_allocation",
+      "current_count": 30,
+      "previous_count": 23,
+      "trend": "UP",
+      "severity": "high",
+      "owner_function": "Supply Chain",
+      "next_action": "Confirm stock position and reallocate from nearest DC.",
+      "escalation_rule": "severity_based:high",
+      "priority": 37.0,
+      "affected_stores": [
+        {
+          "store_id": "S-DEL-009",
+          "count": 8
+        },
+        {
+          "store_id": "S-DEL-002",
+          "count": 6
+        },
+        {
+          "store_id": "S-DEL-010",
+          "count": 4
+        },
+        {
+          "store_id": "S-DEL-008",
+          "count": 3
+        },
+        {
+          "store_id": "S-DEL-003",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Stock kami ahe",
+        "Stock allocation kam hai humare store me yaar",
+        "Agent: How can I help? Customer: allocation is unfair to our store 😩"
+      ]
+    }
+  ],
+  "region_alert_count": 236,
+  "data_limitations": "Feedback is unverified; single reports may not indicate systemic issues. Counts shown are raw, not exposure-normalized."
+}

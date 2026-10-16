@@ -1,0 +1,99 @@
+{
+  "horizon_days": 7,
+  "alpha": 0.4,
+  "act_now_reduction": 0.55,
+  "defer_reduction": 0.15,
+  "pairs_forecasted": 1515,
+  "top_act_now_opportunities": [
+    {
+      "store_id": "S-MUM-001",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 5.286,
+      "forecast_7d_mean": 0.535,
+      "act_now_expected": 2.379,
+      "defer_expected": 4.493,
+      "act_now_advantage": 2.114
+    },
+    {
+      "store_id": "S-KOL-009",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 5.0,
+      "forecast_7d_mean": 0.67,
+      "act_now_expected": 2.25,
+      "defer_expected": 4.25,
+      "act_now_advantage": 2.0
+    },
+    {
+      "store_id": "S-HYD-001",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 4.714,
+      "forecast_7d_mean": 0.136,
+      "act_now_expected": 2.121,
+      "defer_expected": 4.007,
+      "act_now_advantage": 1.886
+    },
+    {
+      "store_id": "S-MUM-010",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 4.571,
+      "forecast_7d_mean": 12.901,
+      "act_now_expected": 2.057,
+      "defer_expected": 3.886,
+      "act_now_advantage": 1.829
+    },
+    {
+      "store_id": "S-MUM-003",
+      "predicted_category": "equipment_or_refrigeration",
+      "baseline_7d_mean": 4.429,
+      "forecast_7d_mean": 4.945,
+      "act_now_expected": 1.993,
+      "defer_expected": 3.764,
+      "act_now_advantage": 1.771
+    },
+    {
+      "store_id": "S-HYD-006",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 4.429,
+      "forecast_7d_mean": 1.097,
+      "act_now_expected": 1.993,
+      "defer_expected": 3.764,
+      "act_now_advantage": 1.771
+    },
+    {
+      "store_id": "S-BLR-003",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 4.429,
+      "forecast_7d_mean": 0.357,
+      "act_now_expected": 1.993,
+      "defer_expected": 3.764,
+      "act_now_advantage": 1.771
+    },
+    {
+      "store_id": "S-MUM-008",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 4.286,
+      "forecast_7d_mean": 4.26,
+      "act_now_expected": 1.929,
+      "defer_expected": 3.643,
+      "act_now_advantage": 1.714
+    },
+    {
+      "store_id": "S-BLR-007",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 4.143,
+      "forecast_7d_mean": 1.88,
+      "act_now_expected": 1.864,
+      "defer_expected": 3.521,
+      "act_now_advantage": 1.657
+    },
+    {
+      "store_id": "S-DEL-005",
+      "predicted_category": "store_cleanliness",
+      "baseline_7d_mean": 4.143,
+      "forecast_7d_mean": 2.722,
+      "act_now_expected": 1.864,
+      "defer_expected": 3.521,
+      "act_now_advantage": 1.657
+    }
+  ]
+}

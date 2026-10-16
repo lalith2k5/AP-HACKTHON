@@ -1,0 +1,202 @@
+{
+  "region_id": "R-SOUTH",
+  "region_name": "South",
+  "week_start": "2026-09-25",
+  "week_end": "2026-10-01",
+  "total_feedback": 1982,
+  "total_feedback_previous_week": 2030,
+  "top_issues": [
+    {
+      "category": "allergen_or_labeling",
+      "current_count": 34,
+      "previous_count": 21,
+      "trend": "UP",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 47.0,
+      "affected_stores": [
+        {
+          "store_id": "S-BLR-007",
+          "count": 17
+        },
+        {
+          "store_id": "S-BLR-002",
+          "count": 3
+        },
+        {
+          "store_id": "S-BLR-008",
+          "count": 3
+        },
+        {
+          "store_id": "S-BLR-001",
+          "count": 2
+        },
+        {
+          "store_id": "S-BLR-004",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "peanut allergen not declared on the...",
+        "Mislabelled product, contains milk but not listed 🙏 seriously",
+        "Label la allergen illa, romba danger"
+      ]
+    },
+    {
+      "category": "staff_misconduct",
+      "current_count": 15,
+      "previous_count": 9,
+      "trend": "UP",
+      "severity": "critical",
+      "owner_function": "HR",
+      "next_action": "Open HR case; preserve evidence; assign reviewer.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 46.75,
+      "affected_stores": [
+        {
+          "store_id": "S-BLR-001",
+          "count": 3
+        },
+        {
+          "store_id": "S-BLR-002",
+          "count": 2
+        },
+        {
+          "store_id": "S-BLR-003",
+          "count": 2
+        },
+        {
+          "store_id": "S-BLR-005",
+          "count": 2
+        },
+        {
+          "store_id": "S-BLR-007",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Agent: How can I help? Customer: Manager thappa pseinaar",
+        "Staff asked for personal favour, unaccep...",
+        "manager ne badtameezi ki please"
+      ]
+    },
+    {
+      "category": "food_safety_or_hygiene",
+      "current_count": 22,
+      "previous_count": 18,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 41.0,
+      "affected_stores": [
+        {
+          "store_id": "S-BLR-001",
+          "count": 6
+        },
+        {
+          "store_id": "S-BLR-009",
+          "count": 4
+        },
+        {
+          "store_id": "S-BLR-002",
+          "count": 3
+        },
+        {
+          "store_id": "S-BLR-003",
+          "count": 2
+        },
+        {
+          "store_id": "S-BLR-006",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Cooked food kept uncovered near billing 🤦",
+        "Shift note: Deli counter hygiene is very poor",
+        "Shift note: Food romba unhygienic"
+      ]
+    },
+    {
+      "category": "safety_hazard",
+      "current_count": 16,
+      "previous_count": 18,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.8,
+      "affected_stores": [
+        {
+          "store_id": "S-BLR-007",
+          "count": 4
+        },
+        {
+          "store_id": "S-BLR-003",
+          "count": 3
+        },
+        {
+          "store_id": "S-BLR-001",
+          "count": 2
+        },
+        {
+          "store_id": "S-BLR-004",
+          "count": 2
+        },
+        {
+          "store_id": "S-BLR-008",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Broken glass on aisle floor, unsafe 🥲",
+        "Shift note: Broken glass on aisle floor, unsafe",
+        "Farsh pe paani tha, koi sign nahi"
+      ]
+    },
+    {
+      "category": "app_payment_issue",
+      "current_count": 59,
+      "previous_count": 43,
+      "trend": "UP",
+      "severity": "high",
+      "owner_function": "Digital",
+      "next_action": "File product bug and attach affected order/offer IDs.",
+      "escalation_rule": "severity_based:high",
+      "priority": 37.0,
+      "affected_stores": [
+        {
+          "store_id": "S-BLR-005",
+          "count": 10
+        },
+        {
+          "store_id": "S-BLR-002",
+          "count": 9
+        },
+        {
+          "store_id": "S-BLR-006",
+          "count": 8
+        },
+        {
+          "store_id": "S-BLR-001",
+          "count": 6
+        },
+        {
+          "store_id": "S-BLR-009",
+          "count": 6
+        }
+      ],
+      "evidence_quotes": [
+        "UPI not working...",
+        "UPI not working ni... 🤬",
+        "Payment fail zala, paisa geli"
+      ]
+    }
+  ],
+  "region_alert_count": 232,
+  "data_limitations": "Feedback is unverified; single reports may not indicate systemic issues. Counts shown are raw, not exposure-normalized."
+}

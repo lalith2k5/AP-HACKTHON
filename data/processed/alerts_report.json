@@ -1,0 +1,20 @@
+{
+  "total_alerts": 1139,
+  "by_trigger_type": {
+    "policy_mandatory": 1056,
+    "radar_anomaly": 83
+  },
+  "by_severity": {
+    "critical": 1056,
+    "high": 43,
+    "medium": 30,
+    "low": 10
+  },
+  "by_owner_function": {
+    "Store Ops": 833,
+    "HR": 267,
+    "Supply Chain": 19,
+    "Merchandising": 10,
+    "Digital": 10
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "classification": {
+    "hidden_labels_total": 2000,
+    "matched_records": 2000,
+    "accuracy": 0.891,
+    "macro_f1": 0.9167451932663706,
+    "weighted_f1": 0.9064705248213929,
+    "per_class_f1": {
+      "allergen_or_labeling": 0.9736842105263158,
+      "app_crash_or_bug": 0.8648648648648649,
+      "app_login_or_account": 0.9795918367346939,
+      "app_offer_or_loyalty": 0.9166666666666666,
+      "app_payment_issue": 0.9807692307692307,
+      "billing_staff_behaviour": 0.9846153846153847,
+      "checkout_experience": 0.783625730994152,
+      "cold_chain_integrity": 1.0,
+      "delivery_or_receiving": 0.8059701492537313,
+      "equipment_or_refrigeration": 0.9953051643192489,
+      "expired_or_near_expiry": 0.9696969696969697,
+      "food_safety_or_hygiene": 1.0,
+      "online_order_fulfillment": 0.8333333333333334,
+      "out_of_stock": 0.9470404984423676,
+      "packaging_or_labeling": 0.967741935483871,
+      "parking_or_entrance": 0.9887640449438202,
+      "planogram_or_shelf_layout": 0.9850746268656716,
+      "pricing_or_price_tag_error": 0.8975609756097561,
+      "product_assortment": 0.9090909090909091,
+      "product_quality_or_freshness": 0.9197860962566845,
+      "promotion_or_offer_issue": 0.9705882352941176,
+      "queue_or_wait_time": 0.9580838323353293,
+      "restroom_condition": 0.6666666666666666,
+      "safety_hazard": 1.0,
+      "staff_conduct": 0.972972972972973,
+      "staff_helpfulness": 0.9426229508196722,
+      "staff_misconduct": 0.9523809523809523,
+      "stock_shortage_or_allocation": 0.8518518518518519,
+      "store_cleanliness": 0.5105105105105106,
+      "store_hours_or_closure": 0.96,
+      "store_lighting_or_ambience": 0.9541284403669725,
+      "trolley_or_basket_availability": 0.8928571428571429,
+      "macro avg": 0.9167451932663706,
+      "weighted avg": 0.9064705248213929
+    }
+  },
+  "escalation": {
+    "escalated_total": 1260,
+    "escalated_with_hidden_labels": 88,
+    "actionable_total_in_hidden_labels": 1255,
+    "escalation_precision": 0.9431818181818182,
+    "escalation_recall": 0.06613545816733067
+  },
+  "operational": {
+    "false_alerts_per_store_week": 5.695,
+    "fusion_quality": {
+      "total_incidents": 21497,
+      "multi_record_incidents": 6764,
+      "cross_channel_incidents": 5024,
+      "multi_record_ratio": 0.3146,
+      "cross_channel_ratio": 0.2337
+    },
+    "channel_coverage": {
+      "online_review": 20006,
+      "app_feedback": 10021,
+      "call_transcript": 5014,
+      "staff_shift_note": 5012
+    },
+    "language_coverage": {
+      "mixed": 8094,
+      "en": 8093,
+      "mr": 8016,
+      "hi": 7982,
+      "ta": 7868
+    },
+    "policy_compliance": 1.0,
+    "mandatory_records": 1260,
+    "mandatory_escalated": 1260,
+    "human_override_rate": 0.0,
+    "resolution_outcome_rate": 0.0,
+    "total_action_events": 1
+  },
+  "seeded_incidents": {
+    "total": 3,
+    "detected": 3,
+    "mean_lead_days_vs_peak": 3.6666666666666665,
+    "details": [
+      {
+        "incident_id": "SEED-1",
+        "store_id": "S-MUM-003",
+        "category_id": "equipment_or_refrigeration",
+        "severity": "high",
+        "record_count": 28,
+        "first_seen": "2026-09-25",
+        "first_record_day": "2026-09-04",
+        "peak_day": "2026-09-26",
+        "first_flag_day": "2026-09-22",
+        "detected": true,
+        "lead_days_vs_first_seen": 3,
+        "lead_days_vs_first_record": -18,
+        "lead_days_vs_peak": 4
+      },
+      {
+        "incident_id": "SEED-2",
+        "store_id": "S-BLR-007",
+        "category_id": "allergen_or_labeling",
+        "severity": "critical",
+        "record_count": 15,
+        "first_seen": "2026-09-26",
+        "first_record_day": "2026-09-05",
+        "peak_day": "2026-10-01",
+        "first_flag_day": "2026-09-26",
+        "detected": true,
+        "lead_days_vs_first_seen": 0,
+        "lead_days_vs_first_record": -21,
+        "lead_days_vs_peak": 5
+      },
+      {
+        "incident_id": "SEED-3",
+        "store_id": "S-DEL-002",
+        "category_id": "staff_misconduct",
+        "severity": "critical",
+        "record_count": 10,
+        "first_seen": "2026-09-28",
+        "first_record_day": "2026-09-05",
+        "peak_day": "2026-09-30",
+        "first_flag_day": "2026-09-28",
+        "detected": true,
+        "lead_days_vs_first_seen": 0,
+        "lead_days_vs_first_record": -23,
+        "lead_days_vs_peak": 2
+      }
+    ]
+  },
+  "run_id": "run-1792131480-5d86f619",
+  "config_hash": "26865ec976ad6cf618a44fc30c012a7284563725ff061ad98288f08251a819d4",
+  "data_hash": "605c0c7bf20a3517561ab2616452220f19394fd745da00b4282890251a191b85",
+  "model_hash": "483abd0358d33cafd33c5bb0b439cae2a785d1bc6f745ddffa2181b268386901"
+}

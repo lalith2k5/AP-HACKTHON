@@ -1,0 +1,202 @@
+{
+  "region_id": "R-CENTRAL",
+  "region_name": "Central",
+  "week_start": "2026-09-25",
+  "week_end": "2026-10-01",
+  "total_feedback": 1849,
+  "total_feedback_previous_week": 1987,
+  "top_issues": [
+    {
+      "category": "safety_hazard",
+      "current_count": 20,
+      "previous_count": 15,
+      "trend": "UP",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 47.0,
+      "affected_stores": [
+        {
+          "store_id": "S-HYD-007",
+          "count": 4
+        },
+        {
+          "store_id": "S-HYD-009",
+          "count": 4
+        },
+        {
+          "store_id": "S-HYD-001",
+          "count": 2
+        },
+        {
+          "store_id": "S-HYD-002",
+          "count": 2
+        },
+        {
+          "store_id": "S-HYD-003",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Farshavar pani aahe, sign nahi",
+        "Farshavar pani aahe, sign nahi",
+        "Agent: How can I help? Customer: Floor la water, slip aayiten"
+      ]
+    },
+    {
+      "category": "allergen_or_labeling",
+      "current_count": 18,
+      "previous_count": 19,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.9,
+      "affected_stores": [
+        {
+          "store_id": "S-HYD-003",
+          "count": 4
+        },
+        {
+          "store_id": "S-HYD-006",
+          "count": 4
+        },
+        {
+          "store_id": "S-HYD-007",
+          "count": 3
+        },
+        {
+          "store_id": "S-HYD-008",
+          "count": 2
+        },
+        {
+          "store_id": "S-HYD-009",
+          "count": 2
+        }
+      ],
+      "evidence_quotes": [
+        "Mislabelled product, contains milk but not listed 😐",
+        "Agent: How can I help? Customer: Peanut allergen not declared on th...",
+        "label pe allergen nahi likha hai, khatranak"
+      ]
+    },
+    {
+      "category": "food_safety_or_hygiene",
+      "current_count": 13,
+      "previous_count": 13,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "Store Ops",
+      "next_action": "Dispatch store ops review within 24h; verify on-site condition.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.65,
+      "affected_stores": [
+        {
+          "store_id": "S-HYD-004",
+          "count": 4
+        },
+        {
+          "store_id": "S-HYD-002",
+          "count": 2
+        },
+        {
+          "store_id": "S-HYD-001",
+          "count": 1
+        },
+        {
+          "store_id": "S-HYD-005",
+          "count": 1
+        },
+        {
+          "store_id": "S-HYD-006",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Agent: How can I help? Customer: Cookedf ood kept uncovered near billing 🤦",
+        "Khaan ugach aahe, safai nahi",
+        "Shift note: Food romba unhygienic"
+      ]
+    },
+    {
+      "category": "staff_misconduct",
+      "current_count": 11,
+      "previous_count": 10,
+      "trend": "FLAT",
+      "severity": "critical",
+      "owner_function": "HR",
+      "next_action": "Open HR case; preserve evidence; assign reviewer.",
+      "escalation_rule": "mandatory_policy:high_risk_category",
+      "priority": 40.55,
+      "affected_stores": [
+        {
+          "store_id": "S-HYD-006",
+          "count": 2
+        },
+        {
+          "store_id": "S-HYD-009",
+          "count": 2
+        },
+        {
+          "store_id": "S-HYD-001",
+          "count": 1
+        },
+        {
+          "store_id": "S-HYD-002",
+          "count": 1
+        },
+        {
+          "store_id": "S-HYD-003",
+          "count": 1
+        }
+      ],
+      "evidence_quotes": [
+        "Staff asked for personal favour, unacceptable seriously",
+        "Manager misbehaved with me and shouted",
+        "manager thappa pesinaar"
+      ]
+    },
+    {
+      "category": "app_payment_issue",
+      "current_count": 48,
+      "previous_count": 53,
+      "trend": "FLAT",
+      "severity": "high",
+      "owner_function": "Digital",
+      "next_action": "File product bug and attach affected order/offer IDs.",
+      "escalation_rule": "severity_based:high",
+      "priority": 31.0,
+      "affected_stores": [
+        {
+          "store_id": "S-HYD-001",
+          "count": 7
+        },
+        {
+          "store_id": "S-HYD-003",
+          "count": 7
+        },
+        {
+          "store_id": "S-HYD-008",
+          "count": 7
+        },
+        {
+          "store_id": "S-HYD-004",
+          "count": 6
+        },
+        {
+          "store_id": "S-HYD-006",
+          "count": 6
+        }
+      ],
+      "evidence_quotes": [
+        "Shift note: UPI not working in app 😩",
+        "Shift note: UPI not working in app 😩",
+        "UPI not working in app bhai"
+      ]
+    }
+  ],
+  "region_alert_count": 237,
+  "data_limitations": "Feedback is unverified; single reports may not indicate systemic issues. Counts shown are raw, not exposure-normalized."
+}

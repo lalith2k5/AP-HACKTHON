@@ -1,0 +1,25 @@
+{
+  "input_path": "/Users/lalith.v/storesignal-ai/data/processed/raw_feedback.parquet",
+  "output_path": "/Users/lalith.v/storesignal-ai/data/processed/normalized_feedback.parquet",
+  "rows_in": 40053,
+  "rows_out": 40053,
+  "rows_dropped_empty": 0,
+  "raw_char_counts": {
+    "min": 10,
+    "max": 94,
+    "mean": 34.96070206975757,
+    "median": 33.0
+  },
+  "normalized_char_counts": {
+    "min": 10,
+    "max": 94,
+    "mean": 34.96065213591991,
+    "median": 33.0
+  },
+  "channel_breakdown": {
+    "online_review": 20006,
+    "app_feedback": 10021,
+    "call_transcript": 5014,
+    "staff_shift_note": 5012
+  }
+}
