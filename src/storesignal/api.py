@@ -10,8 +10,9 @@ import time
 import uuid
 
 import pandas as pd
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from storesignal.api_envelope import install as install_envelope
@@ -63,6 +64,35 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ---------------------------------------------------------------------------
+# Rate limiting (spec 18) — in-memory, per-IP, 300 req/min.
+# For multi-user production: replace with a shared store (Redis).
+# ---------------------------------------------------------------------------
+from collections import defaultdict as _defaultdict, deque as _deque
+
+_RATE_BUCKETS: dict = _defaultdict(_deque)
+_RATE_LIMIT = 300
+_RATE_WINDOW = 60.0
+
+
+@app.middleware("http")
+async def _rate_limit_middleware(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    bucket = _RATE_BUCKETS[ip]
+    while bucket and bucket[0] < now - _RATE_WINDOW:
+        bucket.popleft()
+    if len(bucket) >= _RATE_LIMIT:
+        return JSONResponse(
+            status_code=429,
+            content={"error": {"code": "RATE_LIMITED",
+                               "message": "too many requests"}},
+        )
+    bucket.append(now)
+    return await call_next(request)
 
 install_envelope(app)
 
@@ -643,28 +673,70 @@ def list_forecasts(store_id: str | None = None, limit: int = 50):
     return [{k: _coerce(v) for k, v in row.items()} for row in df.to_dict(orient="records")]
 
 
+_JOBS: dict = {}
+
+
+def _run_reset_bg(job_id: str):
+    import subprocess
+    job = _JOBS[job_id]
+    job["status"] = "running"
+    try:
+        cleared = []
+        for name in ["incident_overrides.jsonl",
+                     "alert_overrides.jsonl",
+                     "incident_notes.jsonl"]:
+            f = PROC / name
+            if f.exists():
+                f.unlink()
+                cleared.append(name)
+        job["cleared_state_files"] = cleared
+        PY = ROOT / ".venv" / "bin" / "python"
+        SRC = ROOT / "src"
+        res = subprocess.run(
+            [str(PY), "-m", "storesignal.pipeline"],
+            check=False, cwd=str(SRC),
+        )
+        if res.returncode != 0:
+            job["status"] = "failed"
+            job["error"] = f"pipeline exited {res.returncode}"
+        else:
+            job["status"] = "succeeded"
+    except Exception as e:
+        job["status"] = "failed"
+        job["error"] = str(e)
+    finally:
+        job["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        audit("demo_reset", "api",
+              f"job={job_id} status={job['status']}")
+
+
 @app.post("/api/v1/demo/reset",
           dependencies=[Depends(require_permission("reset"))])
-def reset():
-    import subprocess
-    PY = ROOT / ".venv" / "bin" / "python"
-    SRC = ROOT / "src"
-    # Clear user-generated state first (overrides + notes)
-    cleared = []
-    for name in ["incident_overrides.jsonl", "alert_overrides.jsonl", "incident_notes.jsonl"]:
-        f = PROC / name
-        if f.exists():
-            f.unlink()
-            cleared.append(name)
-    res = subprocess.run(
-        [str(PY), "-m", "storesignal.pipeline"],
-        check=False, cwd=str(SRC),
-    )
-    if res.returncode != 0:
-        raise HTTPException(status_code=500, detail="pipeline reset failed")
-    audit("demo_reset", "api", f"pipeline rebuilt; cleared={cleared}")
-    return {"status": "reset_ok", "message": "pipeline rebuilt from seed",
-            "cleared_state_files": cleared}
+def reset(background_tasks: BackgroundTasks):
+    """Async reset. Returns job_id immediately; poll /api/v1/jobs/{id}."""
+    job_id = "JOB-" + uuid.uuid4().hex[:12]
+    _JOBS[job_id] = {
+        "job_id": job_id,
+        "kind": "demo_reset",
+        "status": "queued",
+        "queued_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "started_at": None,
+        "finished_at": None,
+        "cleared_state_files": [],
+        "error": None,
+    }
+    _JOBS[job_id]["started_at"] = _JOBS[job_id]["queued_at"]
+    background_tasks.add_task(_run_reset_bg, job_id)
+    return {"job_id": job_id, "status": "queued",
+            "poll": f"/api/v1/jobs/{job_id}"}
+
+
+@app.get("/api/v1/jobs/{job_id}")
+def get_job(job_id: str):
+    job = _JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found")
+    return job
 
 
 @app.get("/api/v1/me")

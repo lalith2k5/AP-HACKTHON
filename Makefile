@@ -42,3 +42,12 @@ clean:
 	@rm -f data/processed/*.parquet data/processed/*.json data/processed/*.graphml data/processed/audit.log data/processed/idempotency.jsonl 2>/dev/null || true
 	@rm -rf data/processed/briefs 2>/dev/null || true
 	@echo "cleaned generated artifacts"
+
+backup:
+	./scripts/backup.sh
+
+restore:
+	./scripts/restore.sh $(ARCHIVE)
+
+test-e2e:
+	cd web && npx playwright test
