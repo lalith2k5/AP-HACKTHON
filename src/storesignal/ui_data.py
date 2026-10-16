@@ -127,7 +127,7 @@ def category_distribution() -> pd.DataFrame | None:
     if p is None or "predicted_category" not in p.columns:
         return None
     agg = (p.groupby("predicted_category").size()
-             .reset_index()
+             .reset_index(name="count")
              .rename(columns={"predicted_category": "category"})
              .sort_values("count", ascending=False).head(12))
     return agg
