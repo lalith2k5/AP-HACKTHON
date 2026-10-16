@@ -18,7 +18,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, f1_score
 from sklearn.pipeline import FeatureUnion
 
-from weak_labels import weak_label_frame
+from storesignal.weak_labels import weak_label_frame
 
 # ---------------------------------------------------------------------------
 # Paths

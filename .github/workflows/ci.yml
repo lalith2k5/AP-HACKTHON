@@ -29,13 +29,12 @@ jobs:
         run: ruff check src tests
 
       - name: Verify config loads
-        run: python src/config_loader.py
+        run: python -m storesignal.config_loader
 
       - name: Build full pipeline
-        run: python src/run_pipeline.py
+        run: python -m storesignal.pipeline
         env:
-          PYTHONPATH: src
-
+          
       - name: Run tests
         run: pytest -q tests
 
@@ -62,7 +61,7 @@ jobs:
 
       - name: Verify API boot
         run: |
-          uvicorn api:app --app-dir src --host 127.0.0.1 --port 8010 &
+          uvicorn storesignal.api:app --host 127.0.0.1 --port 8010 &
           AP=$!
           sleep 5
           curl -s http://127.0.0.1:8010/health | tee /tmp/health.json

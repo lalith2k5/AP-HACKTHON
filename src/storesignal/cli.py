@@ -1,7 +1,7 @@
 """
 StoreSignal AI — Typer CLI
 ===========================
-Single entry point: python src/cli.py <command>
+Single entry point: python -m storesignal.cli <command>
 """
 
 import subprocess
@@ -13,68 +13,67 @@ from rich.table import Table
 
 ROOT = Path.home() / "storesignal-ai"
 PY = ROOT / ".venv" / "bin" / "python"
-SRC = ROOT / "src"
 
 app = typer.Typer(add_completion=False, help="StoreSignal AI command-line interface")
 console = Console()
 
 
-def _run(script: str):
-    path = SRC / script
-    if not path.exists():
-        console.print(f"[red]Missing:[/red] {path}")
-        raise typer.Exit(code=1)
-    console.print(f"[cyan]Running[/cyan] {script}")
-    res = subprocess.run([str(PY), str(path)], check=False, cwd=str(SRC))
+def _run(module: str):
+    """Run a pipeline module as `python -m storesignal.<module>`."""
+    console.print(f"[cyan]Running[/cyan] storesignal.{module}")
+    res = subprocess.run(
+        [str(PY), "-m", f"storesignal.{module}"],
+        check=False, cwd=str(ROOT),
+    )
     if res.returncode != 0:
-        console.print(f"[red]FAILED:[/red] {script}")
+        console.print(f"[red]FAILED:[/red] {module}")
         raise typer.Exit(code=res.returncode)
 
 
 @app.command()
 def pipeline():
     """Run the full pipeline end to end."""
-    _run("run_pipeline.py")
+    _run("pipeline")
 
 
 @app.command()
-def mock(): _run("generate_mock_data.py")
+def mock(): _run("generate_mock_data")
 
 @app.command()
-def ingest(): _run("ingestion.py")
+def ingest(): _run("ingestion")
 
 @app.command()
-def normalize(): _run("normalization.py")
+def normalize(): _run("normalization")
 
 @app.command()
-def classify(): _run("classification.py")
+def classify(): _run("classification")
 
 @app.command()
-def policy(): _run("risk_policy.py")
+def policy(): _run("risk_policy")
 
 @app.command()
-def radar(): _run("detection.py")
+def radar(): _run("detection")
 
 @app.command()
-def route(): _run("routing.py")
+def route(): _run("routing")
 
 @app.command()
-def fuse(): _run("fusion.py")
+def fuse(): _run("fusion")
 
 @app.command()
-def alerts(): _run("alerts.py")
+def alerts(): _run("alerts")
 
 @app.command()
-def briefs(): _run("briefs.py")
+def briefs(): _run("briefs")
 
 @app.command()
-def evaluate(): _run("evaluate.py")
+def evaluate(): _run("evaluate")
 
 @app.command()
-def graph(): _run("relationship_graph.py")
+def graph(): _run("relationship_graph")
 
 @app.command()
-def forecast(): _run("forecasting.py")
+def forecast(): _run("forecasting")
 
 
 @app.command()
@@ -102,17 +101,22 @@ def status():
 @app.command()
 def serve(port: int = 8000):
     """Start FastAPI."""
-    subprocess.run([str(ROOT / ".venv" / "bin" / "uvicorn"), "api:app",
-                    "--reload", "--app-dir", str(SRC), "--port", str(port)],
-                   check=False, cwd=str(SRC))
+    subprocess.run(
+        [str(ROOT / ".venv" / "bin" / "uvicorn"),
+         "storesignal.api:app", "--reload", "--port", str(port)],
+        check=False, cwd=str(ROOT),
+    )
 
 
 @app.command()
 def ui(port: int = 8501):
     """Start Streamlit."""
-    subprocess.run([str(ROOT / ".venv" / "bin" / "streamlit"), "run",
-                    str(SRC / "ui.py"), "--server.port", str(port)],
-                   check=False, cwd=str(SRC))
+    subprocess.run(
+        [str(ROOT / ".venv" / "bin" / "streamlit"), "run",
+         str(ROOT / "src" / "storesignal" / "ui.py"),
+         "--server.port", str(port)],
+        check=False, cwd=str(ROOT),
+    )
 
 
 @app.command()

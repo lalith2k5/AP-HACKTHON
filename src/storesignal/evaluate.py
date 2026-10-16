@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import classification_report, f1_score
 
-from versioning import stamp_run
+from storesignal.versioning import stamp_run
 
 HOME = Path.home()
 ROOT = HOME / "storesignal-ai"

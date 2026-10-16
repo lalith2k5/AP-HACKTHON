@@ -13,8 +13,8 @@ import pandas as pd
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from config_loader import load_config
-from security import (
+from storesignal.config_loader import load_config
+from storesignal.security import (
     audit,
     check_idempotency,
     install_security,
@@ -22,8 +22,8 @@ from security import (
     resolve_role,
     store_idempotency,
 )
-from tracking import record_event
-from tracking import summarize as tracking_summary
+from storesignal.tracking import record_event
+from storesignal.tracking import summarize as tracking_summary
 
 ROOT = Path.home() / "storesignal-ai"
 PROC = ROOT / "data" / "processed"

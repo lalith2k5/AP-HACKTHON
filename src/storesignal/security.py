@@ -19,7 +19,7 @@ from fastapi import Header, HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from config_loader import load_config
+from storesignal.config_loader import load_config
 
 ROOT = Path.home() / "storesignal-ai"
 AUDIT_LOG = ROOT / "data" / "processed" / "audit.log"

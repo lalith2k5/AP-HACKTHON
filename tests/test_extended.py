@@ -70,8 +70,7 @@ def test_policy_compliance_is_one():
 
 def test_security_module_roles():
     import sys
-    sys.path.insert(0, str(ROOT / "src"))
-    import security
+    from storesignal import security
     assert "admin" in security.PERMISSIONS
     assert "reviewer" in security.PERMISSIONS
     assert "regional_manager" in security.PERMISSIONS

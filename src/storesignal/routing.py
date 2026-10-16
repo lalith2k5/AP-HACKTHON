@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from config_loader import load_config
+from storesignal.config_loader import load_config
 
 _cfg = load_config()
 

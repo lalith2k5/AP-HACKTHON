@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "storesignal-ai"
 version = "0.1.0"
@@ -36,9 +40,15 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Pipeline modules are single-purpose scripts with linear flows.
 # "Too many statements" (PLR0915) and "magic values" (PLR2004) are fine here.
-"src/*"   = ["PLR0915", "PLR2004", "PLW0603", "PL"]
+"src/storesignal/*"   = ["PLR0915", "PLR2004", "PLW0603", "PL"]
 "tests/*" = ["PLR2004"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

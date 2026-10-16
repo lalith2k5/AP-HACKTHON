@@ -93,7 +93,7 @@ if view == "Command Center":
 elif view == "Early-Warning Radar":
     st.header("Early-Warning Radar")
     if radar is None or len(radar) == 0:
-        st.info("No radar flags yet. Run src/detection.py.")
+        st.info("No radar flags yet. Run storesignal/detection.py.")
     else:
         r = radar.copy()
         r["day"] = pd.to_datetime(r["day"], utc=True)
@@ -124,7 +124,7 @@ elif view == "Early-Warning Radar":
 elif view == "Incident Explorer":
     st.header("Incident Explorer")
     if incidents is None:
-        st.info("No incidents yet. Run src/fusion.py.")
+        st.info("No incidents yet. Run storesignal/fusion.py.")
     else:
         c1, c2, c3 = st.columns(3)
         cat_sel = c1.selectbox("Category", ["ALL"] + sorted(incidents["predicted_category"].unique()))
@@ -158,7 +158,7 @@ elif view == "Regional Action Brief":
     st.header("Regional Action Brief")
     briefs_dir = PROC / "briefs"
     if not briefs_dir.exists():
-        st.info("No briefs yet. Run src/briefs.py.")
+        st.info("No briefs yet. Run storesignal/briefs.py.")
     else:
         files = sorted(briefs_dir.glob("brief_*.json"))
         if not files:
@@ -195,7 +195,7 @@ elif view == "Model & Trust":
     st.header("Model & Trust")
     report = load(ROOT / "data" / "evaluation" / "reports" / "evaluation_report.json")
     if not report:
-        st.info("Evaluation report not found. Run src/evaluate.py.")
+        st.info("Evaluation report not found. Run storesignal/evaluate.py.")
     else:
         cls = report.get("classification", {})
         esc = report.get("escalation", {})
