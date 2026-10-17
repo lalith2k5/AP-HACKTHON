@@ -141,6 +141,18 @@ export default function ReportsPage() {
             </div>
           </div>
 
+          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+            <a className="btn btn-secondary btn-sm" href="/api/proxy/api/v1/export/brief/ALL.pdf" download>
+              Download PDF
+            </a>
+            <a className="btn btn-secondary btn-sm" href="/api/proxy/api/v1/export/incidents.csv" download>
+              Incidents CSV
+            </a>
+            <a className="btn btn-secondary btn-sm" href="/api/proxy/api/v1/export/audit.csv" download>
+              Audit CSV
+            </a>
+          </div>
+
           <section>
             <h3 className="mb-2 text-sm font-semibold tracking-tight">Top issues</h3>
             <ul className="divide-y divide-border glass">

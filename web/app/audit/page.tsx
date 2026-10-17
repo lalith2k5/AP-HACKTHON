@@ -21,7 +21,10 @@ export default function AuditPage() {
   return (
     <AppShell active="/audit" title="Audit log">
       <div className="space-y-6">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
+          <a className="btn btn-secondary btn-sm" href="/api/proxy/api/v1/export/audit.csv" download>
+            Export CSV
+          </a>
           <input placeholder="event_type (optional)" value={etype} onChange={(e) => setEtype(e.target.value)}
             className="rounded-2xl border border-border bg-background px-3 py-1.5 text-sm" />
           <input placeholder="actor (optional)" value={actor} onChange={(e) => setActor(e.target.value)}

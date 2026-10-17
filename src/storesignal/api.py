@@ -29,6 +29,7 @@ from storesignal import settings as _settings
 from storesignal import state as _state
 from storesignal.api_envelope import install as install_envelope
 from storesignal.api_extras import router as _extras_router
+from storesignal.api_features import router as _features_router
 from storesignal.api_jobs import router as _jobs_router
 from storesignal.config_loader import load_config
 from storesignal.paths import (
@@ -840,3 +841,5 @@ def whoami(x_api_key: str | None = Header(default=None)):
 app.include_router(_extras_router)
 
 app.include_router(_jobs_router)
+
+app.include_router(_features_router)

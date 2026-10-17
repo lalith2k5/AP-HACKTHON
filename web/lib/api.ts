@@ -83,6 +83,32 @@ export const endpoints = {
   overrideAlert: (id: string, body: { actor: string; note: string; decision?: string }) =>
     api(`/api/v1/alerts/${id}/override`, { method: "POST", body }),
   briefWeekly: () => api("/api/v1/briefs/weekly"),
+  importUpload: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/proxy/api/v1/import/upload", {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) throw new Error(`upload failed: ${res.status}`);
+    return res.json();
+  },
+  importPreview: (uploadId: string) =>
+    api(`/api/v1/import/upload/${uploadId}/preview`),
+  importValidate: (body: Record<string, unknown>) =>
+    api("/api/v1/import/validate", { method: "POST", body }),
+  importCommit: (body: Record<string, unknown>) =>
+    api("/api/v1/import/commit", { method: "POST", body }),
+  importBatches: () => api("/api/v1/import/batches"),
+  mergeIncidents: (body: Record<string, unknown>) =>
+    api("/api/v1/incidents/merge", { method: "POST", body }),
+  splitIncident: (id: string, body: Record<string, unknown>) =>
+    api(`/api/v1/incidents/${id}/split`, { method: "POST", body }),
+  incidentLineage: (id: string) => api(`/api/v1/incidents/${id}/lineage`),
+  flagLabel: (recordId: string, body: Record<string, unknown>) =>
+    api(`/api/v1/feedback/${recordId}/flag`, { method: "POST", body }),
+  recordFlags: (recordId: string) => api(`/api/v1/feedback/${recordId}/flags`),
+  mapStores: () => api("/api/v1/map/stores"),
   stores: (params?: Record<string, string>) =>
     api(`/api/v1/stores${params ? `?${new URLSearchParams(params)}` : ""}`),
   store: (id: string) => api(`/api/v1/stores/${id}`),

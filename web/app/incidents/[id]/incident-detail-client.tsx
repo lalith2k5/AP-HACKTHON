@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { endpoints, ApiError } from "@/lib/api";
+import { MergeSplitDialog } from "@/components/merge-split-dialog";
 
 type Incident = {
   incident_id: string;
@@ -168,7 +169,14 @@ export default function IncidentDetailClient() {
           {tab === "Overview" && <TabOverview d={data} />}
           {tab === "Evidence" && <TabEvidence d={data} />}
           {tab === "Timeline" && <TabTimeline id={id} />}
-          {tab === "Actions" && <TabActions id={id} d={data} onDone={reload} notify={notify} />}
+          {tab === "Actions" && (
+            <>
+              <TabActions id={id} d={data} onDone={reload} notify={notify} />
+              <div style={{ marginTop: 20 }}>
+                <MergeSplitDialog incidentId={id} onDone={reload} />
+              </div>
+            </>
+          )}
         </>
       )}
     </AppShell>
