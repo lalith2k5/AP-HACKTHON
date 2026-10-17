@@ -388,10 +388,10 @@ export default function OverviewPage() {
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {inc.predicted_category.replace(/_/g, " ")}
+                    {(inc.predicted_category || (inc as any).category || "unknown").replace(/_/g, " ")}
                   </div>
                   <div style={{ fontSize: 11, color: "var(--fg-2)" }}>
-                    {inc.store_id} · {inc.owner_function}
+                    {inc.store_id || "Unknown store"} · {inc.owner_function || "Unassigned"}
                   </div>
                 </div>
                 <span
@@ -406,7 +406,7 @@ export default function OverviewPage() {
                     letterSpacing: "0.05em",
                   }}
                 >
-                  {inc.severity}
+                  {inc.severity || "unknown"}
                 </span>
               </Link>
             ))}
