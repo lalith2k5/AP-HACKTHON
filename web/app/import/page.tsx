@@ -6,6 +6,17 @@ import { endpoints } from "@/lib/api";
 
 type Step = "upload" | "map" | "validate" | "commit" | "done";
 
+const CANONICAL_FIELDS: { key: string; required: boolean; label: string }[] = [
+  { key: "record_id",         required: true,  label: "record_id" },
+  { key: "channel",           required: true,  label: "channel" },
+  { key: "store_id",          required: true,  label: "store_id" },
+  { key: "timestamp",         required: true,  label: "timestamp" },
+  { key: "text_raw",          required: true,  label: "text_raw" },
+  { key: "rating",            required: false, label: "rating" },
+  { key: "language_hint",     required: false, label: "language_hint" },
+  { key: "source_reference",  required: false, label: "source_reference" },
+];
+
 export default function ImportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("upload");
@@ -36,6 +47,7 @@ export default function ImportPage() {
   }
 
   async function onValidate() {
+    if (!mappingOk) return;
     setErr(null); setBusy(true);
     try {
       const v: any = await endpoints.importValidate({
@@ -68,6 +80,15 @@ export default function ImportPage() {
   }
 
   const stepNum = { upload: 1, map: 2, validate: 3, commit: 4, done: 4 }[step];
+
+  const usedSources = Object.values(mapping).filter(Boolean);
+  const duplicateSource = usedSources.find(
+    (s, i) => usedSources.indexOf(s) !== i
+  );
+  const missingRequired = CANONICAL_FIELDS.filter(
+    (f) => f.required && !mapping[f.key]
+  ).map((f) => f.key);
+  const mappingOk = missingRequired.length === 0 && !duplicateSource;
 
   return (
     <AppShell active="/import" title="Import data">
@@ -138,45 +159,186 @@ export default function ImportPage() {
 
       {step === "map" && preview && (
         <div className="card" style={{ padding: 0 }}>
-          <div className="row-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--line-soft)" }}>
+          <div
+            className="row-between"
+            style={{ padding: "16px 20px", borderBottom: "1px solid var(--line-soft)" }}
+          >
             <div>
-              <div className="t-heading">Map columns</div>
-              <div className="t-caption">{upload?.filename} · {preview.format} · {preview.columns.length} columns</div>
+              <div className="t-heading">Map fields</div>
+              <div className="t-caption">
+                {upload?.filename} · {preview.format} · {preview.columns.length} source columns
+                {" · "}
+                {preview.columns.length - usedSources.length} unmapped
+              </div>
             </div>
-            <button className="btn btn-ghost btn-sm" onClick={reset}>Change file</button>
+            <button className="btn btn-ghost btn-sm" onClick={reset}>
+              Change file
+            </button>
           </div>
+
           <div style={{ padding: 20 }}>
             <table className="table">
               <thead>
-                <tr><th>Source column</th><th>Canonical field</th></tr>
+                <tr>
+                  <th style={{ width: "38%" }}>Canonical field</th>
+                  <th style={{ width: "50%" }}>Source column</th>
+                  <th style={{ width: "12%", textAlign: "right" }}>Status</th>
+                </tr>
               </thead>
               <tbody>
-                {preview.columns.map((col: string) => (
-                  <tr key={col}>
-                    <td className="mono">{col}</td>
-                    <td>
-                      <select
-                        className="select"
-                        value={Object.entries(mapping).find(([, v]) => v === col)?.[0] ?? ""}
-                        onChange={(e) => {
-                          const next = { ...mapping };
-                          for (const k of Object.keys(next)) if (next[k] === col) delete next[k];
-                          if (e.target.value) next[e.target.value] = col;
-                          setMapping(next);
-                        }}
-                      >
-                        <option value="">— skip —</option>
-                        {["record_id","channel","store_id","timestamp","text_raw","rating","language_hint","source_reference"].map((k) => (
-                          <option key={k} value={k}>{k}</option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
+                {CANONICAL_FIELDS.map(({ key, required }) => {
+                  const current = mapping[key] ?? "";
+                  const isDup =
+                    current &&
+                    usedSources.filter((s) => s === current).length > 1;
+                  const status = !current
+                    ? required
+                      ? "missing"
+                      : "optional"
+                    : isDup
+                      ? "duplicate"
+                      : "ok";
+                  return (
+                    <tr key={key}>
+                      <td>
+                        <span className="mono" style={{ fontWeight: 600 }}>
+                          {key}
+                        </span>
+                        {required && (
+                          <span
+                            style={{ color: "var(--st-critical)", marginLeft: 6 }}
+                            title="required"
+                          >
+                            *
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <select
+                          className="select"
+                          value={current}
+                          onChange={(e) => {
+                            const next = { ...mapping };
+                            if (e.target.value) next[key] = e.target.value;
+                            else delete next[key];
+                            setMapping(next);
+                          }}
+                        >
+                          <option value="">— not mapped —</option>
+                          {preview.columns.map((col: string) => {
+                            const takenBy = Object.entries(mapping).find(
+                              ([k, v]) => v === col && k !== key
+                            )?.[0];
+                            return (
+                              <option key={col} value={col}>
+                                {col}
+                                {takenBy ? `  ·  used by ${takenBy}` : ""}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {status === "ok" && <span className="pill pill-ok">ok</span>}
+                        {status === "missing" && (
+                          <span className="pill pill-critical">missing</span>
+                        )}
+                        {status === "optional" && <span className="pill">optional</span>}
+                        {status === "duplicate" && (
+                          <span className="pill pill-high">dup</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-            <div className="row" style={{ marginTop: 20, justifyContent: "flex-end" }}>
-              <button className="btn btn-primary" onClick={onValidate} disabled={busy}>
+
+            {duplicateSource && (
+              <div
+                className="card"
+                style={{
+                  marginTop: 16,
+                  borderColor: "var(--st-high)",
+                  color: "var(--st-high)",
+                  fontSize: 13,
+                }}
+              >
+                Source column <span className="mono">{duplicateSource}</span> is assigned
+                to more than one canonical field. Each source column may feed only one
+                canonical field.
+              </div>
+            )}
+
+            {(() => {
+              const used = new Set(usedSources);
+              const dropped = (preview.columns as string[]).filter(
+                (c) => !used.has(c)
+              );
+              if (dropped.length === 0) return null;
+              return (
+                <div
+                  style={{
+                    marginTop: 20,
+                    padding: "14px 16px",
+                    borderRadius: 10,
+                    background:
+                      "color-mix(in oklab, var(--fg) 3.5%, transparent)",
+                    border: "1px solid var(--line-soft)",
+                  }}
+                >
+                  <div
+                    className="t-micro"
+                    style={{ marginBottom: 8, marginTop: 0 }}
+                  >
+                    Unmapped source columns · {dropped.length} will be dropped
+                  </div>
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: 6 }}
+                  >
+                    {dropped.map((c) => (
+                      <span
+                        key={c}
+                        className="pill mono"
+                        style={{ fontSize: 11 }}
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  <div
+                    className="t-caption"
+                    style={{ marginTop: 8, color: "var(--fg-3)" }}
+                  >
+                    These columns have no canonical equivalent and will not be
+                    imported. This is normal.
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div
+              className="row"
+              style={{ marginTop: 24, justifyContent: "space-between" }}
+            >
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setMapping(preview.suggested_mapping ?? {})}
+              >
+                Reset to auto-mapping
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={onValidate}
+                disabled={busy || !mappingOk}
+                title={
+                  !mappingOk
+                    ? missingRequired.length
+                      ? `Missing: ${missingRequired.join(", ")}`
+                      : "Duplicate source column"
+                    : undefined
+                }
+              >
                 {busy ? "Validating…" : "Validate mapping →"}
               </button>
             </div>
