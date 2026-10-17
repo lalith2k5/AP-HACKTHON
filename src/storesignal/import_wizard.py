@@ -88,37 +88,46 @@ def validate_mapping(columns: list[str], mapping: dict[str, str]) -> list[str]:
 
 
 def _read_csv_robust(source: Path) -> pd.DataFrame:
-    """Read CSV with BOM handling, delimiter sniffing, encoding fallback."""
-    # Try encodings in order: UTF-8 with BOM stripped, UTF-8, Latin-1
+    """Read CSV with BOM handling, delimiter detection, encoding fallback.
+
+    Strategy: read the whole file as text, then pick the delimiter that
+    maximizes the column count on the header row. Simpler and more reliable
+    than csv.Sniffer, which often mis-detects small or unusual files.
+    """
+    import io
+
+    text: str | None = None
     for enc in ("utf-8-sig", "utf-8", "latin-1"):
         try:
-            with source.open("r", encoding=enc, newline="") as fh:
-                sample = fh.read(16384)
-                fh.seek(0)
-                # Sniff delimiter on the first 10 lines
-                try:
-                    import csv as _csv
-                    dialect = _csv.Sniffer().sniff(
-                        "\n".join(sample.splitlines()[:10]) or sample
-                    )
-                    delim = dialect.delimiter
-                except Exception:
-                    # Fallback: pick whichever of , ; \t | appears most in header
-                    header = sample.splitlines()[0] if sample else ""
-                    delim = max([",", ";", "\t", "|"], key=header.count)
-                df = pd.read_csv(
-                    fh,
-                    dtype=str,
-                    keep_default_na=False,
-                    sep=delim,
-                    engine="python",
-                )
-                # Strip BOM from every column name (belt and braces)
-                df.columns = [c.lstrip("\ufeff").strip() for c in df.columns]
-                return df
+            text = source.read_text(encoding=enc)
+            break
         except (UnicodeDecodeError, UnicodeError):
             continue
-    raise ValueError(f"could not decode {source.name} as UTF-8 or Latin-1")
+
+    if text is None:
+        raise ValueError(f"could not decode {source.name} as UTF-8 or Latin-1")
+
+    # Strip BOM if the encoding did not already
+    if text.startswith("\ufeff"):
+        text = text[1:]
+
+    # Pick the delimiter that yields the most columns on the header row
+    first_line = text.split("\n", 1)[0] if text else ""
+    candidates = [",", ";", "\t", "|"]
+    delim = max(candidates, key=lambda d: first_line.count(d))
+    if first_line.count(delim) == 0:
+        delim = ","  # nothing else matched — assume comma
+
+    df = pd.read_csv(
+        io.StringIO(text),
+        dtype=str,
+        keep_default_na=False,
+        sep=delim,
+        engine="python",
+    )
+    # Belt-and-braces BOM strip + whitespace trim on every column name
+    df.columns = [c.lstrip("\ufeff").strip() for c in df.columns]
+    return df
 
 
 def detect_row_issues(df: pd.DataFrame) -> list[dict]:
