@@ -76,10 +76,10 @@ export default function OverviewPage() {
     value: c.count ?? c.n ?? 0,
   })).sort((a, b) => b.value - a.value).slice(0, 7);
 
-  const openIncidents = kpis.open_incidents ?? kpis.total_incidents ?? 0;
-  const urgentCount = kpis.urgent_alerts ?? kpis.open_alerts ?? 0;
+  const openIncidents = kpis.open_incidents ?? 0;
+  const urgentCount = urgent.length;
   const totalFeedback = kpis.total_feedback ?? 0;
-  const escalated = kpis.escalated ?? kpis.mandatory_alerts ?? 0;
+  const escalated = kpis.escalated ?? 0;
   const precision = metrics?.escalation?.escalation_precision ?? 0;
   const macroF1 = metrics?.classification?.macro_f1 ?? 0;
   const accuracy = metrics?.classification?.accuracy ?? 0;

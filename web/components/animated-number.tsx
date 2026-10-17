@@ -19,36 +19,32 @@ export function AnimatedNumber({
 }) {
   const [display, setDisplay] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
-  const started = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    const start = () => {
-      if (started.current) return;
-      started.current = true;
-      const t0 = performance.now();
-      const tick = (now: number) => {
-        const p = Math.min(1, (now - t0) / duration);
-        // Apple-style ease-out
-        const eased = 1 - Math.pow(1 - p, 3);
-        setDisplay(value * eased);
-        if (p < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
+    let animationFrame: number;
+    let startTime: number | null = null;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      // Apple-style ease-out
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(value * eased);
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
     };
 
-    if (typeof IntersectionObserver === "undefined") {
-      start();
+    if (value === 0) {
+      setDisplay(0);
       return;
     }
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && start()),
-      { threshold: 0.1 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
   }, [value, duration]);
 
   const formatted =
