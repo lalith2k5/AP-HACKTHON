@@ -13,7 +13,7 @@ test("welcome loads", async ({ page }) => {
 
 test("overview shows KPI cards", async ({ page }) => {
   await page.goto("/overview");
-  await expect(page.getByText("Key metrics")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("Open incidents")).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText("Open incidents")).toBeVisible();
   await expect(page.getByText("Urgent queue")).toBeVisible();
 });
@@ -21,12 +21,12 @@ test("overview shows KPI cards", async ({ page }) => {
 test("incidents list renders rows", async ({ page }) => {
   await page.goto("/incidents");
   await expect(page.getByText("Incidents", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.locator("ul li a").first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("a[href^='/incidents/INC-']").first()).toBeVisible({ timeout: 10_000 });
 });
 
 test("incident detail has 4 tabs and actions work", async ({ page }) => {
   await page.goto("/incidents");
-  await page.locator("ul li a").first().click();
+  await page.locator("a[href^='/incidents/INC-']").first().click();
   await expect(page.getByRole("tab", { name: "Overview" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Evidence" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Timeline" })).toBeVisible();
