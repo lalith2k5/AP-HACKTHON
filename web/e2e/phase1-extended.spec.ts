@@ -89,17 +89,18 @@ test.describe("actions", () => {
 // Import
 // ---------------------------------------------------------------------------
 test.describe("import", () => {
-  test("form renders with prefilled path and enabled button", async ({ page }) => {
+  test("wizard renders with file picker and stepper", async ({ page }) => {
     await page.goto("/import");
     await expect(page.getByRole("heading", { name: "Import data" })).toBeVisible({
       timeout: 10_000,
     });
-    const input = page.getByLabel(/Source file/i);
-    await expect(input).toBeVisible();
-    await expect(input).toHaveValue(/data\/raw\//);
-    const btn = page.getByRole("button", { name: /Start import/i });
-    await expect(btn).toBeVisible();
-    await expect(btn).toBeEnabled();
+    // Stepper labels
+    await expect(page.getByText("Upload", { exact: true })).toBeVisible();
+    await expect(page.getByText("Map", { exact: true })).toBeVisible();
+    await expect(page.getByText("Validate", { exact: true })).toBeVisible();
+    await expect(page.getByText("Commit", { exact: true })).toBeVisible();
+    // File picker button
+    await expect(page.getByRole("button", { name: /Choose file/i })).toBeVisible();
   });
 });
 

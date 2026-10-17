@@ -355,17 +355,20 @@ def map_stores(_p=Depends(_perm_read)):  # noqa: B008
         sid = s.get("store_id")
         if not isinstance(sid, str):
             continue
-        region = s.get("region_id") or (sid.split("-")[1] if "-" in sid else None)
-        base = REGION_COORDS.get(region, (0.0, 0.0))
-        # Deterministic jitter so stores spread out a little
+        # Derive region CODE from store_id prefix (S-DEL-001 -> DEL).
+        # The store_master region_id column is "R-NORTH" style, which does
+        # not map to coordinates.
+        parts = sid.split("-")
+        code = parts[1] if len(parts) >= 2 else None
+        base = REGION_COORDS.get(code, (20.5937, 78.9629))  # fallback: India centroid
         rnd = random.Random(sid)
-        lat = base[0] + rnd.uniform(-0.08, 0.08)
-        lng = base[1] + rnd.uniform(-0.08, 0.08)
+        lat = base[0] + rnd.uniform(-0.06, 0.06)
+        lng = base[1] + rnd.uniform(-0.06, 0.06)
         out.append({
             "store_id": sid,
             "store_name": s.get("store_name"),
-            "region_id": region,
-            "city": s.get("city"),
+            "region_id": code,
+            "city": s.get("city") or code,
             "lat": round(lat, 4),
             "lng": round(lng, 4),
             "incident_count": int(counts.get(sid, 0)),
@@ -430,10 +433,31 @@ def export_brief_pdf(region_id: str, _p=Depends(_perm_read)):  # noqa: B008
         raise HTTPException(status_code=503, detail="reportlab not installed") from None
 
     from storesignal.briefs import generate_weekly_brief
-    try:
-        brief = generate_weekly_brief(region_id=region_id)
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=f"brief generation failed: {e}") from e
+    # The brief generator keys by region_id ("R-NORTH"), not by store code.
+    # Try the value directly first; if it fails, try mapping common codes.
+    REGION_CODE_TO_ID = {
+        "DEL": "R-NORTH", "MUM": "R-WEST", "BLR": "R-SOUTH",
+        "HYD": "R-SOUTH", "CHN": "R-SOUTH",
+    }
+    candidates = [region_id]
+    if region_id in REGION_CODE_TO_ID:
+        candidates.append(REGION_CODE_TO_ID[region_id])
+    # Also try every known region so any code works
+    candidates.extend(["R-NORTH", "R-WEST", "R-SOUTH", "R-EAST", "R-CENTRAL"])
+
+    brief = None
+    last_err = None
+    for rid in candidates:
+        try:
+            brief = generate_weekly_brief(region_id=rid)
+            region_id = rid
+            break
+        except Exception as e:
+            last_err = e
+            continue
+    if brief is None:
+        raise HTTPException(status_code=422,
+                            detail=f"brief generation failed for all candidates: {last_err}") from last_err
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=LETTER,
