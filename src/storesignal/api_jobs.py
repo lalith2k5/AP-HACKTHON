@@ -313,15 +313,20 @@ def brief_for_region(
 ):
     from fastapi.responses import PlainTextResponse
 
-    from storesignal.briefs import generate_weekly_brief
+    briefs_dir = PROCESSED_DIR / "briefs"
+    brief = None
+    if briefs_dir.exists():
+        hits = sorted(briefs_dir.glob(f"brief_{region_id}_*.json"))
+        if not hits:
+            hits = sorted(briefs_dir.glob("brief_*.json"))
+        if hits:
+            brief = json.loads(hits[-1].read_text())
 
-    try:
-        brief = generate_weekly_brief(region_id=region_id,
-                                      from_ts=from_ts, to_ts=to_ts)
-    except TypeError:
-        brief = generate_weekly_brief(region_id)
+    if brief is None:
+        raise HTTPException(status_code=404,
+                            detail=f"no brief found for region {region_id}; generate first")
 
     if format == "markdown" or format == "md":
         text = brief.get("markdown") if isinstance(brief, dict) else str(brief)
-        return PlainTextResponse(text or "")
+        return PlainTextResponse(text or json.dumps(brief, indent=2))
     return brief

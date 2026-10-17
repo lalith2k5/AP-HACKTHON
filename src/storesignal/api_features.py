@@ -432,32 +432,55 @@ def export_brief_pdf(region_id: str, _p=Depends(_perm_read)):  # noqa: B008
     except ImportError:
         raise HTTPException(status_code=503, detail="reportlab not installed") from None
 
-    from storesignal.briefs import generate_weekly_brief
-    # The brief generator keys by region_id ("R-NORTH"), not by store code.
-    # Try the value directly first; if it fails, try mapping common codes.
-    REGION_CODE_TO_ID = {
-        "DEL": "R-NORTH", "MUM": "R-WEST", "BLR": "R-SOUTH",
-        "HYD": "R-SOUTH", "CHN": "R-SOUTH",
-    }
-    candidates = [region_id]
-    if region_id in REGION_CODE_TO_ID:
-        candidates.append(REGION_CODE_TO_ID[region_id])
-    # Also try every known region so any code works
-    candidates.extend(["R-NORTH", "R-WEST", "R-SOUTH", "R-EAST", "R-CENTRAL"])
+    # Briefs are stored as JSON by storesignal.briefs. Find the file for
+    # the region, else generate, else use any available brief.
+    briefs_dir = PROCESSED_DIR / "briefs"
 
-    brief = None
-    last_err = None
+    def _find_brief_json(rid: str):
+        if briefs_dir.exists():
+            hits = sorted(briefs_dir.glob(f"brief_{rid}_*.json"))
+            if hits:
+                return hits[-1]
+        return None
+
+    candidates = [region_id, "R-NORTH", "R-WEST", "R-SOUTH", "R-EAST", "R-CENTRAL"]
+    CODE_TO_ID = {"DEL": "R-NORTH", "MUM": "R-WEST", "BLR": "R-SOUTH",
+                  "HYD": "R-SOUTH", "CHN": "R-SOUTH"}
+    if region_id in CODE_TO_ID:
+        candidates.insert(1, CODE_TO_ID[region_id])
+
+    brief_path = None
     for rid in candidates:
-        try:
-            brief = generate_weekly_brief(region_id=rid)
+        brief_path = _find_brief_json(rid)
+        if brief_path:
             region_id = rid
             break
+
+    if brief_path is None:
+        # Generate via subprocess, then retry
+        import subprocess
+
+        from storesignal.paths import CODE_ROOT
+        py = str(CODE_ROOT / ".venv" / "bin" / "python")
+        try:
+            subprocess.run(
+                [py, "-m", "storesignal.briefs"],
+                cwd=str(CODE_ROOT), check=True, timeout=60,
+                capture_output=True,
+            )
         except Exception as e:
-            last_err = e
-            continue
-    if brief is None:
-        raise HTTPException(status_code=422,
-                            detail=f"brief generation failed for all candidates: {last_err}") from last_err
+            raise HTTPException(status_code=503,
+                                detail=f"could not generate brief: {e}") from e
+        for rid in candidates:
+            brief_path = _find_brief_json(rid)
+            if brief_path:
+                region_id = rid
+                break
+
+    if brief_path is None:
+        raise HTTPException(status_code=404, detail="no brief JSON available")
+
+    brief = json.loads(brief_path.read_text())
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=LETTER,
