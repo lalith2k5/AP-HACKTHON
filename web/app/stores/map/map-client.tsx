@@ -76,8 +76,8 @@ export default function MapClient() {
           borderRadius: 16,
         }}
       >
-        <div style={{ height: "70vh", minHeight: 520, position: "relative", background: "#eef2f6" }}>
-          {ready && L && RL && (
+        <div style={{ position: "relative", background: "#eef2f6" }}>
+          {ready && L && RL ? (
             <MapInner
               L={L}
               RL={RL}
@@ -85,11 +85,10 @@ export default function MapClient() {
               maxCount={maxCount}
               onMarkerClick={(id: string) => router.push(`/stores/${id}`)}
             />
-          )}
-          {!ready && (
+          ) : (
             <div
               style={{
-                position: "absolute", inset: 0,
+                height: 560,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "var(--fg-3)", fontSize: 13,
               }}
@@ -185,6 +184,24 @@ function MapInner({
 }) {
   const { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, ScaleControl, useMap } = RL;
 
+  // Fix: Leaflet initializes before the flex parent has laid out, so it only
+  // renders 2 tiles. invalidateSize() after mount + on resize forces a reflow.
+  function SizeFix() {
+    const map = useMap();
+    useEffect(() => {
+      const t1 = setTimeout(() => map.invalidateSize(), 50);
+      const t2 = setTimeout(() => map.invalidateSize(), 400);
+      const onResize = () => map.invalidateSize();
+      window.addEventListener("resize", onResize);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        window.removeEventListener("resize", onResize);
+      };
+    }, [map]);
+    return null;
+  }
+
   return (
     <MapContainer
       center={[22.9734, 78.6569]}
@@ -193,9 +210,10 @@ function MapInner({
       maxZoom={18}
       scrollWheelZoom={true}
       zoomControl={true}
-      style={{ height: "100%", width: "100%", background: "#eef2f6" }}
+      style={{ height: "560px", width: "100%", background: "#eef2f6" }}
       attributionControl={true}
     >
+      <SizeFix />
       <LayersControl position="topright">
         {/* Default — closest to Apple Maps look, no key required */}
         <LayersControl.BaseLayer checked name="Light (default)">
