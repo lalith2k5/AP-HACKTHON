@@ -152,7 +152,7 @@ def import_preview(upload_id: str, n: int = Query(default=5, ge=1, le=20), _p=De
         "format": fmt,
         "columns": full_cols,
         "preview": df.astype(str).to_dict(orient="records"),
-        "suggested_mapping": {c: c for c in full_cols if c in iw.CANONICAL_COLUMNS},
+        "suggested_mapping": iw.suggest_mapping(full_cols),
         "issues": full_issues,
     }
 

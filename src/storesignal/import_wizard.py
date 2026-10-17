@@ -22,6 +22,106 @@ CANONICAL_COLUMNS = [
     "record_id", "source_id", "channel", "store_id", "timestamp",
     "text_raw", "language_hint", "rating",
 ]
+FIELD_ALIASES: dict[str, list[str]] = {
+    "record_id": [
+        "record_id", "id", "review_id", "feedback_id", "ticket_id", "complaint_id",
+        "reference", "ref", "record", "uid", "uuid", "case_id", "issue_id",
+    ],
+    "channel": [
+        "channel", "source", "source_channel", "origin", "medium", "feedback_type",
+        "source_type", "input_channel", "touchpoint",
+    ],
+    "store_id": [
+        "store_id", "store", "store_code", "shop", "shop_id", "location",
+        "location_id", "outlet", "outlet_id", "branch", "branch_id", "site",
+        "site_id", "store_number",
+    ],
+    "timestamp": [
+        "timestamp", "ts", "time", "date", "datetime", "created_at", "created",
+        "occurred_at", "event_time", "event_ts", "posted_at", "date_time",
+        "submitted_at", "reported_at", "when",
+    ],
+    "text_raw": [
+        "text_raw", "text", "body", "message", "comment", "review",
+        "content", "feedback", "description", "note", "review_text",
+        "comment_text", "note_text", "body_text", "raw_text", "complaint",
+        "transcript", "remarks",
+    ],
+    "rating": [
+        "rating", "stars", "score", "star_rating", "review_rating",
+        "rating_value", "num_stars", "star",
+    ],
+    "language_hint": [
+        "language_hint", "lang", "language", "locale", "language_code",
+        "lang_code", "detected_language", "script",
+    ],
+    "source_reference": [
+        "source_reference", "source_url", "url", "link", "permalink",
+        "external_id", "external_ref", "ticket_url",
+    ],
+}
+
+# Columns that are too short/generic to safely fuzzy-match on their own
+_MIN_FUZZY_LEN = 3
+
+
+def suggest_mapping(columns: list[str]) -> dict[str, str]:
+    """Return {canonical_field: source_column} using a 3-pass match:
+       1. Normalized exact match on the canonical name
+       2. Normalized exact match on any alias
+       3. Fuzzy substring match (>= 3 chars)
+    Each source column is used at most once."""
+    import re as _re
+
+    def norm(s: str) -> str:
+        return _re.sub(r"[^a-z0-9]", "", s.lower())
+
+    norm_cols = {c: norm(c) for c in columns}
+    used: set[str] = set()
+    mapping: dict[str, str] = {}
+
+    # Pass 1: exact match on canonical name
+    for canon in CANONICAL_COLUMNS:
+        target = norm(canon)
+        for col, nc in norm_cols.items():
+            if col in used:
+                continue
+            if nc == target:
+                mapping[canon] = col
+                used.add(col)
+                break
+
+    # Pass 2: exact match on an alias
+    for canon in CANONICAL_COLUMNS:
+        if canon in mapping:
+            continue
+        aliases = {norm(a) for a in FIELD_ALIASES.get(canon, [])}
+        aliases.discard(norm(canon))
+        for col, nc in norm_cols.items():
+            if col in used:
+                continue
+            if nc in aliases:
+                mapping[canon] = col
+                used.add(col)
+                break
+
+    # Pass 3: fuzzy substring (canonical or alias contained in the column)
+    for canon in CANONICAL_COLUMNS:
+        if canon in mapping:
+            continue
+        keys = {norm(canon)} | {norm(a) for a in FIELD_ALIASES.get(canon, [])}
+        keys = {k for k in keys if len(k) >= _MIN_FUZZY_LEN}
+        for col, nc in norm_cols.items():
+            if col in used:
+                continue
+            if any(k in nc or nc in k for k in keys):
+                mapping[canon] = col
+                used.add(col)
+                break
+
+    return mapping
+
+
 REQUIRED_COLUMNS = ["record_id", "channel", "store_id", "timestamp", "text_raw"]
 VALID_CHANNELS = {"online_review", "app_feedback", "staff_shift_note",
                   "call_transcript", "app_review", "call_centre", "other"}
