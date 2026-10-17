@@ -119,6 +119,29 @@ def import_preview(upload_id: str, n: int = Query(default=5, ge=1, le=20), _p=De
     else:
         raise HTTPException(status_code=422, detail=f"unsupported format: {fmt}")
 
+    issues = iw.detect_row_issues(df) if hasattr(iw, "detect_row_issues") else []
+
+    # Also run a scan over the full file for duplicate IDs (preview only has N rows)
+    full_issues: list[dict] = list(issues)
+    if fmt == "csv":
+        try:
+            full_df = iw._read_csv_robust(src)
+            full_issues = iw.detect_row_issues(full_df)
+        except Exception:
+            pass
+    elif fmt == "jsonl":
+        try:
+            import json as _json
+            rows = []
+            with src.open() as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line:
+                        rows.append(_json.loads(line))
+            full_issues = iw.detect_row_issues(pd.DataFrame(rows))
+        except Exception:
+            pass
+
     return {
         "upload_id": upload_id,
         "filename": meta["filename"],
@@ -126,23 +149,60 @@ def import_preview(upload_id: str, n: int = Query(default=5, ge=1, le=20), _p=De
         "columns": full_cols,
         "preview": df.astype(str).to_dict(orient="records"),
         "suggested_mapping": {c: c for c in full_cols if c in iw.CANONICAL_COLUMNS},
+        "issues": full_issues,
     }
 
 
 @router.post("/import/validate")
 def import_validate(payload: dict = Body(default={}), _p=Depends(_perm_run)):  # noqa: B008
-    """Check that a mapping covers the required columns."""
+    """Check that a mapping covers the required columns + report row issues."""
     from storesignal import import_wizard as iw
     columns = payload.get("columns") or []
     mapping = payload.get("mapping") or {}
+    upload_id = payload.get("upload_id")
+
     errors = iw.validate_mapping(columns, mapping)
     missing_required = [c for c in iw.REQUIRED_COLUMNS
                         if c not in mapping.values()]
+
+    row_issues: list[dict] = []
+    if upload_id:
+        meta_p = UPLOAD_DIR / f"{upload_id}.json"
+        if meta_p.exists():
+            meta = json.loads(meta_p.read_text())
+            src_path = Path(meta["path"])
+            fmt = iw._detect_format(str(src_path))
+            try:
+                if fmt == "csv":
+                    full_df = iw._read_csv_robust(src_path)
+                elif fmt == "jsonl":
+                    import json as _json
+                    rows = []
+                    with src_path.open() as fh:
+                        for line in fh:
+                            line = line.strip()
+                            if line:
+                                rows.append(_json.loads(line))
+                    full_df = pd.DataFrame(rows)
+                elif fmt == "parquet":
+                    full_df = pd.read_parquet(src_path, engine="pyarrow")
+                else:
+                    full_df = pd.DataFrame()
+                row_issues = iw.detect_row_issues(full_df)
+            except Exception as e:
+                row_issues = [{
+                    "level": "warning",
+                    "kind": "scan_failed",
+                    "message": f"could not scan file: {e}",
+                }]
+
+    has_error = any(i.get("level") == "error" for i in row_issues)
     return {
-        "ok": len(errors) == 0 and len(missing_required) == 0,
+        "ok": len(errors) == 0 and len(missing_required) == 0 and not has_error,
         "errors": errors,
         "missing_required": missing_required,
         "required_columns": iw.REQUIRED_COLUMNS,
+        "row_issues": row_issues,
     }
 
 
@@ -171,6 +231,37 @@ def import_commit(payload: dict = Body(default={}), _p=Depends(_perm_run)):  # n
     if not isinstance(result, dict) or "error" in result:
         detail = result.get("error") if isinstance(result, dict) else "import failed"
         raise HTTPException(status_code=422, detail=detail)
+
+    # Hard block: duplicate record_ids violate spec 7.2 (no silent overwrite)
+    try:
+        from storesignal import import_wizard as iw
+        fmt = iw._detect_format(str(src))
+        if fmt == "csv":
+            scan_df = iw._read_csv_robust(src)
+        elif fmt == "jsonl":
+            import json as _json
+            rows = []
+            with src.open() as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line:
+                        rows.append(_json.loads(line))
+            scan_df = pd.DataFrame(rows)
+        elif fmt == "parquet":
+            scan_df = pd.read_parquet(src, engine="pyarrow")
+        else:
+            scan_df = pd.DataFrame()
+        issues = iw.detect_row_issues(scan_df)
+        blockers = [i for i in issues if i.get("level") == "error"]
+        if blockers:
+            raise HTTPException(
+                status_code=422,
+                detail=blockers[0].get("message", "row issues block commit"),
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
 
     batch_id = result.get("batch_id", "unknown")
     audit("import_committed", "operator",

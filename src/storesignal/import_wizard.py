@@ -87,9 +87,107 @@ def validate_mapping(columns: list[str], mapping: dict[str, str]) -> list[str]:
     return errors
 
 
+def _read_csv_robust(source: Path) -> pd.DataFrame:
+    """Read CSV with BOM handling, delimiter sniffing, encoding fallback."""
+    # Try encodings in order: UTF-8 with BOM stripped, UTF-8, Latin-1
+    for enc in ("utf-8-sig", "utf-8", "latin-1"):
+        try:
+            with source.open("r", encoding=enc, newline="") as fh:
+                sample = fh.read(16384)
+                fh.seek(0)
+                # Sniff delimiter on the first 10 lines
+                try:
+                    import csv as _csv
+                    dialect = _csv.Sniffer().sniff(
+                        "\n".join(sample.splitlines()[:10]) or sample
+                    )
+                    delim = dialect.delimiter
+                except Exception:
+                    # Fallback: pick whichever of , ; \t | appears most in header
+                    header = sample.splitlines()[0] if sample else ""
+                    delim = max([",", ";", "\t", "|"], key=header.count)
+                df = pd.read_csv(
+                    fh,
+                    dtype=str,
+                    keep_default_na=False,
+                    sep=delim,
+                    engine="python",
+                )
+                # Strip BOM from every column name (belt and braces)
+                df.columns = [c.lstrip("\ufeff").strip() for c in df.columns]
+                return df
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    raise ValueError(f"could not decode {source.name} as UTF-8 or Latin-1")
+
+
+def detect_row_issues(df: pd.DataFrame) -> list[dict]:
+    """Return row-level issues that could silently corrupt the pipeline."""
+    issues: list[dict] = []
+
+    # Duplicate record_id (spec 7.2 forbids silent overwrite)
+    if "record_id" in df.columns:
+        ids = df["record_id"].astype(str).str.strip()
+        dup_mask = ids.duplicated(keep=False) & (ids != "")
+        dup_ids = ids[dup_mask].unique().tolist()
+        if dup_ids:
+            issues.append({
+                "level": "error",
+                "kind": "duplicate_record_id",
+                "count": int(dup_mask.sum()),
+                "sample": dup_ids[:5],
+                "message": (
+                    f"{int(dup_mask.sum())} rows share a record_id with another row "
+                    f"({len(dup_ids)} distinct IDs). Import blocked."
+                ),
+            })
+
+    # Non-ISO timestamps (silent corruption risk)
+    if "timestamp" in df.columns:
+        import re as _re
+        iso = _re.compile(r"^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2})?")
+        ts = df["timestamp"].astype(str).str.strip()
+        bad = ts[(ts != "") & (~ts.str.match(iso))]
+        if len(bad):
+            issues.append({
+                "level": "warning",
+                "kind": "non_iso_timestamp",
+                "count": int(len(bad)),
+                "sample": bad.head(3).tolist(),
+                "message": (
+                    f"{len(bad)} timestamps are not ISO 8601 "
+                    "(YYYY-MM-DD or YYYY-MM-DDTHH:MM). They will be parsed as NaT."
+                ),
+            })
+
+    # Empty text_raw
+    if "text_raw" in df.columns:
+        empty = df["text_raw"].astype(str).str.strip() == ""
+        if empty.any():
+            issues.append({
+                "level": "warning",
+                "kind": "empty_text",
+                "count": int(empty.sum()),
+                "message": f"{int(empty.sum())} rows have empty text_raw; they will be quarantined.",
+            })
+
+    # Empty store_id (allowed but flagged)
+    if "store_id" in df.columns:
+        empty = df["store_id"].astype(str).str.strip() == ""
+        if empty.any():
+            issues.append({
+                "level": "warning",
+                "kind": "empty_store_id",
+                "count": int(empty.sum()),
+                "message": f"{int(empty.sum())} rows have empty store_id; will be flagged unknown-store.",
+            })
+
+    return issues
+
+
 def _load_raw(source: Path, fmt: str) -> pd.DataFrame:
     if fmt == "csv":
-        return pd.read_csv(source, dtype=str, keep_default_na=False)
+        return _read_csv_robust(source)
     if fmt == "jsonl":
         return pd.read_json(source, lines=True, dtype=False)
     if fmt == "parquet":
