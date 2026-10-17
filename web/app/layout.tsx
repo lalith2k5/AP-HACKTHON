@@ -10,10 +10,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <div aria-hidden className="app-atmosphere"><div className="app-atmosphere-orbs" /></div>
-        {children}
-      </body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
