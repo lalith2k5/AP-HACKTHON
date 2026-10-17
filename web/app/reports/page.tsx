@@ -158,7 +158,7 @@ export default function ReportsPage() {
             <h3 className="mb-2 text-sm font-semibold tracking-tight">Top issues</h3>
             <ul className="divide-y divide-border glass">
               {data.top_issues.map((t) => (
-                <li key={t.category} className="p-4">
+                <li key={t.category} className="p-4 hover-scale">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">

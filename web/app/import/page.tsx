@@ -99,29 +99,18 @@ export default function ImportPage() {
       </div>
 
       {/* Stepper */}
-      <div className="card" style={{ marginBottom: 20, padding: "12px 20px" }}>
-        <div className="row" style={{ gap: 20 }}>
+      <div className="fade-up" style={{ marginBottom: 28, display: "flex", justifyContent: "center" }}>
+        <div className="ios-segmented">
           {["Upload", "Map", "Validate", "Commit"].map((label, i) => {
             const n = i + 1;
             const active = n === stepNum;
-            const done = n < stepNum;
             return (
-              <div key={label} className="row" style={{ gap: 8 }}>
-                <span
-                  style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    width: 22, height: 22, borderRadius: "50%",
-                    background: done ? "var(--st-ok)" : active ? "var(--accent)" : "var(--bg-inset)",
-                    color: done || active ? "#fff" : "var(--fg-2)",
-                    fontSize: 11, fontWeight: 700,
-                  }}
-                >
-                  {done ? "✓" : n}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: active ? 600 : 500, color: active ? "var(--fg)" : "var(--fg-2)" }}>
-                  {label}
-                </span>
-                {n < 4 && <span style={{ color: "var(--fg-3)" }}>—</span>}
+              <div
+                key={label}
+                className={`ios-tab ${active ? "active" : ""}`}
+                style={{ padding: "8px 24px", opacity: n <= stepNum ? 1 : 0.5 }}
+              >
+                {n < stepNum ? "✓ " : ""}{label}
               </div>
             );
           })}

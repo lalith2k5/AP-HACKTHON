@@ -1,87 +1,70 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { api, endpoints } from "@/lib/api";
-
-type Trend = { series: {day:string;predicted_category:string;count:number}[]; anomalies: any[] };
+import { endpoints } from "@/lib/api";
+import { AnimatedNumber } from "@/components/animated-number";
+import { BarChart } from "@/components/bar-chart";
 
 export default function TrendsPage() {
-  const [region, setRegion] = useState("");
-  const [data, setData] = useState<Trend | null>(null);
+  const [data, setData] = useState<any>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    const params: Record<string,string> = {};
-    if (region) params.region_id = region;
-    api<Trend>("/api/v1/trends" + (Object.keys(params).length ? "?" + new URLSearchParams(params) : ""))
+    endpoints.trends()
       .then(setData)
       .catch((e) => setErr(String(e)));
-  }, [region]);
+  }, []);
 
   const byCat: Record<string, number> = {};
-  data?.series.forEach((r) => { byCat[r.predicted_category] = (byCat[r.predicted_category] ?? 0) + r.count; });
-  const top = Object.entries(byCat).sort((a,b) => b[1]-a[1]).slice(0, 12);
+  data?.series?.forEach((r: any) => {
+    byCat[r.predicted_category] = (byCat[r.predicted_category] ?? 0) + r.count;
+  });
+  const topCats = Object.entries(byCat)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([label, value]) => ({ label, value }));
+
+  const anomalies = data?.anomalies ?? [];
 
   return (
     <AppShell active="/trends" title="Trends">
-      <div className="space-y-10">
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium">Region</label>
-          <select value={region} onChange={(e) => setRegion(e.target.value)}
-            className="rounded-2xl border border-border bg-background px-3 py-1.5 text-sm">
-            <option value="">All</option>
-            <option value="DEL">DEL</option>
-            <option value="MUM">MUM</option>
-            <option value="BLR">BLR</option>
-            <option value="HYD">HYD</option>
-            <option value="CHN">CHN</option>
-          </select>
+      <div className="fade-up" style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.03em", margin: 0 }}>
+          Emerging trends
+        </h1>
+        <p style={{ marginTop: 8, fontSize: 15, color: "var(--fg-2)" }}>
+          Baseline vs current window. Robust z-score highlights anomalies.
+        </p>
+      </div>
+
+      {err && <div className="card" style={{ color: "var(--st-critical)" }}>{err}</div>}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        {/* Categories */}
+        <div className="glass-panel fade-up" style={{ padding: 24, animationDelay: "80ms" }}>
+          <div className="kpi-label" style={{ marginBottom: 20 }}>Volume by category</div>
+          {topCats.length > 0 ? <BarChart items={topCats} /> : <p className="muted">Loading…</p>}
         </div>
 
-        {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
-
-        <section className="glass p-6">
-          <h2 className="text-[15px] font-semibold tracking-tight">Category totals</h2>
-          {top.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">No data for this filter.</p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {top.map(([cat, n]) => (
-                <li key={cat} className="flex items-center gap-3">
-                  <span className="w-56 truncate text-sm">{cat}</span>
-                  <div className="h-2 flex-1 rounded-full bg-muted">
-                    <div className="h-2 rounded-full bg-[var(--primary)]" style={{ width: `${Math.min(100, n / top[0][1] * 100)}%` }} />
-                  </div>
-                  <span className="w-16 text-right text-xs text-muted-foreground">{n}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="glass p-6">
-          <h2 className="text-[15px] font-semibold tracking-tight">Anomalies flagged ({data?.anomalies.length ?? 0})</h2>
-          {data?.anomalies.length ? (
-            <table className="mt-3 w-full text-sm">
-              <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr><th className="py-2">Store</th><th>Category</th><th>Days flagged</th><th>Max z</th><th>Last flag</th></tr>
-              </thead>
-              <tbody>
-                {data.anomalies.slice(0, 25).map((a, i) => (
-                  <tr key={i} className="border-t border-[var(--border)]">
-                    <td className="py-2">{a.store_id}</td>
-                    <td>{a.predicted_category}</td>
-                    <td>{a.num_flag_days}</td>
-                    <td>{typeof a.max_robust_z === "number" ? a.max_robust_z.toFixed(2) : a.max_robust_z}</td>
-                    <td>{a.last_flag_day}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="mt-2 text-sm text-muted-foreground">No anomalies in this window.</p>
-          )}
-        </section>
+        {/* Anomalies */}
+        <div className="glass-panel fade-up" style={{ padding: 24, animationDelay: "160ms" }}>
+          <div className="kpi-label" style={{ marginBottom: 20 }}>
+            Flagged anomalies (<AnimatedNumber value={anomalies.length} />)
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {anomalies.slice(0, 8).map((a: any, i: number) => (
+              <div key={i} className="hover-scale" style={{ padding: "12px 16px", borderRadius: 12, background: "var(--bg-inset)", border: "1px solid var(--line-soft)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{a.predicted_category?.replace(/_/g, " ")}</span>
+                  <span style={{ color: "#ff3b30", fontWeight: 700, fontSize: 12 }}>z = {a.max_robust_z?.toFixed(2)}</span>
+                </div>
+                <div style={{ fontSize: 12, color: "var(--fg-2)" }}>{a.store_id} · {a.num_flag_days} days flagged</div>
+              </div>
+            ))}
+            {anomalies.length === 0 && <p className="muted">No anomalies detected.</p>}
+          </div>
+        </div>
       </div>
     </AppShell>
   );
