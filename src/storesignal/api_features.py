@@ -163,14 +163,27 @@ def import_commit(payload: dict = Body(default={}), _p=Depends(_perm_run)):  # n
     src = Path(meta["path"])
 
     try:
-        batch_id = iw.run_import(src, mapping, channel_override=channel_override)
+        result = iw.run_import(src, mapping, channel_override=channel_override)
     except Exception as e:
         audit("import_commit_failed", "operator", f"upload={upload_id} err={e}")
         raise HTTPException(status_code=422, detail=str(e)) from e
 
-    audit("import_committed", "operator", f"batch={batch_id} upload={upload_id}")
-    return {"batch_id": batch_id, "upload_id": upload_id,
-            "process_url": "/api/v1/pipeline/run"}
+    if not isinstance(result, dict) or "error" in result:
+        detail = result.get("error") if isinstance(result, dict) else "import failed"
+        raise HTTPException(status_code=422, detail=detail)
+
+    batch_id = result.get("batch_id", "unknown")
+    audit("import_committed", "operator",
+          f"batch={batch_id} upload={upload_id} valid={result.get('rows_valid')}")
+    return {
+        "batch_id": batch_id,
+        "upload_id": upload_id,
+        "rows_in": result.get("rows_in"),
+        "rows_valid": result.get("rows_valid"),
+        "rows_rejected": result.get("rows_rejected"),
+        "warnings": result.get("warnings", 0),
+        "process_url": "/api/v1/pipeline/run",
+    }
 
 
 @router.get("/import/batches")
