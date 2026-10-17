@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { endpoints } from "@/lib/api";
@@ -24,37 +24,154 @@ function sevColor(high: number) {
   return "#34c759";
 }
 
+const LAYERS = {
+  Light:
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+  Streets:
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+  Satellite:
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  Topographic:
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+} as const;
+
+type LayerName = keyof typeof LAYERS;
+
 export default function MapClient() {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const layerRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
   const [stores, setStores] = useState<StorePoint[]>([]);
   const [err, setErr] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
-  const [L, setL] = useState<any>(null);
-  const [RL, setRL] = useState<any>(null);
+  const [layer, setLayer] = useState<LayerName>("Light");
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const leaflet = await import("leaflet");
-      const reactLeaflet = await import("react-leaflet");
-      if (cancelled) return;
-      setL(leaflet);
-      setRL(reactLeaflet);
-      setReady(true);
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
+  // Load stores
   useEffect(() => {
     endpoints.mapStores()
       .then((d: any) => setStores(d.stores ?? []))
       .catch((e) => setErr(String(e)));
   }, []);
 
-  const maxCount = Math.max(1, ...stores.map((s) => s.incident_count));
+  // Init Leaflet directly (no react-leaflet). Leaflet gets the fully
+  // laid-out DOM node, so no invalidateSize race.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!containerRef.current || mapRef.current) return;
+      const L = (await import("leaflet")).default;
+      if (cancelled || !containerRef.current) return;
+
+      // Hard reset: wipe container in case of double-init in StrictMode
+      containerRef.current.innerHTML = "";
+
+      const map = L.map(containerRef.current, {
+        center: [22.9734, 78.6569],
+        zoom: 5,
+        minZoom: 4,
+        maxZoom: 16,
+        scrollWheelZoom: true,
+        zoomControl: true,
+        attributionControl: true,
+      });
+
+      const tileLayer = L.tileLayer(LAYERS.Light, {
+        attribution:
+          "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors",
+        maxZoom: 16,
+      }).addTo(map);
+
+      L.control.scale({ imperial: false, position: "bottomright" }).addTo(map);
+
+      // Base-layer switcher (top-right)
+      const layersControl = L.control.layers(
+        Object.fromEntries(
+          Object.entries(LAYERS).map(([name, url]) => [
+            name,
+            L.tileLayer(url, { maxZoom: 16 }),
+          ]),
+        ),
+        {},
+        { position: "topright", collapsed: false },
+      );
+      layersControl.addTo(map);
+
+      mapRef.current = map;
+      layerRef.current = tileLayer;
+    })();
+
+    return () => {
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      markersRef.current = [];
+    };
+  }, []);
+
+  // Update markers whenever stores change
+  useEffect(() => {
+    (async () => {
+      if (!mapRef.current) return;
+      const L = (await import("leaflet")).default;
+
+      // Clear existing markers
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+
+      const maxCount = Math.max(1, ...stores.map((s) => s.incident_count));
+
+      stores.forEach((s) => {
+        const size = 8 + (s.incident_count / maxCount) * 12;
+        const color = sevColor(s.high_severity_count);
+        const marker = L.circleMarker([s.lat, s.lng], {
+          radius: size,
+          color: "#ffffff",
+          weight: 2.5,
+          fillColor: color,
+          fillOpacity: 1,
+        })
+          .bindTooltip(
+            `<div style="font-size:12px;line-height:1.45;color:#1d1d1f">
+               <div style="font-weight:700">${s.store_id}</div>
+               <div style="color:#6e6e73">${s.store_name} · ${s.city}</div>
+               <div style="margin-top:4px">
+                 <strong>${s.incident_count}</strong> incidents ·
+                 <span style="color:${color}"><strong>${s.high_severity_count}</strong> high</span>
+               </div>
+             </div>`,
+            { direction: "top", offset: [0, -8], opacity: 1 },
+          )
+          .on("click", () => router.push(`/stores/${s.store_id}`))
+          .addTo(mapRef.current);
+        markersRef.current.push(marker);
+      });
+    })();
+  }, [stores, router]);
+
+  // Swap base layer when user picks one
+  useEffect(() => {
+    (async () => {
+      if (!mapRef.current || !layerRef.current) return;
+      const L = (await import("leaflet")).default;
+      layerRef.current.setUrl(LAYERS[layer]);
+    })();
+  }, [layer]);
 
   return (
     <AppShell active="/stores" title="Stores">
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      />
+
+      <div className="tabs" style={{ marginBottom: 24 }}>
+        <Link href="/stores" className="tab">List</Link>
+        <Link href="/stores/map" className="tab is-active">Map</Link>
+      </div>
+
       <div className="page-head">
         <div>
           <p>
@@ -62,43 +179,33 @@ export default function MapClient() {
             click a dot to open the store
           </p>
         </div>
-        <Link href="/stores" className="btn btn-secondary btn-sm">List view</Link>
+        <div style={{ display: "flex", gap: 6 }}>
+          {(["Light", "Streets", "Satellite", "Topographic"] as LayerName[]).map((name) => (
+            <button
+              key={name}
+              onClick={() => setLayer(name)}
+              className={"btn btn-sm " + (layer === name ? "btn-primary" : "btn-secondary")}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {err && <div className="card" style={{ color: "var(--st-critical)" }}>{err}</div>}
 
-      <div
-        className="card"
-        style={{
-          padding: 0,
-          overflow: "hidden",
-          position: "relative",
-          borderRadius: 16,
-        }}
-      >
-        <div style={{ position: "relative", background: "#eef2f6" }}>
-          {ready && L && RL ? (
-            <MapInner
-              L={L}
-              RL={RL}
-              stores={stores}
-              maxCount={maxCount}
-              onMarkerClick={(id: string) => router.push(`/stores/${id}`)}
-            />
-          ) : (
-            <div
-              style={{
-                height: 560,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "var(--fg-3)", fontSize: 13,
-              }}
-            >
-              Loading map…
-            </div>
-          )}
-        </div>
+      <div className="card" style={{ padding: 0, overflow: "hidden", position: "relative" }}>
+        <div
+          ref={containerRef}
+          id="storesignal-map"
+          style={{
+            width: "100%",
+            height: "620px",
+            background: "#eef2f6",
+          }}
+        />
 
-        {/* Legend — Apple-style floating chip */}
+        {/* Legend */}
         <div
           style={{
             position: "absolute",
@@ -106,7 +213,7 @@ export default function MapClient() {
             left: 16,
             padding: "10px 14px",
             borderRadius: 12,
-            background: "rgba(255,255,255,0.86)",
+            background: "rgba(255,255,255,0.9)",
             backdropFilter: "blur(24px) saturate(180%)",
             WebkitBackdropFilter: "blur(24px) saturate(180%)",
             border: "1px solid rgba(0,0,0,0.06)",
@@ -130,8 +237,10 @@ export default function MapClient() {
               <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span
                   style={{
-                    display: "inline-block", width: 9, height: 9, borderRadius: "50%",
-                    background: l.color, border: "1.5px solid rgba(255,255,255,0.9)",
+                    display: "inline-block",
+                    width: 9, height: 9, borderRadius: "50%",
+                    background: l.color,
+                    border: "1.5px solid rgba(255,255,255,0.9)",
                     boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
                   }}
                 />
@@ -173,123 +282,5 @@ export default function MapClient() {
         </div>
       </section>
     </AppShell>
-  );
-}
-
-function MapInner({
-  L, RL, stores, maxCount, onMarkerClick,
-}: {
-  L: any; RL: any; stores: StorePoint[]; maxCount: number;
-  onMarkerClick: (id: string) => void;
-}) {
-  const { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, ScaleControl, useMap } = RL;
-
-  // Fix: Leaflet initializes before the flex parent has laid out, so it only
-  // renders 2 tiles. invalidateSize() after mount + on resize forces a reflow.
-  function SizeFix() {
-    const map = useMap();
-    useEffect(() => {
-      const t1 = setTimeout(() => map.invalidateSize(), 50);
-      const t2 = setTimeout(() => map.invalidateSize(), 400);
-      const onResize = () => map.invalidateSize();
-      window.addEventListener("resize", onResize);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        window.removeEventListener("resize", onResize);
-      };
-    }, [map]);
-    return null;
-  }
-
-  return (
-    <MapContainer
-      center={[22.9734, 78.6569]}
-      zoom={5}
-      minZoom={4}
-      maxZoom={18}
-      scrollWheelZoom={true}
-      zoomControl={true}
-      style={{ height: "560px", width: "100%", background: "#eef2f6" }}
-      attributionControl={true}
-    >
-      <SizeFix />
-      <LayersControl position="topright">
-        {/* Default — closest to Apple Maps look, no key required */}
-        <LayersControl.BaseLayer checked name="Light (default)">
-          <TileLayer
-            attribution="Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors"
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={16}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Streets">
-          <TileLayer
-            attribution="Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors"
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Satellite">
-          <TileLayer
-            attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Topographic">
-          <TileLayer
-            attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community"
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="OpenStreetMap">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={19}
-          />
-        </LayersControl.BaseLayer>
-      </LayersControl>
-
-      <ScaleControl position="bottomright" imperial={false} />
-
-      {stores.map((s) => {
-        const size = 8 + (s.incident_count / maxCount) * 12;
-        const color = sevColor(s.high_severity_count);
-        return (
-          <CircleMarker
-            key={s.store_id}
-            center={[s.lat, s.lng]}
-            radius={size}
-            pathOptions={{
-              color: "#ffffff",
-              weight: 2.5,
-              fillColor: color,
-              fillOpacity: 1,
-            }}
-            eventHandlers={{
-              click: () => onMarkerClick(s.store_id),
-            }}
-          >
-            <Tooltip direction="top" offset={[0, -8]} opacity={1}>
-              <div style={{ fontSize: 12, lineHeight: 1.45, color: "#1d1d1f" }}>
-                <div style={{ fontWeight: 700 }}>{s.store_id}</div>
-                <div style={{ color: "#6e6e73" }}>
-                  {s.store_name} · {s.city}
-                </div>
-                <div style={{ marginTop: 4 }}>
-                  <strong>{s.incident_count}</strong> incidents ·{" "}
-                  <span style={{ color }}>
-                    <strong>{s.high_severity_count}</strong> high
-                  </span>
-                </div>
-              </div>
-            </Tooltip>
-          </CircleMarker>
-        );
-      })}
-    </MapContainer>
   );
 }
