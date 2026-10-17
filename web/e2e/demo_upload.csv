@@ -1,0 +1,2 @@
+record_id,channel,store_id,timestamp,text_raw,rating
+DEMO-001,online_review,S-DEL-001,2026-10-15T10:00:00Z,The freezer was leaking and staff did not care.,1
