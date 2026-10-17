@@ -349,31 +349,45 @@ def map_stores(_p=Depends(_perm_read)):  # noqa: B008
         if len(inc) else {}
     )
 
-    import random
-    out = []
+    import math
+    # Group by region so we can lay out each region as a clean spiral
+    by_region: dict[str, list[str]] = {}
     for _, s in df.iterrows():
         sid = s.get("store_id")
         if not isinstance(sid, str):
             continue
-        # Derive region CODE from store_id prefix (S-DEL-001 -> DEL).
-        # The store_master region_id column is "R-NORTH" style, which does
-        # not map to coordinates.
         parts = sid.split("-")
-        code = parts[1] if len(parts) >= 2 else None
-        base = REGION_COORDS.get(code, (20.5937, 78.9629))  # fallback: India centroid
-        rnd = random.Random(sid)
-        lat = base[0] + rnd.uniform(-0.06, 0.06)
-        lng = base[1] + rnd.uniform(-0.06, 0.06)
-        out.append({
-            "store_id": sid,
-            "store_name": s.get("store_name"),
-            "region_id": code,
-            "city": s.get("city") or code,
-            "lat": round(lat, 4),
-            "lng": round(lng, 4),
-            "incident_count": int(counts.get(sid, 0)),
-            "high_severity_count": int(sev_counts.get(sid, 0)),
-        })
+        code = parts[1] if len(parts) >= 2 else "UNK"
+        by_region.setdefault(code, []).append(sid)
+
+    out = []
+    for code, sids in by_region.items():
+        base = REGION_COORDS.get(code, (20.5937, 78.9629))
+        n = len(sids)
+        for i, sid in enumerate(sorted(sids)):
+            # Two rings: inner 6 around 0.35deg, outer rest around 0.75deg
+            if i < 6:
+                angle = (i / 6) * 2 * math.pi
+                radius = 0.35
+            else:
+                angle = ((i - 6) / max(1, n - 6)) * 2 * math.pi + 0.4
+                radius = 0.75
+            lat = base[0] + radius * math.sin(angle)
+            lng = base[1] + radius * math.cos(angle)
+            row = df[df["store_id"] == sid]
+            if row.empty:
+                continue
+            s = row.iloc[0]
+            out.append({
+                "store_id": sid,
+                "store_name": s.get("store_name"),
+                "region_id": code,
+                "city": s.get("city") or code,
+                "lat": round(lat, 4),
+                "lng": round(lng, 4),
+                "incident_count": int(counts.get(sid, 0)),
+                "high_severity_count": int(sev_counts.get(sid, 0)),
+            })
     return {"stores": out, "count": len(out)}
 
 
