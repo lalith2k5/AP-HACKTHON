@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { endpoints } from "@/lib/api";
 
@@ -17,13 +18,14 @@ type StorePoint = {
 };
 
 function sevColor(high: number) {
-  if (high >= 20) return "#d70015";
-  if (high >= 10) return "#c93400";
-  if (high >= 3) return "#b25000";
-  return "#00875a";
+  if (high >= 20) return "#ff3b30";
+  if (high >= 10) return "#ff9500";
+  if (high >= 3) return "#ffcc00";
+  return "#34c759";
 }
 
 export default function MapClient() {
+  const router = useRouter();
   const [stores, setStores] = useState<StorePoint[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -35,13 +37,6 @@ export default function MapClient() {
     (async () => {
       const leaflet = await import("leaflet");
       const reactLeaflet = await import("react-leaflet");
-      // Fix default marker icons
-      delete (leaflet.Icon.Default.prototype as any)._getIconUrl;
-      leaflet.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
       if (cancelled) return;
       setL(leaflet);
       setRL(reactLeaflet);
@@ -58,31 +53,13 @@ export default function MapClient() {
 
   const maxCount = Math.max(1, ...stores.map((s) => s.incident_count));
 
-  if (!ready || !L || !RL) {
-    return (
-      <AppShell active="/stores" title="Store impact map">
-        <div className="card" style={{ padding: 60, textAlign: "center" }}>
-          <div className="t-caption">Loading map…</div>
-        </div>
-      </AppShell>
-    );
-  }
-
-  const { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, ScaleControl } = RL;
-
   return (
     <AppShell active="/stores" title="Store impact map">
-      {/* Leaflet CSS */}
-      <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      />
-
       <div className="page-head">
         <div>
           <p>
             {stores.length} stores · {new Set(stores.map((s) => s.region_id)).size} regions ·
-            click a dot to open the store · toggle layers top-right
+            click a dot to open the store
           </p>
         </div>
         <Link href="/stores" className="btn btn-secondary btn-sm">List view</Link>
@@ -92,134 +69,77 @@ export default function MapClient() {
 
       <div
         className="card"
-        style={{ padding: 0, overflow: "hidden", position: "relative" }}
+        style={{
+          padding: 0,
+          overflow: "hidden",
+          position: "relative",
+          borderRadius: 16,
+        }}
       >
-        <div style={{ height: "68vh", minHeight: 480, position: "relative" }}>
-          <MapContainer
-            center={[22.9734, 78.6569]}
-            zoom={5}
-            style={{ height: "100%", width: "100%" }}
-            scrollWheelZoom={true}
-            worldCopyJump={false}
-          >
-            <LayersControl position="topright">
-              <LayersControl.BaseLayer checked name="Satellite">
-                <TileLayer
-                  attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                  maxZoom={19}
-                />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Streets">
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  maxZoom={19}
-                />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Topographic">
-                <TileLayer
-                  attribution='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
-                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
-                  maxZoom={19}
-                />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Light (Positron)">
-                <TileLayer
-                  attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-                  url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                  maxZoom={19}
-                />
-              </LayersControl.BaseLayer>
-            </LayersControl>
-
-            <ScaleControl position="bottomleft" imperial={false} />
-
-            {stores.map((s) => {
-              const size = 6 + (s.incident_count / maxCount) * 14;
-              const color = sevColor(s.high_severity_count);
-              return (
-                <CircleMarker
-                  key={s.store_id}
-                  center={[s.lat, s.lng]}
-                  radius={size}
-                  pathOptions={{
-                    color: "#ffffff",
-                    weight: 1.5,
-                    fillColor: color,
-                    fillOpacity: 0.9,
-                  }}
-                >
-                  <Tooltip direction="top" offset={[0, -6]} opacity={1}>
-                    <div style={{ fontSize: 12, lineHeight: 1.4 }}>
-                      <div style={{ fontWeight: 700 }}>{s.store_id}</div>
-                      <div style={{ color: "#64748b" }}>
-                        {s.store_name} · {s.city}
-                      </div>
-                      <div style={{ marginTop: 4 }}>
-                        <strong>{s.incident_count}</strong> incidents ·{" "}
-                        <span style={{ color }}>
-                          <strong>{s.high_severity_count}</strong> high
-                        </span>
-                      </div>
-                      <div style={{ marginTop: 4, color: "#0ea5e9" }}>
-                        Click to open →
-                      </div>
-                    </div>
-                  </Tooltip>
-                </CircleMarker>
-              );
-            })}
-          </MapContainer>
-
-          {/* Click-to-open on marker — leaflet needs an event handler */}
-          <MarkerClickBridge stores={stores} />
-        </div>
-
-        {/* Legend */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 20,
-            padding: "14px 20px",
-            borderTop: "1px solid var(--line-soft)",
-            fontSize: 11,
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="t-micro" style={{ margin: 0 }}>High severity count</span>
-          {[
-            { color: "#00875a", label: "0-2" },
-            { color: "#b25000", label: "3-9" },
-            { color: "#c93400", label: "10-19" },
-            { color: "#d70015", label: "20+" },
-          ].map((l) => (
-            <span
-              key={l.label}
+        <div style={{ height: "70vh", minHeight: 520, position: "relative", background: "#eef2f6" }}>
+          {ready && L && RL && (
+            <MapInner
+              L={L}
+              RL={RL}
+              stores={stores}
+              maxCount={maxCount}
+              onMarkerClick={(id: string) => router.push(`/stores/${id}`)}
+            />
+          )}
+          {!ready && (
+            <div
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                color: "var(--fg-2)",
+                position: "absolute", inset: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "var(--fg-3)", fontSize: 13,
               }}
             >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: l.color,
-                  border: "1.5px solid rgba(255,255,255,0.9)",
-                }}
-              />
-              {l.label}
-            </span>
-          ))}
-          <span style={{ marginLeft: "auto", color: "var(--fg-3)" }}>
-            Dot size ∝ total incidents
-          </span>
+              Loading map…
+            </div>
+          )}
+        </div>
+
+        {/* Legend — Apple-style floating chip */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 16,
+            left: 16,
+            padding: "10px 14px",
+            borderRadius: 12,
+            background: "rgba(255,255,255,0.86)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            border: "1px solid rgba(0,0,0,0.06)",
+            boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
+            fontSize: 11,
+            zIndex: 500,
+            pointerEvents: "none",
+            color: "#1d1d1f",
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 6, letterSpacing: "-0.01em" }}>
+            High severity
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {[
+              { color: "#34c759", label: "0-2" },
+              { color: "#ffcc00", label: "3-9" },
+              { color: "#ff9500", label: "10-19" },
+              { color: "#ff3b30", label: "20+" },
+            ].map((l) => (
+              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    display: "inline-block", width: 9, height: 9, borderRadius: "50%",
+                    background: l.color, border: "1.5px solid rgba(255,255,255,0.9)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  }}
+                />
+                <span>{l.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -257,19 +177,96 @@ export default function MapClient() {
   );
 }
 
-/* Small bridge so clicking a leaflet marker navigates.
-   react-leaflet markers do not accept onClick={navigate} as a prop,
-   so we add a document-level listener that reads the marker's data. */
-function MarkerClickBridge({ stores }: { stores: StorePoint[] }) {
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      const el = (e.target as HTMLElement).closest(".leaflet-marker-icon, .leaflet-interactive");
-      if (!el) return;
-      const label = el.getAttribute("data-store-id");
-      if (label) window.location.href = `/stores/${label}`;
-    }
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
-  }, [stores]);
-  return null;
+function MapInner({
+  L, RL, stores, maxCount, onMarkerClick,
+}: {
+  L: any; RL: any; stores: StorePoint[]; maxCount: number;
+  onMarkerClick: (id: string) => void;
+}) {
+  const { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, ScaleControl, useMap } = RL;
+
+  return (
+    <MapContainer
+      center={[22.9734, 78.6569]}
+      zoom={5}
+      minZoom={4}
+      maxZoom={18}
+      scrollWheelZoom={true}
+      zoomControl={true}
+      style={{ height: "100%", width: "100%", background: "#eef2f6" }}
+      attributionControl={true}
+    >
+      <LayersControl position="topright">
+        {/* Apple-Maps-like default */}
+        <LayersControl.BaseLayer checked name="Voyager (default)">
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            subdomains="abcd"
+            maxZoom={19}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Satellite">
+          <TileLayer
+            attribution="Tiles &copy; Esri"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={19}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Streets">
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={19}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Minimal (Positron)">
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            subdomains="abcd"
+            maxZoom={19}
+          />
+        </LayersControl.BaseLayer>
+      </LayersControl>
+
+      <ScaleControl position="bottomright" imperial={false} />
+
+      {stores.map((s) => {
+        const size = 8 + (s.incident_count / maxCount) * 12;
+        const color = sevColor(s.high_severity_count);
+        return (
+          <CircleMarker
+            key={s.store_id}
+            center={[s.lat, s.lng]}
+            radius={size}
+            pathOptions={{
+              color: "#ffffff",
+              weight: 2.5,
+              fillColor: color,
+              fillOpacity: 1,
+            }}
+            eventHandlers={{
+              click: () => onMarkerClick(s.store_id),
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -8]} opacity={1}>
+              <div style={{ fontSize: 12, lineHeight: 1.45, color: "#1d1d1f" }}>
+                <div style={{ fontWeight: 700 }}>{s.store_id}</div>
+                <div style={{ color: "#6e6e73" }}>
+                  {s.store_name} · {s.city}
+                </div>
+                <div style={{ marginTop: 4 }}>
+                  <strong>{s.incident_count}</strong> incidents ·{" "}
+                  <span style={{ color }}>
+                    <strong>{s.high_severity_count}</strong> high
+                  </span>
+                </div>
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        );
+      })}
+    </MapContainer>
+  );
 }

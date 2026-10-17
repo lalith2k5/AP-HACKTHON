@@ -1,3 +1,6 @@
+/* Leaflet base styles */
+@import "leaflet/dist/leaflet.css";
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -751,4 +754,82 @@
   line-height: 1.15;
   color: var(--fg);
   margin: 0;
+}
+
+
+/* ------------------------------------------------------------------
+   Leaflet — Apple Maps look
+   ------------------------------------------------------------------ */
+.leaflet-container {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif !important;
+  background: #eef2f6;
+}
+.leaflet-control-attribution {
+  background: rgba(255,255,255,0.72) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-radius: 6px 0 0 0 !important;
+  padding: 2px 8px !important;
+  font-size: 10px !important;
+  color: #6e6e73 !important;
+}
+.leaflet-control-attribution a { color: #0066cc !important; }
+.leaflet-bar {
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+.leaflet-bar a {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  color: #1d1d1f !important;
+  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+}
+.leaflet-bar a:hover {
+  background: #ffffff !important;
+}
+.leaflet-control-layers {
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  padding: 8px 10px !important;
+}
+.leaflet-control-layers label {
+  font-size: 12px !important;
+  color: #1d1d1f;
+  padding: 3px 0 !important;
+}
+.leaflet-control-scale-line {
+  background: rgba(255,255,255,0.82) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0,0,0,0.10) !important;
+  border-top: none !important;
+  color: #6e6e73 !important;
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  border-radius: 0 0 6px 6px !important;
+}
+.leaflet-tooltip {
+  background: rgba(255,255,255,0.96) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.14) !important;
+  padding: 10px 14px !important;
+  color: #1d1d1f !important;
+}
+.leaflet-tooltip-top::before {
+  border-top-color: rgba(255,255,255,0.96) !important;
 }
