@@ -5,6 +5,7 @@ API key auth with roles, rate limiting, audit logging, correlation IDs,
 idempotency keys, spec-compliant classify response.
 """
 
+import contextlib
 import json
 import time
 import uuid
@@ -694,10 +695,8 @@ def overview(region_id: str | None = None):
     eval_path = ROOT / "data" / "evaluation" / "reports" / "evaluation_report.json"
     eval_data = {}
     if eval_path.exists():
-        try:
+        with contextlib.suppress(Exception):
             eval_data = json.loads(eval_path.read_text())
-        except Exception:
-            pass
 
     classification = eval_data.get("classification", {})
     escalation = eval_data.get("escalation", {})
@@ -705,7 +704,13 @@ def overview(region_id: str | None = None):
     macro_f1 = classification.get("macro_f1", 0.9167)
     precision = escalation.get("escalation_precision", 0.9432)
 
-    total_feedback = int(len(inc))
+    # total_feedback = total raw records (from predictions.parquet)
+    # open_incidents = number of grouped incidents (from incidents.parquet)
+    try:
+        preds = _load("preds", PROC / "predictions.parquet")
+        total_feedback = int(len(preds))
+    except Exception:
+        total_feedback = int(len(inc))
     open_incidents = int(len(inc))
     escalated = int(inc["severity"].isin(["critical", "high"]).sum()) if len(inc) else 0
 
