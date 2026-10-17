@@ -9,13 +9,12 @@ test.skip(oidcOn, "OIDC enabled — these tests assume Mode A (static key)");
 // Trends
 // ---------------------------------------------------------------------------
 test.describe("trends", () => {
-  test("loads with heading, region filter, and category section", async ({ page }) => {
+  test("loads with heading and category chart", async ({ page }) => {
     await page.goto("/trends");
     await expect(page.getByRole("heading", { name: "Trends" })).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByText("Category totals")).toBeVisible();
-    await expect(page.locator("select").first()).toBeVisible();
+    await expect(page.getByText("Volume by category")).toBeVisible();
   });
 
   test("renders category volume chart", async ({ page }) => {
