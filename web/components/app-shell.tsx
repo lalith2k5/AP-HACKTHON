@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { PageTransition } from "./page-transition";
 import {
-  MapPin,
   LayoutDashboard,
   ListChecks,
   Bell,
@@ -20,8 +19,7 @@ const NAV_WORKSPACE = [
   { href: "/incidents", label: "Incidents", Icon: ListChecks },
   { href: "/alerts",    label: "Alerts",    Icon: Bell },
   { href: "/trends",    label: "Trends",    Icon: TrendingUp },
-  { href: "/stores",    label: "Stores",    Icon: Store },
-  { href: "/stores/map", label: "Store Map", Icon: MapPin },
+  { href: "/stores", label: "Stores", Icon: Store },
   { href: "/actions",   label: "Actions",   Icon: CheckCircle2 },
   { href: "/reports",   label: "Reports",   Icon: FileText },
 ] as const;

@@ -54,7 +54,7 @@ export default function MapClient() {
   const maxCount = Math.max(1, ...stores.map((s) => s.incident_count));
 
   return (
-    <AppShell active="/stores" title="Store impact map">
+    <AppShell active="/stores" title="Stores">
       <div className="page-head">
         <div>
           <p>

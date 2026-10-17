@@ -14,6 +14,10 @@ export default function StoresPage() {
 
   return (
     <AppShell active="/stores" title="Stores">
+      <div className="tabs" style={{ marginBottom: 24 }}>
+        <Link href="/stores" className="tab is-active">List</Link>
+        <Link href="/stores/map" className="tab">Map</Link>
+      </div>
       {err && <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>}
       {!rows && !err && <p className="text-sm text-muted-foreground">Loading...</p>}
       {rows && (
