@@ -17,10 +17,22 @@ type StorePoint = {
 };
 
 const INDIA_BOUNDS = { minLat: 6, maxLat: 37, minLng: 67, maxLng: 98 };
+
 const REGION_LABEL: Record<string, string> = {
   DEL: "Delhi NCR", MUM: "Mumbai", BLR: "Bangalore",
   HYD: "Hyderabad", CHN: "Chennai",
 };
+
+const REGION_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  DEL: { lat: 28.61, lng: 77.21 },
+  MUM: { lat: 19.08, lng: 72.88 },
+  BLR: { lat: 12.97, lng: 77.59 },
+  HYD: { lat: 17.38, lng: 78.49 },
+  CHN: { lat: 13.08, lng: 80.27 },
+};
+
+const INDIA_PATH =
+  "M 35,7 L 42,9 L 48,11 L 55,12 L 63,12 L 70,14 L 74,16 L 79,17 L 83,19 L 86,20 L 88,22 L 92,25 L 96,28 L 97,31 L 94,34 L 92,37 L 90,40 L 88,44 L 88,48 L 84,50 L 82,54 L 80,60 L 78,66 L 77,72 L 78,78 L 78,84 L 76,90 L 73,93 L 68,93 L 60,93 L 50,93 L 44,93 L 40,91 L 36,87 L 33,82 L 30,77 L 27,72 L 24,67 L 21,62 L 18,57 L 15,53 L 12,50 L 8,48 L 4,46 L 3,43 L 5,40 L 9,38 L 13,36 L 17,32 L 20,28 L 22,23 L 25,17 L 28,12 L 32,9 Z";
 
 function sevColor(high: number) {
   if (high >= 20) return "var(--st-critical)";
@@ -46,19 +58,13 @@ export default function StoreMapPage() {
     y: 100 - ((lat - INDIA_BOUNDS.minLat) / (INDIA_BOUNDS.maxLat - INDIA_BOUNDS.minLat)) * 100,
   });
 
-  const total = stores.length;
-  const byRegion = stores.reduce<Record<string, number>>((acc, s) => {
-    acc[s.region_id] = (acc[s.region_id] ?? 0) + 1;
-    return acc;
-  }, {});
-
   return (
     <AppShell active="/stores" title="Store impact map">
       <div className="page-head">
         <div>
           <p>
-            {total} stores across {Object.keys(byRegion).length} regions.
-            Dot color reflects high-severity incident count. Size reflects total incidents.
+            {stores.length} stores · {new Set(stores.map((s) => s.region_id)).size} regions ·
+            color = high-severity count · size = total incidents
           </p>
         </div>
         <Link href="/stores" className="btn btn-secondary btn-sm">List view</Link>
@@ -66,40 +72,70 @@ export default function StoreMapPage() {
 
       {err && <div className="card" style={{ color: "var(--st-critical)" }}>{err}</div>}
 
-      <div className="card" style={{ padding: 0, overflow: "hidden", position: "relative" }}>
-        {/* Map canvas */}
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <div
           style={{
             position: "relative",
             width: "100%",
             aspectRatio: "5 / 4",
             background:
-              "linear-gradient(180deg, color-mix(in oklab, var(--accent) 5%, transparent) 0%, transparent 60%), var(--bg-sunken)",
+              "linear-gradient(180deg, #dbeafe 0%, #e0e7ff 55%, #ede9fe 100%)",
             overflow: "hidden",
           }}
         >
-          {/* Subtle grid */}
+          {/* Base SVG map */}
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.35 }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
           >
             <defs>
-              <pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse">
-                <path d="M 5 0 L 0 0 0 5" fill="none" stroke="var(--line-soft)" strokeWidth="0.15" />
+              <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f1f5f9" />
+                <stop offset="100%" stopColor="#e2e8f0" />
+              </linearGradient>
+              <filter id="landShadow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="0.8" stdDeviation="0.6" floodColor="#0f172a" floodOpacity="0.12" />
+              </filter>
+              <pattern id="oceanDots" width="3" height="3" patternUnits="userSpaceOnUse">
+                <circle cx="1.5" cy="1.5" r="0.15" fill="#94a3b8" opacity="0.3" />
               </pattern>
             </defs>
-            <rect width="100" height="100" fill="url(#grid)" />
+
+            {/* Ocean texture */}
+            <rect width="100" height="100" fill="url(#oceanDots)" />
+
+            {/* India landmass */}
+            <path
+              d={INDIA_PATH}
+              fill="url(#land)"
+              stroke="#64748b"
+              strokeWidth="0.3"
+              strokeLinejoin="round"
+              filter="url(#landShadow)"
+            />
+
+            {/* Region cluster outlines */}
+            {Object.entries(REGION_CENTROIDS).map(([code, c]) => {
+              const { x, y } = project(c.lat, c.lng);
+              return (
+                <circle
+                  key={code}
+                  cx={x}
+                  cy={y}
+                  r="1.3"
+                  fill="none"
+                  stroke="#94a3b8"
+                  strokeWidth="0.15"
+                  strokeDasharray="0.6 0.6"
+                  opacity="0.5"
+                />
+              );
+            })}
           </svg>
 
           {/* Region labels */}
-          {Object.entries({
-            DEL: { lat: 28.61, lng: 77.21 },
-            MUM: { lat: 19.08, lng: 72.88 },
-            BLR: { lat: 12.97, lng: 77.59 },
-            HYD: { lat: 17.38, lng: 78.49 },
-            CHN: { lat: 13.08, lng: 80.27 },
-          }).map(([code, c]) => {
+          {Object.entries(REGION_CENTROIDS).map(([code, c]) => {
             const { x, y } = project(c.lat, c.lng);
             return (
               <div
@@ -107,15 +143,16 @@ export default function StoreMapPage() {
                 style={{
                   position: "absolute",
                   left: `${x}%`,
-                  top: `${y + 6}%`,
+                  top: `${y + 3.2}%`,
                   transform: "translate(-50%, 0)",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--fg-3)",
-                  letterSpacing: "0.06em",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#475569",
+                  letterSpacing: "0.08em",
                   textTransform: "uppercase",
                   pointerEvents: "none",
                   whiteSpace: "nowrap",
+                  textShadow: "0 1px 2px rgba(255,255,255,0.9)",
                 }}
               >
                 {REGION_LABEL[code] ?? code}
@@ -126,7 +163,7 @@ export default function StoreMapPage() {
           {/* Store dots */}
           {stores.map((s) => {
             const { x, y } = project(s.lat, s.lng);
-            const size = 8 + (s.incident_count / maxCount) * 18;
+            const size = 7 + (s.incident_count / maxCount) * 16;
             const active = hover === s.store_id;
             const dim = hover && !active;
             return (
@@ -139,16 +176,16 @@ export default function StoreMapPage() {
                   position: "absolute",
                   left: `${x}%`,
                   top: `${y}%`,
-                  transform: `translate(-50%, -50%) scale(${active ? 1.35 : 1})`,
+                  transform: `translate(-50%, -50%) scale(${active ? 1.5 : 1})`,
                   width: size,
                   height: size,
                   borderRadius: "50%",
                   background: sevColor(s.high_severity_count),
-                  border: "2px solid var(--bg)",
+                  border: "1.5px solid rgba(255,255,255,0.95)",
                   opacity: dim ? 0.25 : 1,
                   boxShadow: active
-                    ? "0 4px 16px rgba(0,0,0,0.18)"
-                    : "0 1px 3px rgba(0,0,0,0.10)",
+                    ? "0 6px 18px rgba(15,23,42,0.30)"
+                    : "0 1px 3px rgba(15,23,42,0.20)",
                   transition: "transform 200ms var(--ease), opacity 200ms var(--ease)",
                   zIndex: active ? 20 : 1,
                 }}
@@ -157,7 +194,7 @@ export default function StoreMapPage() {
             );
           })}
 
-          {/* Hover tooltip */}
+          {/* Tooltip */}
           {hover && (() => {
             const s = stores.find((x) => x.store_id === hover);
             if (!s) return null;
@@ -168,24 +205,27 @@ export default function StoreMapPage() {
                   position: "absolute",
                   left: `${x}%`,
                   top: `${y}%`,
-                  transform: "translate(-50%, calc(-100% - 12px))",
+                  transform: "translate(-50%, calc(-100% - 14px))",
                   padding: "10px 14px",
                   borderRadius: 12,
-                  background: "var(--bg-raised)",
-                  border: "1px solid var(--line)",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                  background: "rgba(255,255,255,0.96)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid rgba(15,23,42,0.08)",
+                  boxShadow: "0 12px 32px rgba(15,23,42,0.18)",
                   fontSize: 12,
                   pointerEvents: "none",
                   zIndex: 30,
                   whiteSpace: "nowrap",
                 }}
               >
-                <div style={{ fontWeight: 600 }}>{s.store_id}</div>
-                <div className="muted" style={{ marginTop: 2 }}>
+                <div style={{ fontWeight: 700, color: "#0f172a" }}>{s.store_id}</div>
+                <div style={{ color: "#64748b", marginTop: 2 }}>
                   {s.store_name} · {s.city}
                 </div>
-                <div style={{ marginTop: 6, display: "flex", gap: 10 }}>
-                  <span><strong>{s.incident_count}</strong> incidents</span>
+                <div style={{ marginTop: 6, display: "flex", gap: 12 }}>
+                  <span style={{ color: "#0f172a" }}>
+                    <strong>{s.incident_count}</strong> incidents
+                  </span>
                   <span style={{ color: sevColor(s.high_severity_count) }}>
                     <strong>{s.high_severity_count}</strong> high
                   </span>
@@ -215,22 +255,11 @@ export default function StoreMapPage() {
             { color: "var(--st-critical)", label: "20+" },
           ].map((l) => (
             <span key={l.label} style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--fg-2)" }}>
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: l.color,
-                  border: "1.5px solid var(--bg)",
-                }}
-              />
+              <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: l.color, border: "1.5px solid rgba(255,255,255,0.9)" }} />
               {l.label}
             </span>
           ))}
-          <span style={{ marginLeft: "auto", color: "var(--fg-3)" }}>
-            Dot size ∝ total incidents
-          </span>
+          <span style={{ marginLeft: "auto", color: "var(--fg-3)" }}>Dot size ∝ total incidents</span>
         </div>
       </div>
 
@@ -248,13 +277,10 @@ export default function StoreMapPage() {
                   <td>{s.city}</td>
                   <td>{s.incident_count}</td>
                   <td>
-                    <span
-                      className="pill"
-                      style={{
-                        background: `color-mix(in oklab, ${sevColor(s.high_severity_count)} 14%, transparent)`,
-                        color: sevColor(s.high_severity_count),
-                      }}
-                    >
+                    <span className="pill" style={{
+                      background: `color-mix(in oklab, ${sevColor(s.high_severity_count)} 14%, transparent)`,
+                      color: sevColor(s.high_severity_count),
+                    }}>
                       {s.high_severity_count}
                     </span>
                   </td>
