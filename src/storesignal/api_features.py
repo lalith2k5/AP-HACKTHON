@@ -166,8 +166,11 @@ def import_validate(payload: dict = Body(default={}), _p=Depends(_perm_run)):  #
     upload_id = payload.get("upload_id")
 
     errors = iw.validate_mapping(columns, mapping)
+    # mapping is {canonical_field: source_column}, so a required canonical
+    # field is present when it appears as a KEY, not a value. Checking
+    # values() was the bug that made auto-mapped CSVs fail validation.
     missing_required = [c for c in iw.REQUIRED_COLUMNS
-                        if c not in mapping.values()]
+                        if c not in mapping.keys()]
 
     row_issues: list[dict] = []
     if upload_id:
