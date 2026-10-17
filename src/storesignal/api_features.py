@@ -101,8 +101,12 @@ def import_preview(upload_id: str, n: int = Query(default=5, ge=1, le=20), _p=De
 
     fmt = iw._detect_format(str(src))
     if fmt == "csv":
-        df = pd.read_csv(src, dtype=str, keep_default_na=False, nrows=n)
-        full_cols = list(pd.read_csv(src, dtype=str, keep_default_na=False, nrows=0).columns)
+        # Use the robust reader so BOM / delimiter sniffing / encoding
+        # fallback applies here too. The old direct pd.read_csv() call was
+        # bypassing all of that and splitting semicolon CSVs into one column.
+        full_df = iw._read_csv_robust(src)
+        full_cols = list(full_df.columns)
+        df = full_df.head(n)
     elif fmt == "jsonl":
         rows = []
         with src.open() as fh:
