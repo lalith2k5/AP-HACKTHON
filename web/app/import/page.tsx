@@ -73,7 +73,6 @@ export default function ImportPage() {
     <AppShell active="/import" title="Import data">
       <div className="page-head">
         <div>
-          <h2 className="page-head-title">Import data</h2>
           <p>CSV, JSONL, or Parquet. Column mapping is required for CSV and JSONL.</p>
         </div>
       </div>
