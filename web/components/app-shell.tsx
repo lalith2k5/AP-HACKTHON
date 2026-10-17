@@ -105,7 +105,7 @@ export function AppShell({
 
       <div className="main">
         <header className="topbar">
-          <div className="topbar-title" role="presentation">{title}</div>
+          <h1 className="topbar-title">{title}</h1>
         </header>
 
         <main className="content"><PageTransition>{children}</PageTransition></main>

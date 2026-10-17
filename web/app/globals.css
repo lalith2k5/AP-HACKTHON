@@ -740,3 +740,15 @@
   transition: transform 200ms var(--ease), filter 200ms var(--ease);
 }
 .pill:hover { transform: scale(1.04); filter: brightness(1.05); }
+
+
+/* Page head titles - match the old <h1> visual exactly,
+   but stay as <h2> so the topbar owns the h1 role. */
+.page-head-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.024em;
+  line-height: 1.15;
+  color: var(--fg);
+  margin: 0;
+}

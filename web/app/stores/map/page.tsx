@@ -40,7 +40,7 @@ export default function StoreMapPage() {
     <AppShell active="/stores" title="Store impact map">
       <div className="page-head">
         <div>
-          <h1>Store impact map</h1>
+          <h2 className="page-head-title">Store impact map</h2>
           <p>Each dot is a store. Size scales with incident count. Coordinates derived from region centers.</p>
         </div>
         <Link href="/stores" className="btn btn-secondary">List view</Link>
