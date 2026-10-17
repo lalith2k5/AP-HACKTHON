@@ -117,32 +117,82 @@ export default function MapClient() {
       if (!mapRef.current) return;
       const L = (await import("leaflet")).default;
 
-      // Clear existing markers
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
 
       const maxCount = Math.max(1, ...stores.map((s) => s.incident_count));
 
       stores.forEach((s) => {
-        const size = 8 + (s.incident_count / maxCount) * 12;
+        const scale = 1 + (s.incident_count / maxCount) * 0.5;
         const color = sevColor(s.high_severity_count);
-        const marker = L.circleMarker([s.lat, s.lng], {
-          radius: size,
-          color: "#ffffff",
-          weight: 2.5,
-          fillColor: color,
-          fillOpacity: 1,
-        })
+        const w = 30 * scale;
+        const h = 40 * scale;
+
+        // Apple-style pin: rounded square with a triangle tail,
+        // white store glyph, colored fill, soft shadow.
+        const html = `
+          <div style="
+            position: relative;
+            width: ${w}px;
+            height: ${h}px;
+            filter: drop-shadow(0 4px 6px rgba(15,23,42,0.28));
+            transition: transform 180ms cubic-bezier(0.22,0.61,0.36,1);
+          ">
+            <div style="
+              position: absolute;
+              inset: 0 0 ${h * 0.25}px 0;
+              border-radius: ${w * 0.32}px;
+              background: ${color};
+              border: ${2 * scale}px solid #ffffff;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+            ">
+              <svg width="${w * 0.55}" height="${w * 0.55}" viewBox="0 0 24 24"
+                   fill="none" stroke="#ffffff" stroke-width="2.2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l1.5-6h15L21 9"/>
+                <path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"/>
+                <path d="M8 21v-6h8v6"/>
+                <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+              </svg>
+            </div>
+            <div style="
+              position: absolute;
+              bottom: ${h * 0.18}px;
+              left: 50%;
+              transform: translateX(-50%) rotate(45deg);
+              width: ${w * 0.28}px;
+              height: ${w * 0.28}px;
+              background: ${color};
+              border-right: ${2 * scale}px solid #ffffff;
+              border-bottom: ${2 * scale}px solid #ffffff;
+              border-radius: 0 0 ${w * 0.08}px 0;
+            "></div>
+          </div>`;
+
+        const icon = L.divIcon({
+          html,
+          className: "ss-marker",
+          iconSize: [w, h],
+          iconAnchor: [w / 2, h],
+          tooltipAnchor: [0, -h + 4],
+          popupAnchor: [0, -h + 8],
+        });
+
+        const marker = L.marker([s.lat, s.lng], { icon })
           .bindTooltip(
-            `<div style="font-size:12px;line-height:1.45;color:#1d1d1f">
-               <div style="font-weight:700">${s.store_id}</div>
-               <div style="color:#6e6e73">${s.store_name} · ${s.city}</div>
-               <div style="margin-top:4px">
-                 <strong>${s.incident_count}</strong> incidents ·
+            `<div style="font-size:12px;line-height:1.45;color:#1d1d1f;min-width:150px">
+               <div style="font-weight:700;font-size:13px">${s.store_id}</div>
+               <div style="color:#6e6e73;margin-top:2px">${s.store_name}</div>
+               <div style="color:#6e6e73">${s.city} · ${s.region_id}</div>
+               <div style="margin-top:6px;display:flex;gap:10px;align-items:center">
+                 <span><strong>${s.incident_count}</strong> incidents</span>
                  <span style="color:${color}"><strong>${s.high_severity_count}</strong> high</span>
                </div>
              </div>`,
-            { direction: "top", offset: [0, -8], opacity: 1 },
+            { direction: "top", offset: [0, -4], opacity: 1, className: "ss-tooltip" },
           )
           .on("click", () => router.push(`/stores/${s.store_id}`))
           .addTo(mapRef.current);
