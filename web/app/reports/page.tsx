@@ -86,6 +86,7 @@ export default function ReportsPage() {
 
   return (
     <AppShell active="/reports" title="Weekly Report">
+      <div className="fade-up" style={{ animationDelay: "0ms" }}>
       <div className="mb-4">
         <h2 className="text-[22px] font-semibold tracking-tight">Weekly regional brief</h2>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -101,7 +102,7 @@ export default function ReportsPage() {
 
       {data && (
         <div className="space-y-8">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 fade-up" style={{ animationDelay: "80ms" }}>
             <div className="glass p-5">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Region</div>
               <div className="mt-1 text-lg font-semibold">{data.region_name}</div>
@@ -210,6 +211,7 @@ export default function ReportsPage() {
           )}
         </div>
       )}
+    </div>
     </AppShell>
   );
 }

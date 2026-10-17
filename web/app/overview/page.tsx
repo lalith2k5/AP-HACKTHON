@@ -364,9 +364,9 @@ export default function OverviewPage() {
             </Link>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {urgent.slice(0, 6).map((inc) => (
+            {urgent.slice(0, 6).map((inc, i) => (
               <Link
-                key={inc.incident_id}
+                key={inc.incident_id || `urgent-${i}`}
                 href={`/incidents/${inc.incident_id}`}
                 className="live-row"
                 style={{ textDecoration: "none", color: "inherit" }}

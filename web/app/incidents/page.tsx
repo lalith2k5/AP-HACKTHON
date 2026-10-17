@@ -1,89 +1,115 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { endpoints, ApiError } from "@/lib/api";
+import { endpoints } from "@/lib/api";
+import { AnimatedNumber } from "@/components/animated-number";
 
 type Incident = {
   incident_id: string;
   store_id: string;
   predicted_category: string;
-  owner_function: string;
   severity: string;
-  first_seen: string;
-  last_seen: string;
+  owner_function: string;
   record_count: number;
-  channels: string;
-  sample_text: string;
-  verification_status: string;
 };
 
 const SEV_COLOR: Record<string, string> = {
-  critical: "var(--status-critical)",
-  high:     "var(--status-high)",
-  medium:   "var(--status-medium)",
-  low:      "var(--status-low)",
+  critical: "#ff3b30", high: "#ff9500", medium: "#ffcc00", low: "#34c759",
 };
 
 export default function IncidentsPage() {
-  const [items, setItems] = useState<Incident[] | null>(null);
+  const [rows, setRows] = useState<Incident[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const data = (await endpoints.incidents({ limit: "50" })) as Incident[];
-        setItems(data);
-      } catch (e) {
-        setErr((e as ApiError).message);
-      }
-    })();
+    endpoints.incidents()
+      .then((d: any) => setRows(d.items ?? d.incidents ?? d))
+      .catch((e) => setErr(String(e)));
   }, []);
+
+  const total = rows?.length ?? 0;
+  const critical = rows?.filter((r) => r.severity === "critical").length ?? 0;
+  const high = rows?.filter((r) => r.severity === "high").length ?? 0;
 
   return (
     <AppShell active="/incidents" title="Incidents">
-      <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-[22px] font-semibold tracking-tight">Incidents</h2>
-        <span className="text-xs text-muted-foreground">
-          {items ? `${items.length} shown` : "loading..."}
-        </span>
+      <div className="fade-up" style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.03em", margin: 0 }}>
+          Incidents
+        </h1>
+        <p style={{ marginTop: 8, fontSize: 15, color: "var(--fg-2)" }}>
+          Traceable issues grouped by evidence and routed to owning teams.
+        </p>
       </div>
-      {err && (
-        <div className="rounded-3xl border border-[var(--status-critical)]/30 bg-[color-mix(in_oklch,var(--status-critical),transparent_94%)] p-4 text-sm text-[var(--status-critical)]">
-          {err}
+
+      {err && <div className="card" style={{ color: "var(--st-critical)" }}>{err}</div>}
+
+      {/* Summary strip */}
+      <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 28, animationDelay: "80ms" }}>
+        <div className="kpi-tile">
+          <div className="kpi-label">Total incidents</div>
+          <div className="kpi-number-sm">
+            <AnimatedNumber value={total} />
+          </div>
         </div>
-      )}
-      {items && (
-        <ul className="divide-y divide-border glass">
-          {items.map((it) => (
-            <li key={it.incident_id}>
-              <Link
-                href={`/incidents/${it.incident_id}`}
-                className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-muted/40"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      aria-hidden
-                      className="inline-block size-2 rounded-full"
-                      style={{ background: SEV_COLOR[it.severity] ?? "var(--muted-foreground)" }}
-                    />
-                    <span className="text-sm font-medium truncate">
-                      {it.predicted_category.replaceAll("_", " ")}
-                    </span>
-                    <span className="text-xs text-muted-foreground">· {it.store_id}</span>
-                  </div>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">{it.sample_text}</p>
+        <div className="kpi-tile">
+          <div className="kpi-label">Critical</div>
+          <div className="kpi-number-sm" style={{ color: "#ff3b30" }}>
+            <AnimatedNumber value={critical} />
+          </div>
+        </div>
+        <div className="kpi-tile">
+          <div className="kpi-label">High</div>
+          <div className="kpi-number-sm" style={{ color: "#ff9500" }}>
+            <AnimatedNumber value={high} />
+          </div>
+        </div>
+      </div>
+
+      {/* Incident list */}
+      {rows && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {rows.slice(0, 50).map((r, i) => (
+            <Link
+              key={r.incident_id || `inc-${i}`}
+              href={`/incidents/${r.incident_id}`}
+              className="kpi-tile fade-up"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 20,
+                textDecoration: "none",
+                color: "inherit",
+                animationDelay: `${Math.min(i * 30, 300)}ms`,
+                padding: "18px 24px",
+              }}
+            >
+              <span
+                className="pulse-dot"
+                style={{
+                  background: SEV_COLOR[r.severity] ?? "#8e8e93",
+                  boxShadow: `0 0 8px ${SEV_COLOR[r.severity] ?? "#8e8e93"}`,
+                }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--fg)" }}>
+                  {(r.predicted_category || "unknown").replace(/_/g, " ")}
                 </div>
-                <div className="shrink-0 text-right">
-                  <div className="text-xs font-medium uppercase text-muted-foreground">{it.severity}</div>
-                  <div className="text-xs text-muted-foreground">{it.record_count} rec</div>
+                <div style={{ fontSize: 13, color: "var(--fg-2)", marginTop: 2 }}>
+                  {r.incident_id} · {r.store_id} · {r.owner_function}
                 </div>
-              </Link>
-            </li>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{r.record_count} rec</div>
+                <div style={{ fontSize: 11, color: "var(--fg-3)", textTransform: "uppercase", fontWeight: 600 }}>
+                  {r.severity}
+                </div>
+              </div>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </AppShell>
   );
