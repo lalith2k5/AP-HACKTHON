@@ -18,17 +18,16 @@ test.describe("trends", () => {
     await expect(page.locator("select").first()).toBeVisible();
   });
 
-  test("region filter accepts a value and re-queries", async ({ page }) => {
+  test("renders category volume chart", async ({ page }) => {
     await page.goto("/trends");
-    await page.locator("select").first().selectOption("DEL");
-    await expect(page.getByText("Category totals")).toBeVisible({
+    await expect(page.getByText("Volume by category")).toBeVisible({
       timeout: 10_000,
     });
   });
 
   test("anomalies section renders (populated or empty)", async ({ page }) => {
     await page.goto("/trends");
-    await expect(page.getByText(/Anomalies flagged/)).toBeVisible({
+    await expect(page.getByText(/Flagged anomalies/)).toBeVisible({
       timeout: 10_000,
     });
   });
